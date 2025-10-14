@@ -1,4 +1,7 @@
-export default {
+import generated from "@tailwindcss/typography";
+import {Config} from "tailwindcss";
+
+const config: Config = {
   darkMode: 'class',
   content: [
     "./index.html",
@@ -8,6 +11,8 @@ export default {
     extend: {},
   },
   plugins: [
-    require('@tailwindcss/typography')
+    generated
   ],
 }
+
+export default config;
