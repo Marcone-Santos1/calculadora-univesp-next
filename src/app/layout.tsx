@@ -4,7 +4,7 @@ import './globals.css';
 import {NavBar} from '@/components/NavBar';
 import {AppStateProvider} from '@/components/AppStateProvider';
 import { GoogleTagManager } from '@next/third-parties/google'
-import Script from "next/script";
+import { GoogleAnalytics } from '@next/third-parties/google'
 import AdsRefresher from "@/components/AdsRefresher";
 import {AdsenseScript} from "@/components/AdsenseScript";
 
@@ -40,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
     <GoogleTagManager gtmId="G-3141WNQQZQ" />
+    <GoogleAnalytics gaId="G-3141WNQQZQ" />
     <AdsenseScript />
     <body className={inter.className}>
     <AppStateProvider>
