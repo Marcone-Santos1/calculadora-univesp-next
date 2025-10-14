@@ -6,6 +6,7 @@ import {AppStateProvider} from '@/components/AppStateProvider';
 import { GoogleTagManager } from '@next/third-parties/google'
 import Script from "next/script";
 import AdsRefresher from "@/components/AdsRefresher";
+import {AdsenseScript} from "@/components/AdsenseScript";
 
 const inter = Inter({subsets: ['latin']});
 
@@ -39,15 +40,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
     <GoogleTagManager gtmId="G-3141WNQQZQ" />
-    <head>
-      <Script
-        async
-        strategy="afterInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9195195721061205"
-        crossOrigin="anonymous"
-        onError={(e) => console.error('Erro ao carregar o script do AdSense:', e)}
-      />
-    </head>
+    <AdsenseScript />
     <body className={inter.className}>
     <AppStateProvider>
       <NavBar/>
