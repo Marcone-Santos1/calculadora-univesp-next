@@ -1,6 +1,6 @@
-import {PESOS} from "./Constants.ts";
-import {GradesProp} from "@/Contracts/GradesProp.ts";
-import {HistoryEntryProp} from "@/Contracts/HistoryEntryProp.ts";
+import {PESOS} from "./Constants";
+import {GradesProp} from "@/Contracts/GradesProp";
+import {HistoryEntryProp} from "@/Contracts/HistoryEntryProp";
 
 
 export const calcMediaFinal = ({g1, g2}: GradesProp) => {
