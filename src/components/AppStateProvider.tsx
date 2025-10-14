@@ -6,12 +6,12 @@ import { useState, useEffect, createContext, useContext } from 'react';
 const AppContext = createContext<{ isDarkMode: boolean; toggleDarkMode: () => void } | null>(null);
 
 export const AppStateProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [isMounted, setIsMounted] = useState(false); // Evita problemas de hidratação
 
   useEffect(() => {
     const theme = localStorage.getItem('darkTheme');
-    setIsDarkMode(theme === 'dark');
+    setIsDarkMode(theme === 'dark' || theme === null);
     setIsMounted(true);
   }, []);
 

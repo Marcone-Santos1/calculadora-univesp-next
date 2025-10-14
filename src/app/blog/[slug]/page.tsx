@@ -51,7 +51,6 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
   const articleData = articles.find(p => p.slug.endsWith(params.slug));
 
   return (
-    // Envolvemos o componente do artigo no ArticleLayout aqui!
     <ArticleLayout title={articleData?.title || 'Artigo'}>
       <ArticleComponent />
     </ArticleLayout>
