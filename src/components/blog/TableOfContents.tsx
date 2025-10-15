@@ -15,9 +15,9 @@ export const TableOfContents = () => {
   useEffect(() => {
     const elements = Array.from(
       document.querySelectorAll("article h2, article h3")
-    ).map((el) => ({
-      id: el.id,
-      text: el.textContent || "",
+    ).map((el, index) => ({
+      id: el.id || `heading-${index}`, // garante key única
+      text: el.textContent?.trim() || `heading-${index}`,
       level: el.tagName === "H2" ? 2 : 3,
     }));
 
