@@ -49,4 +49,25 @@ export const articles: Article[] = [
     date: '2025-10-14',
     tags: ['Exame', 'Recuperação', 'Provas', 'Notas', 'Acadêmico']
   },
+  {
+    slug: '/blog/guia-ava-univesp',
+    title: 'AVA Univesp: O Guia para Dominar a Plataforma',
+    description: 'Domine o Ambiente Virtual de Aprendizagem (AVA) da UNIVESP. Guia completo com dicas para organizar seus estudos, acessar materiais e não perder prazos.',
+    date: '2025-10-15',
+    tags: ['AVA', 'EAD', 'Organização', 'Dicas', 'UNIVESP']
+  },
+  {
+    slug: '/blog/o-que-cai-na-prova-univesp',
+    title: 'O que Cai na Prova da UNIVESP? Um Guia Realista',
+    description: 'Descubra o que realmente cai na prova da UNIVESP. Um guia prático para focar seus estudos no conteúdo que mais importa e garantir sua aprovação.',
+    date: '2025-10-15',
+    tags: ['Provas', 'Dicas', 'Estudos', 'UNIVESP', 'Aprovação']
+  },
+  {
+    slug: '/blog/o-que-estudar-vestibular-univesp',
+    title: 'Vestibular UNIVESP: O Que Estudar e Como se Preparar',
+    description: 'Seu guia completo para o vestibular da UNIVESP. Saiba o que estudar em cada matéria e descubra as melhores estratégias de preparação para garantir sua vaga.',
+    date: '2025-10-15',
+    tags: ['Vestibular', 'Dicas', 'Estudos', 'UNIVESP', 'Aprovação']
+  },
 ];
