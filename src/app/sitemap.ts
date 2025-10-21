@@ -1,5 +1,3 @@
-// src/app/sitemap.ts
-
 import { MetadataRoute } from 'next';
 import { articles } from '@/data/articles'; // Importamos os dados dos seus artigos
 
@@ -66,4 +64,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...blogRoutes,
     // ...questionRoutes, // Adicione as rotas das perguntas aqui quando estiverem prontas
   ];
+
 }
