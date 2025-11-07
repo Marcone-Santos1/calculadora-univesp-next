@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from "next/image";
 
 export const ManualNaoEscrito = () => {
   return (
@@ -23,6 +24,15 @@ export const ManualNaoEscrito = () => {
       </p>
 
       <h2>O Campus Duplo: Entendendo o "Governo" e a "Nação"</h2>
+
+      <Image
+        src="/images/blog/manual-nao-escrito-aluno-univesp/cover.png"
+        alt="A dualidade do campus. Um estudante no centro, servindo como uma 'ponte' entre o mundo oficial (AVA) e o mundo caótico (Grupos/Nação)."
+        width={1200}
+        height={630}
+        priority
+      />
+
       <p>
         Para ter sucesso aqui, você precisa entender que a UNIVESP opera em duas esferas que correm em paralelo.
       </p>
@@ -41,12 +51,27 @@ export const ManualNaoEscrito = () => {
         (ansiedade). O aluno de sucesso é um diplomata: ele vive nos dois mundos.
       </p>
 
+      <Image
+        src="/images/blog/manual-nao-escrito-aluno-univesp/campus_governo_nacao.png"
+        alt="Visualizar as duas esferas de operação da universidade de forma clara."
+        width={1200}
+        height={630}
+        priority
+      />
+
       <h2>Navegando na "Nação": O Guia do Ecossistema Não-Oficial</h2>
       <p>
         Vamos dissecar os componentes-chave deste universo paralelo e como usá-los estrategicamente.
       </p>
 
       <h3>O Oráculo Caótico: Grupos de WhatsApp e Telegram</h3>
+      <Image
+        src="/images/blog/manual-nao-escrito-aluno-univesp/oraculo.png"
+        alt="Visualizar as duas esferas de operação da universidade de forma clara."
+        width={1200}
+        height={630}
+        priority
+      />
       <p>
         O grupo de WhatsApp da sua turma é, ao mesmo tempo, sua maior bênção e sua pior maldição.
       </p>
@@ -82,6 +107,13 @@ export const ManualNaoEscrito = () => {
         <li><strong>O Questionador:</strong> Não produz muito, mas tem objeções a tudo que os outros fazem.</li>
         <li><strong>O Proativo:</strong> O colega que realmente divide as tarefas e cumpre os prazos.</li>
       </ol>
+      <Image
+        src="/images/blog/manual-nao-escrito-aluno-univesp/gestao_pi.png"
+        alt="Os arquétipos clássicos de um grupo de PI em EAD."
+        width={1200}
+        height={630}
+        priority
+      />
       <p>
         O segredo não é ter sorte de cair num grupo só de "Proativos". O segredo é ter <strong>método</strong>.
       </p>
@@ -135,6 +167,13 @@ export const ManualNaoEscrito = () => {
                                                                 className="font-semibold underline">Calculadora
           Univesp</Link> é a sua bússola.
         </p>
+        <Image
+          src="/images/blog/manual-nao-escrito-aluno-univesp/bussola_estrategica.png"
+          alt="Os arquétipos clássicos de um grupo de PI em EAD."
+          width={1200}
+          height={630}
+          priority
+        />
         <p>
           É nela que você traduz toda a informação em um plano de ação. "Preciso de um 6,5 na prova para passar", "Se eu
           gabaritar a Semana 4, posso tirar um 5,0 no exame". Ela é a ferramenta que te tira do banco do passageiro
