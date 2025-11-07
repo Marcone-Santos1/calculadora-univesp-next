@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import Image from "next/image";
+
+import Cover from '/public/images/blog/guia-estudo-exatas-univesp/cover.png'
 
 export const GuiaEstudoExatas = () => {
   return (
@@ -9,6 +12,13 @@ export const GuiaEstudoExatas = () => {
         em matemática, ou simplesmente se considere "uma pessoa de humanas". O modelo EAD, com sua imensa flexibilidade,
         pode parecer assustador quando aplicado a disciplinas que exigem um raciocínio abstrato e complexo.
       </p>
+      <Image
+        src="/images/blog/guia-estudo-exatas-univesp/cover.png"
+        alt="Uma cena que represente a superação das dificuldades em exatas no EAD, com foco na ferramenta (a calculadora) e no ambiente UNIVESP."
+        width={1200}
+        height={630}
+        priority
+      />
       <p>
         A boa notícia? O sucesso em exatas não tem a ver com genialidade, mas sim com <strong>método</strong>. Ninguém
         nasce sabendo Cálculo. O que existe são técnicas de estudo que funcionam e outras que falham miseravelmente,
@@ -21,6 +31,13 @@ export const GuiaEstudoExatas = () => {
       </p>
 
       <h2>A Mentalidade Correta: "Músculo" vs. "Dom"</h2>
+      <Image
+        src="/images/blog/guia-estudo-exatas-univesp/mentalidade.png"
+        alt="Visualizar a ideia de que aprender exatas é como construir um músculo, contrastando com a ideia de um 'dom inato'."
+        width={1200}
+        height={630}
+        priority
+      />
       <p>
         A primeira barreira é mental. A maioria dos alunos reprova em exatas não por falta de capacidade, mas por adotar
         uma abordagem passiva.
@@ -36,6 +53,13 @@ export const GuiaEstudoExatas = () => {
       </p>
 
       <h2>O Método de Estudo Ativo em 4 Passos</h2>
+      <Image
+        src="/images/blog/guia-estudo-exatas-univesp/metodo_estudo.png"
+        alt="Uma representação visual do processo de construção, tijolo por tijolo, ou um fluxo de 4 passos."
+        width={1200}
+        height={630}
+        priority
+      />
       <p>
         Para construir esse "músculo", você precisa de um sistema. Esqueça o ciclo "assistir à aula -{">"} fazer a prova".
         Adote este método:
@@ -116,6 +140,13 @@ export const GuiaEstudoExatas = () => {
       </ol>
 
       <h2>Dicas Específicas para Código (Programação)</h2>
+      <Image
+        src="/images/blog/guia-estudo-exatas-univesp/dicas_especificas_para_codigo.png"
+        alt="A mentalidade de 'debugar' e o processo de tentativa e erro na programação"
+        width={1200}
+        height={630}
+        priority
+      />
       <p>
         Aprender a programar tem uma particularidade: você precisa "falar" a língua do computador.
       </p>
