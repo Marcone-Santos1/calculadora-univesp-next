@@ -14,6 +14,10 @@ import {ArticleLayout} from "@/components/blog/ArticleLayout";
 import {GuiaAVA} from "@/components/blog/articles/AvaGuide";
 import {OQueCaiNaProva} from "@/components/blog/articles/OQueCaiNaProva";
 import {VestibularUnivesp} from "@/components/blog/articles/VestibularUnivesp";
+import {GuiaTCC} from "@/components/blog/articles/GuiaTCC";
+import {GuiaEstudoExatas} from "@/components/blog/articles/GuiaEstudoExatas";
+import {GuiaEixosUnivesp} from "@/components/blog/articles/GuiaEixosUnivesp";
+import {ManualNaoEscrito} from "@/components/blog/articles/ManualNaoEscrito";
 
 // Mapeia o slug do artigo ao seu componente React
 const articleComponents: Record<string, ComponentType> = {
@@ -26,6 +30,10 @@ const articleComponents: Record<string, ComponentType> = {
   'guia-ava-univesp': GuiaAVA,
   'o-que-cai-na-prova-univesp': OQueCaiNaProva,
   'o-que-estudar-vestibular-univesp': VestibularUnivesp,
+  'guia-tcc-univesp-aprovacao': GuiaTCC,
+  'guia-estudo-exatas-univesp': GuiaEstudoExatas,
+  'guia-eixos-univesp-ciclo-basico': GuiaEixosUnivesp,
+  'manual-nao-escrito-aluno-univesp': ManualNaoEscrito,
 };
 
 // Função para gerar metadados dinâmicos (SEO)
