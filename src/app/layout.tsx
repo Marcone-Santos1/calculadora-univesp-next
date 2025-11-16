@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   other: {
     'google-site-verification': '68Q5UEjHZo-zjJfY_P_3H9IbrIOeMVNDq16SBlTHrWA'
-  }
+  },
   openGraph: {
     title: 'Calculadora Univesp | Média, Exame e Simulação',
     description: 'A ferramenta mais completa para os alunos da UNIVESP calcularem suas notas.',
