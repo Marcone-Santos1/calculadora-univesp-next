@@ -1,13 +1,28 @@
 "use client";
 
-import Link from 'next/link'; // Use o Link do Next.js
-import { FaRegMoon, FaRegSun, FaUser } from "react-icons/fa";
-import { useAppContext } from './AppStateProvider'; // Importe o hook
+import Link from 'next/link';
+import { FaRegMoon, FaRegSun, FaUser, FaUserShield } from "react-icons/fa";
+import { useAppContext } from './AppStateProvider';
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useEffect, useState } from 'react';
 
 export const NavBar = () => {
   const { isDarkMode, toggleDarkMode } = useAppContext();
   const { data: session } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetch('/api/check-admin')
+        .then(res => res.json())
+        .then(data => {
+          setIsAdmin(data.isAdmin)
+        })
+        .catch(() => setIsAdmin(false));
+    } else {
+      setIsAdmin(false);
+    }
+  }, [session]);
 
   return (
     <header className="flex items-center justify-around bg-[#F0F7FF] dark:bg-gray-800 p-4 shadow-md">
@@ -19,6 +34,11 @@ export const NavBar = () => {
         <Link href="/questoes" className="text-gray-700 dark:text-gray-300 hover:text-blue-500">Questões</Link>
         <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-blue-500">Blog</Link>
         <Link href="/sobre" className="text-gray-700 dark:text-gray-300 hover:text-blue-500">Sobre</Link>
+        {isAdmin && (
+          <Link href="/admin" className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-semibold flex items-center gap-1">
+            <FaUserShield /> Admin
+          </Link>
+        )}
 
         <button
           onClick={toggleDarkMode}

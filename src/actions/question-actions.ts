@@ -56,7 +56,8 @@ export async function getQuestion(id: string) {
             alternatives: {
                 include: {
                     votes: true
-                }
+                },
+                orderBy: { letter: 'asc' }
             },
             comments: {
                 include: {
