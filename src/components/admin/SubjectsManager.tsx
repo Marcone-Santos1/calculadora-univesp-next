@@ -12,6 +12,8 @@ interface Subject {
     name: string;
     color: string;
     icon: string;
+    createdAt: Date;
+    updatedAt: Date;
     _count: { questions: number };
 }
 

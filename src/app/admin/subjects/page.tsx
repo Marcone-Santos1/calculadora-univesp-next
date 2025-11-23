@@ -10,7 +10,7 @@ export default async function AdminSubjectsPage() {
                 Subjects Management
             </h1>
 
-            <SubjectsManager subjects={subjects} />
+            <SubjectsManager subjects={subjects as any} />
         </div>
     );
 }

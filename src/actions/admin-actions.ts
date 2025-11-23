@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server';
 
 import { prisma } from '@/lib/prisma';
@@ -6,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 
 // ============ Question Management ============
 
-export async function getAdminQuestions(search?: string, verified?: boolean) {
+export async function getAdminQuestions(search?: string, verified?: boolean, verificationRequested?: boolean) {
     await requireAdmin();
 
     const where: any = {};
@@ -20,6 +21,10 @@ export async function getAdminQuestions(search?: string, verified?: boolean) {
 
     if (verified !== undefined) {
         where.isVerified = verified;
+    }
+
+    if (verificationRequested !== undefined) {
+        where.verificationRequested = verificationRequested;
     }
 
     const questions = await prisma.question.findMany({
@@ -72,7 +77,10 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
         await prisma.$transaction([
             prisma.question.update({
                 where: { id },
-                data: { isVerified: true }
+                data: {
+                    isVerified: true,
+                    verificationRequested: false // Clear request
+                }
             }),
             prisma.alternative.updateMany({
                 where: { questionId: id },
@@ -87,7 +95,10 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
         // Unverifying or toggling without specific answer (fallback)
         await prisma.question.update({
             where: { id },
-            data: { isVerified: !question.isVerified }
+            data: {
+                isVerified: !question.isVerified,
+                verificationRequested: false // Clear request if verifying
+            }
         });
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server';
 
 import { prisma } from '@/lib/prisma';
@@ -192,5 +193,24 @@ export async function createComment(questionId: string, text: string, parentId?:
         }
     });
 
+
     revalidatePath(`/questoes/${questionId}`);
+}
+
+export async function requestVerification(questionId: string) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized');
+    }
+
+    await prisma.question.update({
+        where: { id: questionId },
+        data: {
+            verificationRequested: true,
+            verificationRequestDate: new Date()
+        }
+    });
+
+    revalidatePath(`/questoes/${questionId}`);
+    revalidatePath('/admin/questions');
 }

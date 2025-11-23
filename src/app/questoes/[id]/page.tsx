@@ -85,7 +85,12 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                             </div>
 
                             <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                                <ValidationButton questionId={question.id} />
+                                <ValidationButton
+                                    questionId={question.id}
+                                    isLoggedIn={!!session}
+                                    isVerified={question.isVerified}
+                                    verificationRequested={question.verificationRequested}
+                                />
                                 <ShareButton questionId={question.id} questionTitle={question.title} />
                             </div>
                         </div>

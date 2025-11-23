@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { FaTrash, FaCheckCircle, FaTimesCircle, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaTrash, FaCheckCircle, FaTimesCircle, FaExternalLinkAlt, FaExclamationCircle } from 'react-icons/fa';
 import { deleteQuestion, toggleQuestionVerification } from '@/actions/admin-actions';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { VerifyQuestionDialog } from '@/components/admin/VerifyQuestionDialog';
@@ -20,6 +20,8 @@ interface Question {
     id: string;
     title: string;
     isVerified: boolean;
+    verificationRequested?: boolean;
+    verificationRequestDate?: Date | null;
     createdAt: Date;
     user: { name: string | null; email: string | null };
     subject: { name: string };
@@ -29,9 +31,11 @@ interface Question {
 
 interface QuestionsListProps {
     questions: Question[];
+    verificationRequests?: Question[];
 }
 
-export function QuestionsList({ questions }: QuestionsListProps) {
+export function QuestionsList({ questions, verificationRequests = [] }: QuestionsListProps) {
+    const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [verifyQuestion, setVerifyQuestion] = useState<Question | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -83,10 +87,38 @@ export function QuestionsList({ questions }: QuestionsListProps) {
         });
     };
 
+    const displayQuestions = activeTab === 'all' ? questions : verificationRequests;
+
     return (
         <>
+            <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700 mb-6">
+                <button
+                    onClick={() => setActiveTab('all')}
+                    className={`pb-2 px-1 font-medium transition-colors relative ${activeTab === 'all'
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                >
+                    All Questions
+                </button>
+                <button
+                    onClick={() => setActiveTab('requests')}
+                    className={`pb-2 px-1 font-medium transition-colors relative flex items-center gap-2 ${activeTab === 'requests'
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                >
+                    Verification Requests
+                    {verificationRequests.length > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                            {verificationRequests.length}
+                        </span>
+                    )}
+                </button>
+            </div>
+
             <div className="space-y-4">
-                {questions.map((question) => (
+                {displayQuestions.map((question) => (
                     <div
                         key={question.id}
                         className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
@@ -105,6 +137,11 @@ export function QuestionsList({ questions }: QuestionsListProps) {
                                     {question.isVerified && (
                                         <span className="px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-semibold rounded">
                                             Verified
+                                        </span>
+                                    )}
+                                    {question.verificationRequested && !question.isVerified && (
+                                        <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 text-xs font-semibold rounded flex items-center gap-1">
+                                            <FaExclamationCircle /> Requested
                                         </span>
                                     )}
                                 </div>
@@ -144,7 +181,7 @@ export function QuestionsList({ questions }: QuestionsListProps) {
                         </div>
                     </div>
                 ))}
-                {questions.length === 0 && (
+                {displayQuestions.length === 0 && (
                     <p className="text-center text-gray-500 py-8">No questions found</p>
                 )}
             </div>

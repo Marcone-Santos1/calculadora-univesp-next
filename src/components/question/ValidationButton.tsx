@@ -1,32 +1,66 @@
 'use client';
 
-import { FaExclamationTriangle } from 'react-icons/fa';
+import { useTransition } from 'react';
+import { FaCheckCircle } from 'react-icons/fa';
 import { useToast } from '@/components/ToastProvider';
+import { requestVerification } from '@/actions/question-actions';
 
 interface ValidationButtonProps {
     questionId: string;
+    isLoggedIn: boolean;
+    isVerified: boolean;
+    verificationRequested: boolean;
 }
 
-export function ValidationButton({ questionId }: ValidationButtonProps) {
+export function ValidationButton({ questionId, isLoggedIn, isVerified, verificationRequested }: ValidationButtonProps) {
     const { showToast } = useToast();
+    const [isPending, startTransition] = useTransition();
 
     const handleRequestValidation = () => {
-        // TODO: Implement server action to request validation
-        // For now, just show a toast
-        showToast('Solicitação de validação enviada! Um moderador irá revisar em breve.', 'success');
+        if (!isLoggedIn) {
+            showToast('Você precisa estar logado para pedir validação.', 'warning');
+            return;
+        }
 
-        // In the future, this could:
-        // 1. Create a notification for moderators
-        // 2. Mark the question as "pending validation"
-        // 3. Send an email to moderators
+        startTransition(async () => {
+            try {
+                await requestVerification(questionId);
+                showToast('Pedido de validação enviado com sucesso!', 'success');
+            } catch (error) {
+                showToast('Erro ao enviar pedido de validação.', 'error');
+            }
+        });
     };
+
+    if (isVerified) {
+        return (
+            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium px-4 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <FaCheckCircle />
+                <span>Verificada</span>
+            </div>
+        );
+    }
+
+    if (verificationRequested) {
+        return (
+            <button
+                disabled
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 rounded-lg font-medium cursor-not-allowed opacity-80"
+            >
+                <FaCheckCircle />
+                <span>Validação Solicitada</span>
+            </button>
+        );
+    }
 
     return (
         <button
             onClick={handleRequestValidation}
-            className="text-sm text-gray-500 hover:text-orange-500 flex items-center gap-2 transition-colors"
+            disabled={isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg font-medium transition-colors disabled:opacity-50"
         >
-            <FaExclamationTriangle /> Pedir Validação
+            <FaCheckCircle />
+            <span>Pedir Validação</span>
         </button>
     );
 }
