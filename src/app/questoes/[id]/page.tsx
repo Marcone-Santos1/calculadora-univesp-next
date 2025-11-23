@@ -4,8 +4,9 @@ import { getQuestion, voteOnAlternative } from '@/actions/question-actions';
 import { AlternativeItem } from '@/components/question/AlternativeItem';
 import { ShareButton } from '@/components/question/ShareButton';
 import { ValidationButton } from '@/components/question/ValidationButton';
+import { CommentSection } from '@/components/question/CommentSection';
 import Link from 'next/link';
-import { FaArrowLeft, FaCheckCircle, FaUser } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
 
 // Server Component
@@ -89,34 +90,13 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                             </div>
                         </div>
 
-                        {/* Comments Section */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                                Comentários e Explicações ({question.comments.length})
-                            </h3>
 
-                            <div className="space-y-6">
-                                {question.comments.map((comment: any) => (
-                                    <div key={comment.id} className="flex gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                                            <FaUser className="text-gray-500 dark:text-gray-400" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-gray-900 dark:text-white">{comment.userName}</span>
-                                                <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
-                                            </div>
-                                            <p className="text-gray-700 dark:text-gray-300 text-sm">
-                                                {comment.text}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {question.comments.length === 0 && (
-                                    <p className="text-gray-500 text-center py-4">Nenhum comentário ainda.</p>
-                                )}
-                            </div>
-                        </div>
+                        {/* Comments Section */}
+                        <CommentSection
+                            questionId={question.id}
+                            comments={question.comments}
+                            isLoggedIn={!!session}
+                        />
                     </div>
 
                     {/* Sidebar */}

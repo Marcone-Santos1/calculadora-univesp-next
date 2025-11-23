@@ -123,4 +123,9 @@ model Comment {
   
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  // For nested replies
+  parentId   String?
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[] @relation("CommentReplies")
 }

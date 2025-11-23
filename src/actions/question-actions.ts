@@ -60,7 +60,16 @@ export async function getQuestion(id: string) {
             },
             comments: {
                 include: {
-                    user: true
+                    user: true,
+                    replies: {
+                        include: {
+                            user: true
+                        },
+                        orderBy: { createdAt: 'asc' }
+                    }
+                },
+                where: {
+                    parentId: null // Only get top-level comments
                 },
                 orderBy: { createdAt: 'asc' }
             }
@@ -81,7 +90,11 @@ export async function getQuestion(id: string) {
         })),
         comments: question.comments.map(c => ({
             ...c,
-            userName: c.user.name || 'Anônimo'
+            userName: c.user.name || 'Anônimo',
+            replies: c.replies.map(r => ({
+                ...r,
+                userName: r.user.name || 'Anônimo'
+            }))
         }))
     };
 }
@@ -157,4 +170,26 @@ export async function voteOnAlternative(alternativeId: string) {
     });
 
     revalidatePath(`/questoes`);
+}
+
+export async function createComment(questionId: string, text: string, parentId?: string) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized');
+    }
+
+    if (!text || text.trim().length === 0) {
+        throw new Error('Comment text cannot be empty');
+    }
+
+    await prisma.comment.create({
+        data: {
+            text: text.trim(),
+            userId: session.user.id,
+            questionId,
+            parentId: parentId || null
+        }
+    });
+
+    revalidatePath(`/questoes/${questionId}`);
 }
