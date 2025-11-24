@@ -1,13 +1,15 @@
-import type {Metadata} from 'next';
-import {Inter} from 'next/font/google';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
-import {NavBar} from '@/components/NavBar';
-import {AppStateProvider} from '@/components/AppStateProvider';
-import {GoogleAnalytics} from '@next/third-parties/google'
+import { NavBar } from '@/components/NavBar';
+import { AppStateProvider } from '@/components/AppStateProvider';
+import { SessionProvider } from '@/components/SessionProvider';
+import { ToastProvider } from '@/components/ToastProvider';
+import { GoogleAnalytics } from '@next/third-parties/google'
 import AdsRefresher from "@/components/AdsRefresher";
-import {AdsenseScript} from "@/components/AdsenseScript";
+import { AdsenseScript } from "@/components/AdsenseScript";
 
-const inter = Inter({subsets: ['latin']});
+const inter = Inter({ subsets: ['latin'] });
 
 
 export const metadata: Metadata = {
@@ -42,21 +44,25 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-                                     children,
-                                   }: {
+  children,
+}: {
   children: React.ReactNode;
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-    <GoogleAnalytics gaId="G-3141WNQQZQ" />
-    <AdsenseScript />
-    <body className={inter.className}>
-    <AppStateProvider>
-      <NavBar/>
-      <main>{children}</main>
-      <AdsRefresher />
-    </AppStateProvider>
-    </body>
+      <GoogleAnalytics gaId="G-3141WNQQZQ" />
+      <AdsenseScript />
+      <body className={inter.className}>
+        <ToastProvider>
+          <SessionProvider>
+            <AppStateProvider>
+              <NavBar />
+              <main>{children}</main>
+              <AdsRefresher />
+            </AppStateProvider>
+          </SessionProvider>
+        </ToastProvider>
+      </body>
     </html>
   );
 }
