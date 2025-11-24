@@ -35,10 +35,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                             </span>
                         </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${question.subject?.color
-                            ? 'bg-opacity-10 text-opacity-100'
-                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                        }`} style={question.subject?.color ? { backgroundColor: `${question.subject.color}20`, color: question.subject.color } : {}}>
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mb-2">
                         {question.subjectName}
                     </span>
                 </div>

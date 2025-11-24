@@ -11,4 +11,9 @@ declare module "next-auth" {
     interface User {
         isAdmin: boolean;
     }
+
+    interface JWT {
+        id: string;
+        isAdmin: boolean;
+    }
 }
