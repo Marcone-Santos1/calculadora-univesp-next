@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getAdminSubjects } from '@/actions/admin-actions';
 import { SubjectsManager } from '@/components/admin/SubjectsManager';
 

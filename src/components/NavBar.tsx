@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { FaRegMoon, FaRegSun, FaUser, FaUserShield } from "react-icons/fa";
 import { useAppContext } from './AppStateProvider';
 import { signIn, signOut, useSession } from "next-auth/react";
@@ -51,7 +52,13 @@ export const NavBar = () => {
         {session ? (
           <div className="flex items-center gap-3 ml-4">
             {session.user?.image ? (
-              <img src={session.user.image} alt="Profile" className="w-8 h-8 rounded-full" />
+              <Image
+                src={session.user.image}
+                alt="Profile"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
             ) : (
               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
                 <FaUser />

@@ -31,7 +31,7 @@ export function UsersList({ users }: UsersListProps) {
                 await toggleUserAdmin(id);
                 showToast('Admin status updated', 'success');
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Failed to update admin status', 'error');
             }
         });

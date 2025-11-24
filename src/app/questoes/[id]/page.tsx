@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getQuestion, voteOnAlternative } from '@/actions/question-actions';
@@ -89,7 +90,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                                     questionId={question.id}
                                     isLoggedIn={!!session}
                                     isVerified={question.isVerified}
-                                    verificationRequested={question.verificationRequested}
+                                    verificationRequested={(question as any).verificationRequested}
                                 />
                                 <ShareButton questionId={question.id} questionTitle={question.title} />
                             </div>

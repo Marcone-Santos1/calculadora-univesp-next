@@ -16,7 +16,7 @@ export async function GET() {
         });
 
         return NextResponse.json({ isAdmin: user?.isAdmin || false });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ isAdmin: false });
     }
 }

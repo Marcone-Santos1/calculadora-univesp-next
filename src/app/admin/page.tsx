@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getAdminStats } from '@/actions/admin-actions';
 import { StatsCard } from '@/components/admin/StatsCard';
 import { FaUsers, FaQuestionCircle, FaComments, FaCheckCircle } from 'react-icons/fa';

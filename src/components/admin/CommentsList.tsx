@@ -33,7 +33,7 @@ export function CommentsList({ comments }: CommentsListProps) {
                 await deleteComment(id);
                 showToast('Comment deleted successfully', 'success');
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Failed to delete comment', 'error');
             }
         });

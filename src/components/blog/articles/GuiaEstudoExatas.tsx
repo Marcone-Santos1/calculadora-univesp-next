@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from "next/image";
 
-import Cover from '/public/images/blog/guia-estudo-exatas-univesp/cover.png'
+
 
 export const GuiaEstudoExatas = () => {
   return (
@@ -169,10 +169,10 @@ export const GuiaEstudoExatas = () => {
       </ul>
 
       <div className="bg-blue-100 dark:bg-blue-800 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 my-6"
-           role="alert">
+        role="alert">
         <p className="font-bold">Calcule seu Esforço</p>
         <p>Todo esse esforço precisa de um alvo. Use a <Link href="https://univesp-calculadora.vercel.app/"
-                                                             className="font-semibold underline">Calculadora
+          className="font-semibold underline">Calculadora
           Univesp</Link> para saber exatamente quanto suas Atividades Avaliativas valem e qual nota você precisa na
           prova. Ver o número exato te ajuda a dosar o esforço e a manter a motivação neste método rigoroso.</p>
       </div>

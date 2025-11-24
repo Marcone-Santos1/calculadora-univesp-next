@@ -9,7 +9,7 @@ interface ValidationButtonProps {
     questionId: string;
     isLoggedIn: boolean;
     isVerified: boolean;
-    verificationRequested: boolean;
+    verificationRequested?: boolean;
 }
 
 export function ValidationButton({ questionId, isLoggedIn, isVerified, verificationRequested }: ValidationButtonProps) {

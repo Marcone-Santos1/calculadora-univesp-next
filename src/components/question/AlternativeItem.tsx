@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useTransition } from 'react';
@@ -57,7 +58,7 @@ export const AlternativeItem: React.FC<AlternativeItemProps> = ({
                 await onVote(alternative.id);
                 showToast('Voto registrado com sucesso!', 'success');
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Erro ao registrar voto. Tente novamente.', 'error');
             }
         });

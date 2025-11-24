@@ -47,7 +47,7 @@ export function CommentSection({ questionId, comments, isLoggedIn }: CommentSect
                 setNewComment('');
                 showToast('Comentário adicionado com sucesso!', 'success');
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Erro ao adicionar comentário.', 'error');
             }
         });
@@ -71,7 +71,7 @@ export function CommentSection({ questionId, comments, isLoggedIn }: CommentSect
                 setReplyingTo(null);
                 showToast('Resposta adicionada com sucesso!', 'success');
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Erro ao adicionar resposta.', 'error');
             }
         });

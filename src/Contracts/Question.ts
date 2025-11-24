@@ -21,11 +21,17 @@ export interface Question {
     subjectId: string;
     subjectName: string;
     week?: string; // e.g., "Semana 1"
-    createdAt: string;
+    createdAt: Date;
     userId: string;
     userName: string;
+    subject?: {
+        name: string;
+        color?: string | null;
+        icon?: string | null;
+    };
     alternatives: Alternative[];
     comments: Comment[];
     isVerified: boolean;
     views: number;
+    verificationRequested?: boolean;
 }

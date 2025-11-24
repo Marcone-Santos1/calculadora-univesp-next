@@ -48,7 +48,7 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                 await deleteQuestion(id);
                 showToast('Question deleted successfully', 'success');
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Failed to delete question', 'error');
             }
         });
@@ -65,7 +65,7 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                     await toggleQuestionVerification(question.id);
                     showToast('Question unverified', 'success');
                     router.refresh();
-                } catch (error) {
+                } catch {
                     showToast('Failed to unverify question', 'error');
                 }
             });
@@ -81,7 +81,7 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                 showToast('Question verified successfully', 'success');
                 setVerifyQuestion(null);
                 router.refresh();
-            } catch (error) {
+            } catch {
                 showToast('Failed to verify question', 'error');
             }
         });
@@ -95,8 +95,8 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                 <button
                     onClick={() => setActiveTab('all')}
                     className={`pb-2 px-1 font-medium transition-colors relative ${activeTab === 'all'
-                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                 >
                     All Questions
@@ -104,8 +104,8 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                 <button
                     onClick={() => setActiveTab('requests')}
                     className={`pb-2 px-1 font-medium transition-colors relative flex items-center gap-2 ${activeTab === 'requests'
-                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
                 >
                     Verification Requests
@@ -162,8 +162,8 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                                     onClick={() => handleToggleVerification(question)}
                                     disabled={isPending}
                                     className={`p-2 rounded-lg transition-colors ${question.isVerified
-                                            ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-600 hover:bg-orange-200 dark:hover:bg-orange-900/30'
-                                            : 'bg-green-100 dark:bg-green-900/20 text-green-600 hover:bg-green-200 dark:hover:bg-green-900/30'
+                                        ? 'bg-orange-100 dark:bg-orange-900/20 text-orange-600 hover:bg-orange-200 dark:hover:bg-orange-900/30'
+                                        : 'bg-green-100 dark:bg-green-900/20 text-green-600 hover:bg-green-200 dark:hover:bg-green-900/30'
                                         }`}
                                     title={question.isVerified ? 'Unverify' : 'Verify'}
                                 >

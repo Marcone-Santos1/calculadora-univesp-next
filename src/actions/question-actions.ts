@@ -214,3 +214,16 @@ export async function requestVerification(questionId: string) {
     revalidatePath(`/questoes/${questionId}`);
     revalidatePath('/admin/questions');
 }
+
+export async function getSubjectsWithCounts() {
+    const subjects = await prisma.subject.findMany({
+        include: {
+            _count: {
+                select: { questions: true }
+            }
+        },
+        orderBy: { name: 'asc' }
+    });
+
+    return subjects;
+}
