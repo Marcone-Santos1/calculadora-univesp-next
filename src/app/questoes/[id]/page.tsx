@@ -58,7 +58,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                                     </h1>
                                 </div>
                                 {question.isVerified && (
-                                    <div className="flex flex-col items-end text-green-600 dark:text-green-400">
+                                    <div className="flex flex-col items-center text-green-600 dark:text-green-400">
                                         <FaCheckCircle className="text-2xl" />
                                         <span className="text-xs font-bold">Verificada</span>
                                     </div>
