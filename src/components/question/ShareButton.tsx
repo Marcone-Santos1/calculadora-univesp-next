@@ -22,7 +22,7 @@ export function ShareButton({ questionId, questionTitle }: ShareButtonProps) {
                     url: url,
                 });
                 showToast('Compartilhado com sucesso!', 'success');
-            } catch (error) {
+            } catch {
                 // User cancelled share
             }
         } else {
@@ -30,7 +30,7 @@ export function ShareButton({ questionId, questionTitle }: ShareButtonProps) {
             try {
                 await navigator.clipboard.writeText(url);
                 showToast('Link copiado para a área de transferência!', 'success');
-            } catch (error) {
+            } catch {
                 showToast('Erro ao copiar link.', 'error');
             }
         }

@@ -26,7 +26,7 @@ export function ValidationButton({ questionId, isLoggedIn, isVerified, verificat
             try {
                 await requestVerification(questionId);
                 showToast('Pedido de validação enviado com sucesso!', 'success');
-            } catch (error) {
+            } catch {
                 showToast('Erro ao enviar pedido de validação.', 'error');
             }
         });
