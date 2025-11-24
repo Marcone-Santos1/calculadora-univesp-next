@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-export async function getQuestions(query?: string, subjectId?: string) {
+export async function getQuestions(query?: string, subjectId?: string, verified?: string) {
     const where: any = {};
 
     if (query) {
@@ -17,6 +17,12 @@ export async function getQuestions(query?: string, subjectId?: string) {
 
     if (subjectId) {
         where.subjectId = subjectId;
+    }
+
+    if (verified === 'true') {
+        where.isVerified = true;
+    } else if (verified === 'false') {
+        where.isVerified = false;
     }
 
     const questions = await prisma.question.findMany({
@@ -113,7 +119,7 @@ export async function createQuestion(formData: FormData) {
     const week = formData.get('week') as string;
     const alternatives = JSON.parse(formData.get('alternatives') as string);
 
-    await prisma.question.create({
+    const question = await prisma.question.create({
         data: {
             title,
             text,
@@ -130,6 +136,8 @@ export async function createQuestion(formData: FormData) {
     });
 
     revalidatePath('/questoes');
+
+    return { questionId: question.id };
 }
 
 export async function voteOnAlternative(alternativeId: string) {
