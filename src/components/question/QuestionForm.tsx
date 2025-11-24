@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createQuestion } from '@/actions/question-actions';
-import { FaImage } from 'react-icons/fa';
+
 
 interface Subject {
     id: string;
