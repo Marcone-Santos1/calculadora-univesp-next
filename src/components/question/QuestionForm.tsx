@@ -80,11 +80,6 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     required
                 />
-                <div className="mt-2 flex gap-2">
-                    <button type="button" className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
-                        <FaImage /> Adicionar Imagem
-                    </button>
-                </div>
             </div>
 
             <div className="mb-8">
