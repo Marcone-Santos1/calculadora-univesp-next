@@ -97,9 +97,13 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     );
 };
 
+import { Loading } from '@/components/Loading';
+
+// ...
+
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }) {
     return (
-        <Suspense fallback={<div className="p-8 text-center">Carregando...</div>}>
+        <Suspense fallback={<Loading />}>
             <QuestionsContent searchParams={searchParams} />
         </Suspense>
     );

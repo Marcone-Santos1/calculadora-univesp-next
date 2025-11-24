@@ -135,10 +135,14 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
     );
 };
 
+import { Loading } from '@/components/Loading';
+
+// ...
+
 export default async function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
     return (
-        <Suspense fallback={<div className="p-8 text-center">Carregando...</div>}>
+        <Suspense fallback={<Loading />}>
             <QuestionDetailContent id={resolvedParams.id} />
         </Suspense>
     );

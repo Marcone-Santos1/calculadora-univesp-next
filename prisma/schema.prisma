@@ -109,7 +109,7 @@ model Vote {
   user          User        @relation(fields: [userId], references: [id])
   
   alternativeId String
-  alternative   Alternative @relation(fields: [alternativeId], references: [id])
+  alternative   Alternative @relation(fields: [alternativeId], references: [id], onDelete: Cascade)
   
   createdAt     DateTime    @default(now())
 
