@@ -6,6 +6,7 @@ import { Question } from '@/Contracts/Question';
 import { FaCheckCircle, FaComment, FaEye, FaClock, FaUser, FaCheck } from 'react-icons/fa';
 import { FavoriteButton } from './FavoriteButton';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import ReactMarkdown from 'react-markdown';
 
 interface QuestionCardProps {
     question: Question;
@@ -60,9 +61,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                         {question.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 leading-relaxed">
-                        {question.text}
-                    </p>
+                    <div className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 leading-relaxed prose dark:prose-invert prose-sm max-w-none">
+                        <ReactMarkdown
+                            components={{
+                                // Override elements to prevent layout issues in preview
+                                img: () => null, // Hide images in preview
+                                h1: ({ children }: { children?: React.ReactNode }) => <span className="font-bold">{children}</span>,
+                                h2: ({ children }: { children?: React.ReactNode }) => <span className="font-bold">{children}</span>,
+                                h3: ({ children }: { children?: React.ReactNode }) => <span className="font-bold">{children}</span>,
+                                p: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
+                            }}
+                        >
+                            {question.text}
+                        </ReactMarkdown>
+                    </div>
                 </div>
 
                 {/* Footer: Stats & Status */}
