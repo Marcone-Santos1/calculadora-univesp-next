@@ -11,6 +11,38 @@ import { QuestionViewTracker } from '@/components/question/QuestionViewTracker';
 import Link from 'next/link';
 import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
+import { Metadata } from 'next';
+import { Loading } from '@/components/Loading';
+
+// Generate Dynamic Metadata
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const resolvedParams = await params;
+    const question = await getQuestion(resolvedParams.id);
+
+    if (!question) {
+        return {
+            title: 'Questão não encontrada | Calculadora Univesp',
+            description: 'A questão que você procura não foi encontrada.',
+        };
+    }
+
+    const description = question.text.substring(0, 155) + (question.text.length > 155 ? '...' : '');
+
+    return {
+        title: `${question.title} | Calculadora Univesp`,
+        description: description,
+        openGraph: {
+            title: question.title,
+            description: description,
+            type: 'article',
+            url: `https://univesp-calculadora.vercel.app/questoes/${question.id}`,
+            siteName: 'Calculadora Univesp',
+        },
+        alternates: {
+            canonical: `https://univesp-calculadora.vercel.app/questoes/${question.id}`,
+        },
+    };
+}
 
 // Server Component
 const QuestionDetailContent = async ({ id }: { id: string }) => {
@@ -39,8 +71,42 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
         }
     }
 
+    // JSON-LD Structured Data for Q&A Page
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'QAPage',
+        mainEntity: {
+            '@type': 'Question',
+            name: question.title,
+            text: question.text,
+            answerCount: question.comments.length,
+            upvoteCount: totalVotes,
+            dateCreated: question.createdAt.toISOString(),
+            author: {
+                '@type': 'Person',
+                name: question.userName || 'Usuário da Univesp',
+            },
+            suggestedAnswer: question.comments.map((comment: any) => ({
+                '@type': 'Answer',
+                text: comment.content,
+                dateCreated: comment.createdAt.toISOString(),
+                upvoteCount: 0, // Assuming no comment voting yet
+                author: {
+                    '@type': 'Person',
+                    name: comment.userName || 'Usuário',
+                },
+            })),
+        },
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+            {/* Structured Data Script */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+
             <ViewTracker questionId={id} />
             <QuestionViewTracker questionId={id} />
 
@@ -49,120 +115,119 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                     <FaArrowLeft /> Voltar para Questões
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex-1">
-                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mb-2">
-                                        {question.subjectName}
-                                    </span>
-                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {question.title}
-                                    </h1>
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+                    {/* Header */}
+                    <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+                                {question.subjectName}
+                            </span>
+                            <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm font-medium">
+                                Semana {question.week}
+                            </span>
+                            {question.isVerified && (
+                                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium flex items-center gap-1">
+                                    <FaCheckCircle className="text-xs" /> Verificada
+                                </span>
+                            )}
+                        </div>
 
-                                    {/* Metadata */}
-                                    <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
-                                        <div className="flex items-center gap-1.5">
-                                            <FaUser className="text-xs" />
-                                            <span>{question.userName}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <FaClock className="text-xs" />
-                                            <span>{new Date(question.createdAt).toLocaleDateString('pt-BR')}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <FaEye className="text-xs" />
-                                            <span>{question.views} {question.views === 1 ? 'visualização' : 'visualizações'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <FaComment className="text-xs" />
-                                            <span>{question.comments.length} {question.comments.length === 1 ? 'comentário' : 'comentários'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                {question.isVerified && (
-                                    <div className="flex flex-col items-center text-green-600 dark:text-green-400 ml-4">
-                                        <FaCheckCircle className="text-2xl" />
-                                        <span className="text-xs font-bold">Verificada</span>
-                                    </div>
-                                )}
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                            {question.title}
+                        </h1>
+
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-1">
+                                <FaUser />
+                                <span>{question.userName || 'Anônimo'}</span>
                             </div>
-
-                            <div className="prose dark:prose-invert max-w-none mb-8 text-gray-800 dark:text-gray-200">
-                                <p>{question.text}</p>
+                            <div className="flex items-center gap-1">
+                                <FaClock />
+                                <span>{new Date(question.createdAt).toLocaleDateString('pt-BR')}</span>
                             </div>
-
-                            <div className="space-y-3">
-                                <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-2">Alternativas</h3>
-                                {question.alternatives.map((alt: any) => (
-                                    <AlternativeItem
-                                        key={alt.id}
-                                        alternative={alt}
-                                        totalVotes={totalVotes}
-                                        onVote={voteOnAlternative}
-                                        hasVoted={userHasVoted}
-                                        isVerified={question.isVerified}
-                                        isLoggedIn={!!session}
-                                        userVotedId={userVotedAlternativeId}
-                                    />
-                                ))}
+                            <div className="flex items-center gap-1">
+                                <FaEye />
+                                <span>{question.views} visualizações</span>
                             </div>
+                            <div className="flex items-center gap-1">
+                                <FaComment />
+                                <span>{question.comments.length} comentários</span>
+                            </div>
+                        </div>
+                    </div>
 
-                            <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                    {/* Content */}
+                    <div className="p-6 md:p-8">
+                        <div className="prose dark:prose-invert max-w-none mb-8">
+                            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
+                                {question.text}
+                            </p>
+                        </div>
+
+                        {/* Alternatives */}
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                                Alternativas
+                            </h3>
+                            <div className="grid gap-3">
+                                {question.alternatives.map((alternative: any) => {
+                                    return (
+                                        <AlternativeItem
+                                            key={alternative.id}
+                                            alternative={alternative}
+                                            totalVotes={totalVotes}
+                                            onVote={async (id) => {
+                                                'use server';
+                                                if (!session?.user?.id) return;
+                                                await voteOnAlternative(id);
+                                            }}
+                                            hasVoted={userHasVoted}
+                                            isVerified={question.isVerified}
+                                            isLoggedIn={!!session}
+                                            userVotedId={userVotedAlternativeId}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                            <ShareButton
+                                questionId={question.id}
+                                questionTitle={question.title}
+                            />
+
+                            {/* Only show validation button for admins or trusted users - simplified for now */}
+                            {session?.user?.isAdmin && (
                                 <ValidationButton
                                     questionId={question.id}
-                                    isLoggedIn={!!session}
                                     isVerified={question.isVerified}
+                                    isLoggedIn={!!session}
                                     verificationRequested={(question as any).verificationRequested}
                                 />
-                                <ShareButton questionId={question.id} questionTitle={question.title} />
-                            </div>
-                        </div>
-
-
-                        {/* Comments Section */}
-                        <CommentSection
-                            questionId={question.id}
-                            comments={question.comments}
-                            isLoggedIn={!!session}
-                        />
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-4">Estatísticas</h3>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Visualizações</span>
-                                    <span className="font-medium dark:text-white">{question.views}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Total de Votos</span>
-                                    <span className="font-medium dark:text-white">{totalVotes}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Criado por</span>
-                                    <span className="font-medium dark:text-white">{question.userName}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Semana</span>
-                                    <span className="font-medium dark:text-white">{question.week || 'N/A'}</span>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
+                </div>
+
+                {/* Comments Section */}
+                <div className="mt-8">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <FaComment className="text-blue-500" />
+                        Discussão ({question.comments.length})
+                    </h2>
+
+                    <CommentSection
+                        questionId={question.id}
+                        comments={question.comments}
+                        isLoggedIn={!!session}
+                    />
                 </div>
             </div>
         </div>
     );
 };
-
-import { Loading } from '@/components/Loading';
-
-// ...
 
 export default async function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
