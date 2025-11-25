@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FaUser, FaReply } from 'react-icons/fa';
 import { ReportButton } from '../report/ReportButton';
+import ReactMarkdown from 'react-markdown';
 
 interface Comment {
     id: string;
@@ -52,9 +53,9 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
                         </span>
                         <ReportButton commentId={comment.id} />
                     </div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap break-words">
-                        {comment.text}
-                    </p>
+                    <div className="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-gray-300 break-words leading-relaxed">
+                        <ReactMarkdown>{comment.text}</ReactMarkdown>
+                    </div>
 
                     <button
                         onClick={() => setIsReplying(!isReplying)}

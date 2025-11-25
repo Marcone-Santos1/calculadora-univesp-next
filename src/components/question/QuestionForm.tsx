@@ -6,6 +6,12 @@ import { FaSearch, FaTimes, FaChevronDown, FaExclamationTriangle } from 'react-i
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import dynamic from 'next/dynamic';
+
+const MarkdownEditor = dynamic(
+    () => import('@/components/editor/MarkdownEditor').then((mod) => mod.MarkdownEditor),
+    { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 dark:bg-gray-700 animate-pulse rounded-lg" /> }
+);
 
 interface Subject {
     id: string;
@@ -259,15 +265,16 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Detalhes da Questão *
                     </label>
-                    <textarea
-                        name="text"
-                        rows={6}
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="Cole o texto da questão aqui. Suporta Markdown básico."
-                        className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
+                    <div className="prose dark:prose-invert max-w-none">
+                        <MarkdownEditor
+                            value={text}
+                            onChange={setText}
+                            height={400}
+                            placeholder="Cole o texto da questão aqui. Suporta Markdown e imagens (cole ou arraste)."
+                        />
+                        {/* Hidden input for form submission if needed, but we use state in handleSubmit */}
+                        <input type="hidden" name="text" value={text} />
+                    </div>
                 </div>
 
                 <div className="mb-8">

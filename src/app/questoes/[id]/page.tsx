@@ -9,6 +9,7 @@ import { CommentSection } from '@/components/question/CommentSection';
 import { ViewTracker } from '@/components/question/ViewTracker';
 import { QuestionViewTracker } from '@/components/question/QuestionViewTracker';
 import { ReportButton } from '@/components/report/ReportButton';
+import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
@@ -160,10 +161,8 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
 
                     {/* Content */}
                     <div className="p-6 md:p-8">
-                        <div className="prose dark:prose-invert max-w-none mb-8">
-                            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
-                                {question.text}
-                            </p>
+                        <div className="prose dark:prose-invert max-w-none mb-8 text-gray-700 dark:text-gray-300 leading-relaxed break-words">
+                            <ReactMarkdown>{question.text}</ReactMarkdown>
                         </div>
 
                         {/* Alternatives */}
@@ -201,7 +200,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                                 isLoggedIn={!!session}
                                 verificationRequested={(question as any).verificationRequested}
                             />
-                            
+
                             <ShareButton
                                 questionId={question.id}
                                 questionTitle={question.title}
