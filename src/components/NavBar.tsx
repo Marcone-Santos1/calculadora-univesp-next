@@ -72,6 +72,9 @@ export const NavBar = () => {
                     <FaUser />
                   </div>
                 )}
+                <Link href="/perfil" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                  Perfil
+                </Link>
                 <button
                   onClick={() => signOut()}
                   className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
@@ -133,7 +136,11 @@ export const NavBar = () => {
 
               {session ? (
                 <>
-                  <div className="flex items-center gap-3 px-4 py-2">
+                  <Link
+                    href="/perfil"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
                     {session.user?.image ? (
                       <Image
                         src={session.user.image}
@@ -147,14 +154,16 @@ export const NavBar = () => {
                         <FaUser />
                       </div>
                     )}
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{session.user?.name}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Meu Perfil</span>
+                  </Link>
+                  <div className="px-4 pb-2">
+                    <button
+                      onClick={() => { signOut(); closeMobileMenu(); }}
+                      className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+                    >
+                      Sair
+                    </button>
                   </div>
-                  <button
-                    onClick={() => { signOut(); closeMobileMenu(); }}
-                    className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
-                  >
-                    Sair
-                  </button>
                 </>
               ) : (
                 <button
