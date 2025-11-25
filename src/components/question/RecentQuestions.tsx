@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { FaClock, FaTimes } from 'react-icons/fa';
+import { FaClock } from 'react-icons/fa';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface Question {
