@@ -4,6 +4,7 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { createNotification } from './notification-actions';
 
 export async function getQuestions(
     query?: string,
@@ -115,16 +116,7 @@ export async function getQuestion(id: string) {
             },
             comments: {
                 include: {
-                    user: true,
-                    replies: {
-                        include: {
-                            user: true
-                        },
-                        orderBy: { createdAt: 'asc' }
-                    }
-                },
-                where: {
-                    parentId: null // Only get top-level comments
+                    user: true
                 },
                 orderBy: { createdAt: 'asc' }
             }
@@ -132,6 +124,41 @@ export async function getQuestion(id: string) {
     });
 
     if (!question) return null;
+
+    // Helper to build comment tree
+    const buildCommentTree = (comments: any[]) => {
+        const commentMap = new Map();
+        const roots: any[] = [];
+
+        // Initialize map
+        comments.forEach(comment => {
+            commentMap.set(comment.id, {
+                ...comment,
+                userName: comment.user.name || 'Anônimo',
+                replies: []
+            });
+        });
+
+        // Build tree
+        comments.forEach(comment => {
+            if (comment.parentId) {
+                const parent = commentMap.get(comment.parentId);
+                if (parent) {
+                    parent.replies.push(commentMap.get(comment.id));
+                } else {
+                    // Parent not found (maybe deleted?), treat as root or orphan
+                    // For now, let's treat as root to avoid losing data
+                    roots.push(commentMap.get(comment.id));
+                }
+            } else {
+                roots.push(commentMap.get(comment.id));
+            }
+        });
+
+        return roots;
+    };
+
+    const commentTree = buildCommentTree(question.comments);
 
     return {
         ...question,
@@ -143,14 +170,7 @@ export async function getQuestion(id: string) {
             // Keep votes array for checking if user voted
             votes: alt.votes
         })),
-        comments: question.comments.map(c => ({
-            ...c,
-            userName: c.user.name || 'Anônimo',
-            replies: c.replies.map(r => ({
-                ...r,
-                userName: r.user.name || 'Anônimo'
-            }))
-        }))
+        comments: commentTree
     };
 }
 
@@ -187,6 +207,8 @@ export async function createQuestion(formData: FormData) {
     return { questionId: question.id };
 }
 
+
+
 export async function voteOnAlternative(alternativeId: string) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -199,7 +221,7 @@ export async function voteOnAlternative(alternativeId: string) {
 
     const alternative = await prisma.alternative.findUnique({
         where: { id: alternativeId },
-        select: { questionId: true }
+        include: { question: true } // Include question to get author ID
     });
 
     if (!alternative) throw new Error('Alternative not found');
@@ -226,6 +248,16 @@ export async function voteOnAlternative(alternativeId: string) {
         }
     });
 
+    // Notify question author about the vote
+    if (alternative.question.userId !== session.user.id) {
+        await createNotification({
+            userId: alternative.question.userId,
+            type: 'VOTE',
+            message: `Alguém votou na sua questão: "${alternative.question.title.substring(0, 30)}..."`,
+            link: `/questoes/${alternative.questionId}`
+        });
+    }
+
     revalidatePath(`/questoes`);
 }
 
@@ -239,15 +271,41 @@ export async function createComment(questionId: string, text: string, parentId?:
         throw new Error('Comment text cannot be empty');
     }
 
-    await prisma.comment.create({
+    const comment = await prisma.comment.create({
         data: {
             text: text.trim(),
             userId: session.user.id,
             questionId,
             parentId: parentId || null
+        },
+        include: {
+            question: true,
+            parent: true
         }
     });
 
+    // Notify
+    if (parentId && comment.parent) {
+        // Reply to a comment
+        if (comment.parent.userId !== session.user.id) {
+            await createNotification({
+                userId: comment.parent.userId,
+                type: 'REPLY',
+                message: `Alguém respondeu seu comentário na questão "${comment.question.title.substring(0, 30)}..."`,
+                link: `/questoes/${questionId}`
+            });
+        }
+    } else {
+        // Comment on a question
+        if (comment.question.userId !== session.user.id) {
+            await createNotification({
+                userId: comment.question.userId,
+                type: 'COMMENT',
+                message: `Alguém comentou na sua questão "${comment.question.title.substring(0, 30)}..."`,
+                link: `/questoes/${questionId}`
+            });
+        }
+    }
 
     revalidatePath(`/questoes/${questionId}`);
 }
