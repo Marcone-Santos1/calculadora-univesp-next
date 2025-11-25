@@ -1,0 +1,79 @@
+
+> calculadora-univesp-next@0.1.0 build
+> prisma generate && next build --turbopack
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+Ô£ö Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 306ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+   Ôû▓ Next.js 15.5.5 (Turbopack)
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ÔÜá Slow filesystem detected. The benchmark took 749ms. If /home/maruko/projects/calculadora-univesp-next/.next is a network drive, consider moving it to a local folder. If you have an antivirus enabled, consider excluding your project directory.
+ Ô£ô Finished writing to disk in 287ms
+ Ô£ô Compiled successfully in 5.9s
+   Linting and checking validity of types ...
+
+./src/actions/user-actions.ts
+4:10  Warning: 'auth' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/navbar/UserDropdown.tsx
+7:46  Warning: 'FaCog' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/notification/NotificationBell.tsx
+41:8  Warning: React Hook useEffect has a missing dependency: 'fetchNotifications'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+54:49  Warning: 'link' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/31) ...
+   Generating static pages (7/31) 
+   Generating static pages (15/31) 
+   Generating static pages (23/31) 
+ Ô£ô Generating static pages (31/31)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                            Size  First Load JS
+Ôöî Ôùï /                                               2.64 kB         144 kB
+Ôö£ Ôùï /_not-found                                         0 B         141 kB
+Ôö£ ãÆ /admin                                            503 B         143 kB
+Ôö£ ãÆ /admin/comments                                 1.53 kB         144 kB
+Ôö£ ãÆ /admin/questions                                2.46 kB         144 kB
+Ôö£ ãÆ /admin/subjects                                 2.07 kB         144 kB
+Ôö£ ãÆ /admin/users                                    1.65 kB         144 kB
+Ôö£ ãÆ /api/auth/[...nextauth]                             0 B            0 B
+Ôö£ ãÆ /api/check-admin                                    0 B            0 B
+Ôö£ Ôùï /blog                                               0 B         141 kB
+Ôö£ ÔùÅ /blog/[slug]                                    1.08 kB         142 kB
+Ôö£   Ôö£ /blog/guia-sistema-avaliacao-univesp
+Ôö£   Ôö£ /blog/dicas-prova-presencial-univesp
+Ôö£   Ôö£ /blog/desvendando-projeto-integrador-univesp
+Ôö£   Ôöö [+10 more paths]
+Ôö£ ãÆ /perfil                                         1.54 kB         143 kB
+Ôö£ ãÆ /questoes                                       7.41 kB         149 kB
+Ôö£ ãÆ /questoes/[id]                                   3.4 kB         145 kB
+Ôö£ Ôùï /questoes/nova                                  5.68 kB         147 kB
+Ôö£ Ôùï /robots.txt                                         0 B            0 B
+Ôö£ Ôùï /sitemap.xml                                        0 B            0 B
+Ôöö Ôùï /sobre                                              0 B         141 kB
++ First Load JS shared by all                        159 kB
+  Ôö£ chunks/2a338aeb675a5707.js                      58.9 kB
+  Ôö£ chunks/8082ab48faca5ea1.js                      17.2 kB
+  Ôö£ chunks/f838030c0d88a070.js                        17 kB
+  Ôö£ chunks/9eb69ee735a4f630.css                     16.8 kB
+  Ôöö other shared chunks (total)                     48.9 kB
+
+
+ãÆ Middleware                                         106 kB
+
+Ôùï  (Static)   prerendered as static content
+ÔùÅ  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ãÆ  (Dynamic)  server-rendered on demand
+

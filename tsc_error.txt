@@ -1,0 +1,11 @@
+src/app/busca/page.tsx(30,53): error TS2322: Type '{ userName: string; subjectName: string; alternatives: { votes: number; id: string; text: string; letter: string; isCorrect: boolean; questionId: string; }[]; totalVotes: number; commentsCount: number; ... 15 more ...; subjectId: string; }' is not assignable to type 'Question'.
+  Types of property 'week' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+src/components/profile/ProfileHeader.tsx(27,25): error TS2607: JSX element class does not support attributes because it does not have a 'props' property.
+src/components/profile/ProfileHeader.tsx(27,26): error TS2786: 'Image' cannot be used as a JSX component.
+  Its type 'new (width?: number | undefined, height?: number | undefined) => HTMLImageElement' is not a valid JSX element type.
+    Type 'new (width?: number | undefined, height?: number | undefined) => HTMLImageElement' is not assignable to type 'new (props: any, context: any) => Component<any, any, any>'.
+      Type 'HTMLImageElement' is missing the following properties from type 'Component<any, any, any>': context, setState, forceUpdate, render, and 2 more.
+src/components/question/CommentItem.tsx(44,29): error TS2304: Cannot find name 'ReportButton'.
+src/components/question/CommentItem.tsx(54,26): error TS2304: Cannot find name 'ReportButton'.

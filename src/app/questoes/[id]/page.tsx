@@ -8,6 +8,8 @@ import { ValidationButton } from '@/components/question/ValidationButton';
 import { CommentSection } from '@/components/question/CommentSection';
 import { ViewTracker } from '@/components/question/ViewTracker';
 import { QuestionViewTracker } from '@/components/question/QuestionViewTracker';
+import { ReportButton } from '@/components/report/ReportButton';
+import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
@@ -153,15 +155,14 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                                 <FaComment />
                                 <span>{question.comments.length} comentários</span>
                             </div>
+                            <ReportButton questionId={question.id} />
                         </div>
                     </div>
 
                     {/* Content */}
                     <div className="p-6 md:p-8">
-                        <div className="prose dark:prose-invert max-w-none mb-8">
-                            <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
-                                {question.text}
-                            </p>
+                        <div className="prose dark:prose-invert max-w-none mb-8 text-gray-700 dark:text-gray-300 leading-relaxed break-words">
+                            <ReactMarkdown>{question.text}</ReactMarkdown>
                         </div>
 
                         {/* Alternatives */}
@@ -192,21 +193,18 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex flex-wrap justify-between gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                            <ValidationButton
+                                questionId={question.id}
+                                isVerified={question.isVerified}
+                                isLoggedIn={!!session}
+                                verificationRequested={(question as any).verificationRequested}
+                            />
+
                             <ShareButton
                                 questionId={question.id}
                                 questionTitle={question.title}
                             />
-
-                            {/* Only show validation button for admins or trusted users - simplified for now */}
-                            {session?.user?.isAdmin && (
-                                <ValidationButton
-                                    questionId={question.id}
-                                    isVerified={question.isVerified}
-                                    isLoggedIn={!!session}
-                                    verificationRequested={(question as any).verificationRequested}
-                                />
-                            )}
                         </div>
                     </div>
                 </div>

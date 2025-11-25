@@ -49,6 +49,27 @@ model User {
   questions     Question[]
   comments      Comment[]
   votes         Vote[]
+  notifications Notification[]
+  
+  // Gamification
+  reputation    Int             @default(0)
+  reputationLogs ReputationLog[]
+  
+  // Reporting
+  reportsFiled  Report[]        @relation("Reporter")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // 'REPLY', 'ANSWER', 'VOTE', 'VERIFICATION'
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  // Optional links
+  link      String?  // URL to redirect to
 }
 
 model VerificationToken {
@@ -89,6 +110,7 @@ model Question {
   
   alternatives Alternative[]
   comments     Comment[]
+  reports      Report[]
 }
 
 model Alternative {
@@ -131,4 +153,32 @@ model Comment {
   parentId   String?
   parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies    Comment[] @relation("CommentReplies")
+  
+  reports    Report[]
+}
+
+model ReputationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String   // 'VOTE_RECEIVED', 'ANSWER_ACCEPTED', etc.
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  reason    String
+  status    String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  createdAt DateTime @default(now())
+  
+  reporterId String
+  reporter   User     @relation("Reporter", fields: [reporterId], references: [id])
+  
+  // Optional targets
+  questionId String?
+  question   Question? @relation(fields: [questionId], references: [id])
+  
+  commentId  String?
+  comment    Comment?  @relation(fields: [commentId], references: [id])
 }

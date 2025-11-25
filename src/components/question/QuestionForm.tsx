@@ -6,6 +6,14 @@ import { FaSearch, FaTimes, FaChevronDown, FaExclamationTriangle } from 'react-i
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import dynamic from 'next/dynamic';
+
+const MarkdownEditor = dynamic(
+    () => import('@/components/editor/MarkdownEditor').then((mod) => mod.MarkdownEditor),
+    { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 dark:bg-gray-700 animate-pulse rounded-lg" /> }
+);
+
+import { ImageUploadArea } from '@/components/editor/ImageUploadArea';
 
 interface Subject {
     id: string;
@@ -105,6 +113,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         setSubjectSearch('');
     };
 
+    const formRef = React.useRef<HTMLFormElement>(null);
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setShowConfirmation(true);
@@ -119,8 +129,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         setIsSubmitting(true);
 
         try {
-            const formElement = document.querySelector('form') as HTMLFormElement;
-            const formData = new FormData(formElement);
+            if (!formRef.current) return;
+            const formData = new FormData(formRef.current);
 
             const result = await createQuestion(formData);
 
@@ -142,7 +152,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <form ref={formRef} onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 {/* Searchable Subject Field */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -257,15 +267,28 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Detalhes da Questão *
                     </label>
-                    <textarea
-                        name="text"
-                        rows={6}
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="Cole o texto da questão aqui. Suporta Markdown básico."
-                        className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
+                    <div className="space-y-4">
+                        <div className="prose dark:prose-invert max-w-none">
+                            <MarkdownEditor
+                                value={text}
+                                onChange={setText}
+                                height={400}
+                                placeholder="Digite o texto da questão aqui..."
+                            />
+                        </div>
+
+                        <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                                Anexar Imagens
+                            </label>
+                            <ImageUploadArea
+                                onUpload={(markdown) => setText(prev => prev ? `${prev}\n\n${markdown}` : markdown)}
+                            />
+                        </div>
+
+                        {/* Hidden input for form submission if needed, but we use state in handleSubmit */}
+                        <input type="hidden" name="text" value={text} />
+                    </div>
                 </div>
 
                 <div className="mb-8">
@@ -328,53 +351,55 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                         background-color: rgb(107 114 128);
                     }
                 `}</style>
-            </form>
+            </form >
 
             {/* Confirmation Dialog */}
-            {showConfirmation && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
-                        <div className="flex items-start gap-4 mb-4">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                                <FaExclamationTriangle className="text-yellow-600 dark:text-yellow-500 text-xl" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                                    Confirmar Publicação
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                                    Revise todos os dados antes de publicar.
-                                </p>
-                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
-                                    <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
-                                        ⚠️ Após a criação, a questão não poderá ser editada.
+            {
+                showConfirmation && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 p-6">
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                                    <FaExclamationTriangle className="text-yellow-600 dark:text-yellow-500 text-xl" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                                        Confirmar Publicação
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                        Revise todos os dados antes de publicar.
+                                    </p>
+                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
+                                        <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
+                                            ⚠️ Após a criação, a questão não poderá ser editada.
+                                        </p>
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Tem certeza que deseja publicar esta questão?
                                     </p>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Tem certeza que deseja publicar esta questão?
-                                </p>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowConfirmation(false)}
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors"
+                                >
+                                    Revisar
+                                </button>
+                                <button
+                                    onClick={handleConfirmedSubmit}
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors"
+                                >
+                                    {isSubmitting ? 'Publicando...' : 'Confirmar'}
+                                </button>
                             </div>
                         </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                onClick={() => setShowConfirmation(false)}
-                                disabled={isSubmitting}
-                                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors"
-                            >
-                                Revisar
-                            </button>
-                            <button
-                                onClick={handleConfirmedSubmit}
-                                disabled={isSubmitting}
-                                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors"
-                            >
-                                {isSubmitting ? 'Publicando...' : 'Confirmar'}
-                            </button>
-                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 };
