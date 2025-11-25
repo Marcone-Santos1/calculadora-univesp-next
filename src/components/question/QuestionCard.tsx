@@ -1,13 +1,19 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Question } from '@/Contracts/Question';
-import { FaCheckCircle, FaComment, FaEye, FaClock, FaUser } from 'react-icons/fa';
+import { FaCheckCircle, FaComment, FaEye, FaClock, FaUser, FaCheck } from 'react-icons/fa';
+import { FavoriteButton } from './FavoriteButton';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface QuestionCardProps {
     question: Question;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
+    const { isRead } = useUserPreferences();
+
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('pt-BR', {
             day: '2-digit',
@@ -35,9 +41,18 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                             </span>
                         </div>
                     </div>
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mb-2">
-                        {question.subjectName}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        {isRead(question.id) && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg text-xs font-medium" title="Já visualizada">
+                                <FaCheck className="text-[10px]" />
+                                <span>Lida</span>
+                            </div>
+                        )}
+                        <FavoriteButton questionId={question.id} className="text-lg" />
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {question.subjectName}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Title & Content */}
@@ -67,6 +82,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                         <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 text-sm font-medium px-2 py-1 bg-green-50 dark:bg-green-900/20 rounded-lg">
                             <FaCheckCircle />
                             <span>Verificada</span>
+                        </div>
+                    )}
+
+                    {question.verificationRequested && !question.isVerified && (
+                        <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-sm font-medium px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                            <FaCheckCircle />
+                            <span>Verificação Solicitada</span>
                         </div>
                     )}
                 </div>

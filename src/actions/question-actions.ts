@@ -5,7 +5,14 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-export async function getQuestions(query?: string, subjectId?: string) {
+export async function getQuestions(
+    query?: string,
+    subjectId?: string,
+    verified?: string,
+    verificationRequested?: string,
+    activity?: string,
+    sort?: string
+) {
     const where: any = {};
 
     if (query) {
@@ -17,6 +24,24 @@ export async function getQuestions(query?: string, subjectId?: string) {
 
     if (subjectId) {
         where.subjectId = subjectId;
+    }
+
+    if (verified === 'true') {
+        where.isVerified = true;
+    } else if (verified === 'false') {
+        where.isVerified = false;
+    }
+
+    if (verificationRequested === 'true') {
+        where.verificationRequested = true;
+    }
+
+    // Activity filters
+    if (activity === 'trending') {
+        // Questions from last 7 days
+        where.createdAt = {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        };
     }
 
     const questions = await prisma.question.findMany({
@@ -31,21 +56,49 @@ export async function getQuestions(query?: string, subjectId?: string) {
             },
             comments: true,
             _count: {
-                select: { comments: true }
+                select: {
+                    comments: true,
+                }
             }
         },
         orderBy: { createdAt: 'desc' }
     });
 
-    return questions.map(q => ({
-        ...q,
-        userName: q.user.name || 'Anônimo',
-        subjectName: q.subject.name,
-        alternatives: q.alternatives.map(alt => ({
-            ...alt,
-            votes: alt.votes.length
-        }))
-    }));
+    // Map and calculate metrics
+    let processedQuestions = questions.map(q => {
+        const totalVotes = q.alternatives.reduce((sum, alt) => sum + alt.votes.length, 0);
+
+        return {
+            ...q,
+            userName: q.user.name || 'Anônimo',
+            subjectName: q.subject.name,
+            alternatives: q.alternatives.map(alt => ({
+                ...alt,
+                votes: alt.votes.length
+            })),
+            totalVotes,
+            commentsCount: q.comments.length
+        };
+    });
+
+    // Apply activity filters (post-fetch filtering for complex conditions)
+    if (activity === 'no-votes') {
+        processedQuestions = processedQuestions.filter(q => q.totalVotes === 0);
+    } else if (activity === 'no-comments') {
+        processedQuestions = processedQuestions.filter(q => q.commentsCount === 0);
+    }
+
+    // Apply sorting
+    if (sort === 'popular') {
+        // Sort by total votes (descending)
+        processedQuestions.sort((a, b) => b.totalVotes - a.totalVotes);
+    } else if (sort === 'discussed') {
+        // Sort by comments count (descending)
+        processedQuestions.sort((a, b) => b.commentsCount - a.commentsCount);
+    }
+    // Default is already sorted by createdAt desc
+
+    return processedQuestions;
 }
 
 export async function getQuestion(id: string) {
@@ -113,7 +166,7 @@ export async function createQuestion(formData: FormData) {
     const week = formData.get('week') as string;
     const alternatives = JSON.parse(formData.get('alternatives') as string);
 
-    await prisma.question.create({
+    const question = await prisma.question.create({
         data: {
             title,
             text,
@@ -130,6 +183,8 @@ export async function createQuestion(formData: FormData) {
     });
 
     revalidatePath('/questoes');
+
+    return { questionId: question.id };
 }
 
 export async function voteOnAlternative(alternativeId: string) {
