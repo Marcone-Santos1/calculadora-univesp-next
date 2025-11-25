@@ -4,17 +4,21 @@ import { QuestionCard } from '@/components/question/QuestionCard';
 import { QuestionSidebar } from '@/components/question/QuestionSidebar';
 import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions';
 import Link from 'next/link';
-import { FaPlus, FaFilter } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaTimes } from 'react-icons/fa';
+import { MobileFilterModal } from '@/components/question/MobileFilterModal';
 
 // Server Component
-const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string }> }) => {
+const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string }> }) => {
     const params = await searchParams;
     const query = params.q;
     const subjectId = params.subject;
     const verified = params.verified;
+    const verificationRequested = params.verificationRequested;
+    const activity = params.activity;
+    const sort = params.sort;
 
     const [questions, subjects] = await Promise.all([
-        getQuestions(query, subjectId, verified),
+        getQuestions(query, subjectId, verified, verificationRequested, activity, sort),
         getSubjectsWithCounts()
     ]);
 
@@ -40,14 +44,16 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                     {/* Main Content */}
                     <main className="flex-1">
                         {/* Mobile Header & Actions */}
-                        <div className="lg:hidden mb-6 space-y-4">
-                            <Link
-                                href="/questoes/nova"
-                                className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20"
-                            >
-                                <FaPlus /> Nova Pergunta
-                            </Link>
-                            {/* Mobile Filter Toggle could go here */}
+                        <div className="lg:hidden mb-6">
+                            <div className="flex gap-3 mb-4">
+                                <Link
+                                    href="/questoes/nova"
+                                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20"
+                                >
+                                    <FaPlus /> Nova
+                                </Link>
+                                <MobileFilterModal subjects={subjects} />
+                            </div>
                         </div>
 
                         {/* Page Header */}
@@ -99,8 +105,6 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
 };
 
 import { Loading } from '@/components/Loading';
-
-// ...
 
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string }> }) {
     return (

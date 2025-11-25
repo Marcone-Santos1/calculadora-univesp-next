@@ -69,6 +69,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                             <span>Verificada</span>
                         </div>
                     )}
+
+                    {question.verificationRequested && !question.isVerified && (
+                        <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-sm font-medium px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                            <FaCheckCircle />
+                            <span>Verificação Solicitada</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </Link>

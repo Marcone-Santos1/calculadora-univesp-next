@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaSearch, FaChevronDown, FaChevronRight, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaChevronDown, FaChevronRight, FaTimes, FaClock, FaCheckCircle, FaBan } from 'react-icons/fa';
 
 // Custom scrollbar styles
 const scrollbarStyles = `
@@ -111,6 +111,23 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
         router.push(`/questoes?${params.toString()}`);
     };
 
+    // Helper function to build URLs that preserve existing filters
+    const buildFilterUrl = (updates: Record<string, string | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Apply updates
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null) {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+
+        const paramString = params.toString();
+        return `/questoes${paramString ? `?${paramString}` : ''}`;
+    };
+
     // Group subjects by category
     const categorizedSubjects = useMemo(() => {
         const filtered = subjects.filter(s =>
@@ -167,36 +184,142 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                 </form>
             </div>
 
-            {/* Verification Status Filter */}
+            {/* Clear Filters Button */}
+            {(searchParams.get('sort') || searchParams.get('activity') || searchParams.get('verified') || searchParams.get('verificationRequested') || searchParams.get('subject') || searchParams.get('q')) && (
+                <Link
+                    href="/questoes"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition-all text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white shadow-sm"
+                >
+                    <FaTimes className="text-xs" />
+                    <span>Limpar Filtros</span>
+                </Link>
+            )}
+
+            {/* Sort By Filter */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Status de Verificação</h3>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Ordenar Por</h3>
                 <div className="space-y-2">
                     <Link
-                        href="/questoes"
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('verified')
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        href={buildFilterUrl({ sort: null })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('sort')
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <span>🕒</span>
+                        <span>Mais Recentes</span>
+                    </Link>
+                    <Link
+                        href={buildFilterUrl({ sort: 'popular' })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('sort') === 'popular'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <span>🔥</span>
+                        <span>Mais Populares</span>
+                    </Link>
+                    <Link
+                        href={buildFilterUrl({ sort: 'discussed' })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('sort') === 'discussed'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <span>💬</span>
+                        <span>Mais Discutidas</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Activity Filter */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Atividade</h3>
+                <div className="space-y-2">
+                    <Link
+                        href={buildFilterUrl({ activity: null })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('activity')
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                             }`}
                     >
                         <span>Todas</span>
                     </Link>
                     <Link
-                        href={`/questoes?verified=true${currentSubject ? `&subject=${currentSubject}` : ''}`}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verified') === 'true'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        href={buildFilterUrl({ activity: 'no-votes' })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('activity') === 'no-votes'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                             }`}
                     >
-                        <span>✓ Verificadas</span>
+                        <span>🆘</span>
+                        <span>Sem Votos</span>
                     </Link>
                     <Link
-                        href={`/questoes?verified=false${currentSubject ? `&subject=${currentSubject}` : ''}`}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verified') === 'false'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        href={buildFilterUrl({ activity: 'no-comments' })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('activity') === 'no-comments'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                             }`}
                     >
-                        <span>X Não Verificadas</span>
+                        <span>💭</span>
+                        <span>Sem Comentários</span>
+                    </Link>
+                    <Link
+                        href={buildFilterUrl({ activity: 'trending' })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('activity') === 'trending'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <span>📈</span>
+                        <span>Em Alta (7 dias)</span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Verification Status Filter */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Status de Verificação</h3>
+                <div className="space-y-2">
+                    <Link
+                        href={buildFilterUrl({ verified: null, verificationRequested: null })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('verified') && !searchParams.get('verificationRequested')
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <span>Todas</span>
+                    </Link>
+                    <Link
+                        href={buildFilterUrl({ verified: 'true', verificationRequested: null })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verified') === 'true'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <FaCheckCircle />
+                        <span>Verificadas</span>
+                    </Link>
+                    <Link
+                        href={buildFilterUrl({ verified: 'false', verificationRequested: null })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verified') === 'false'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <FaBan />
+                        <span> Não Verificadas</span>
+                    </Link>
+                    <Link
+                        href={buildFilterUrl({ verified: null, verificationRequested: 'true' })}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verificationRequested') === 'true'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                            }`}
+                    >
+                        <FaClock />
+                        <span> Pendentes</span>
                     </Link>
                 </div>
             </div>
@@ -230,7 +353,7 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                 <div className="max-h-[600px] overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {/* All Questions */}
                     <Link
-                        href="/questoes"
+                        href={buildFilterUrl({ subject: null })}
                         className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-sm ${!currentSubject
                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -270,7 +393,7 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                                     {categorizedSubjects[category].map((subject) => (
                                         <Link
                                             key={subject.id}
-                                            href={`/questoes?subject=${subject.id}`}
+                                            href={buildFilterUrl({ subject: subject.id })}
                                             className={`flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors text-sm ${currentSubject === subject.id
                                                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'

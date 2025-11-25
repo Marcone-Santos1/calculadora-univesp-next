@@ -6,8 +6,9 @@ import { AlternativeItem } from '@/components/question/AlternativeItem';
 import { ShareButton } from '@/components/question/ShareButton';
 import { ValidationButton } from '@/components/question/ValidationButton';
 import { CommentSection } from '@/components/question/CommentSection';
+import { ViewTracker } from '@/components/question/ViewTracker';
 import Link from 'next/link';
-import { FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
 
 // Server Component
@@ -39,6 +40,8 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+            <ViewTracker questionId={id} />
+
             <div className="container mx-auto max-w-4xl">
                 <Link href="/questoes" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-500 mb-6">
                     <FaArrowLeft /> Voltar para Questões
@@ -49,16 +52,36 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                             <div className="flex justify-between items-start mb-4">
-                                <div>
+                                <div className="flex-1">
                                     <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mb-2">
                                         {question.subjectName}
                                     </span>
                                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {question.title}
                                     </h1>
+
+                                    {/* Metadata */}
+                                    <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+                                        <div className="flex items-center gap-1.5">
+                                            <FaUser className="text-xs" />
+                                            <span>{question.userName}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <FaClock className="text-xs" />
+                                            <span>{new Date(question.createdAt).toLocaleDateString('pt-BR')}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <FaEye className="text-xs" />
+                                            <span>{question.views} {question.views === 1 ? 'visualização' : 'visualizações'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <FaComment className="text-xs" />
+                                            <span>{question.comments.length} {question.comments.length === 1 ? 'comentário' : 'comentários'}</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 {question.isVerified && (
-                                    <div className="flex flex-col items-center text-green-600 dark:text-green-400">
+                                    <div className="flex flex-col items-center text-green-600 dark:text-green-400 ml-4">
                                         <FaCheckCircle className="text-2xl" />
                                         <span className="text-xs font-bold">Verificada</span>
                                     </div>
