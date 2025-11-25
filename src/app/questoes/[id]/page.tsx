@@ -7,6 +7,7 @@ import { ShareButton } from '@/components/question/ShareButton';
 import { ValidationButton } from '@/components/question/ValidationButton';
 import { CommentSection } from '@/components/question/CommentSection';
 import { ViewTracker } from '@/components/question/ViewTracker';
+import { QuestionViewTracker } from '@/components/question/QuestionViewTracker';
 import Link from 'next/link';
 import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
@@ -41,6 +42,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
             <ViewTracker questionId={id} />
+            <QuestionViewTracker questionId={id} />
 
             <div className="container mx-auto max-w-4xl">
                 <Link href="/questoes" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-500 mb-6">

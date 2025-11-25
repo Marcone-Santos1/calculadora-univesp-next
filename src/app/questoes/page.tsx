@@ -37,7 +37,10 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                             >
                                 <FaPlus /> Nova Pergunta
                             </Link>
-                            <QuestionSidebar subjects={subjects} />
+                            <QuestionSidebar
+                                subjects={subjects}
+                                questions={questions.map(q => ({ id: q.id, title: q.title, subjectId: q.subjectId }))}
+                            />
                         </div>
                     </aside>
 
@@ -52,7 +55,10 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                                 >
                                     <FaPlus /> Nova
                                 </Link>
-                                <MobileFilterModal subjects={subjects} />
+                                <MobileFilterModal
+                                    subjects={subjects}
+                                    questions={questions.map(q => ({ id: q.id, title: q.title, subjectId: q.subjectId }))}
+                                />
                             </div>
                         </div>
 

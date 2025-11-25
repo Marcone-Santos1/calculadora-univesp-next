@@ -4,11 +4,18 @@ import { useState } from 'react';
 import { FaFilter, FaTimes } from 'react-icons/fa';
 import { QuestionSidebar } from './QuestionSidebar';
 
-interface MobileFilterModalProps {
-    subjects: any[];
+interface SimpleQuestion {
+    id: string;
+    title: string;
+    subjectId: string;
 }
 
-export function MobileFilterModal({ subjects }: MobileFilterModalProps) {
+interface MobileFilterModalProps {
+    subjects: any[];
+    questions?: SimpleQuestion[];
+}
+
+export function MobileFilterModal({ subjects, questions = [] }: MobileFilterModalProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -42,7 +49,7 @@ export function MobileFilterModal({ subjects }: MobileFilterModalProps) {
                             </button>
                         </div>
                         <div className="p-4">
-                            <QuestionSidebar subjects={subjects} />
+                            <QuestionSidebar subjects={subjects} questions={questions} />
                         </div>
                     </div>
                 </>

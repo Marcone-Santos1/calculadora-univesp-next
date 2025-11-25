@@ -8,6 +8,8 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { GoogleAnalytics } from '@next/third-parties/google'
 import AdsRefresher from "@/components/AdsRefresher";
 import { AdsenseScript } from "@/components/AdsenseScript";
+import { CookieConsent } from "@/components/CookieConsent";
+import { UserPreferencesProvider } from "@/context/UserPreferencesContext";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -53,12 +55,15 @@ export default function RootLayout({
         <ToastProvider>
           <SessionProvider>
             <AppStateProvider>
-              <NavBar />
-              <main>{children}</main>
-              <AdsRefresher />
+              <UserPreferencesProvider>
+                <NavBar />
+                <main>{children}</main>
+                <AdsRefresher />
+              </UserPreferencesProvider>
             </AppStateProvider>
           </SessionProvider>
         </ToastProvider>
+        <CookieConsent />
       </body>
     </html>
   );

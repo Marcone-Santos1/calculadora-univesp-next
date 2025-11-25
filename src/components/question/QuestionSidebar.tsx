@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaSearch, FaChevronDown, FaChevronRight, FaTimes, FaClock, FaCheckCircle, FaBan } from 'react-icons/fa';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { RecentQuestions } from './RecentQuestions';
+import { FavoritesList } from './FavoritesList';
 
 // Custom scrollbar styles
 const scrollbarStyles = `
@@ -51,8 +54,15 @@ interface Subject {
     _count: { questions: number };
 }
 
+interface SimpleQuestion {
+    id: string;
+    title: string;
+    subjectId: string;
+}
+
 interface QuestionSidebarProps {
     subjects: Subject[];
+    questions?: SimpleQuestion[];
 }
 
 // Categorize subjects by detecting keywords
@@ -91,14 +101,14 @@ const categorizeSubject = (name: string): string => {
     return 'Outras';
 };
 
-export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
+export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentSubject = searchParams.get('subject');
     const currentQuery = searchParams.get('q') || '';
     const [searchTerm, setSearchTerm] = useState(currentQuery);
     const [subjectFilter, setSubjectFilter] = useState('');
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Computação', 'Matemática']));
+    const { preferences, setExpandedCategories, setDefaultSort, setDefaultSubject } = useUserPreferences();
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -110,6 +120,29 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
         }
         router.push(`/questoes?${params.toString()}`);
     };
+
+    // Apply default filters on mount if no params present
+    useEffect(() => {
+        // Only apply if we are on the main questions page without params
+        if (searchParams.toString() === '') {
+            const params = new URLSearchParams();
+            let hasDefaults = false;
+
+            if (preferences.defaultSort) {
+                params.set('sort', preferences.defaultSort);
+                hasDefaults = true;
+            }
+
+            if (preferences.defaultSubject) {
+                params.set('subject', preferences.defaultSubject);
+                hasDefaults = true;
+            }
+
+            if (hasDefaults) {
+                router.replace(`/questoes?${params.toString()}`);
+            }
+        }
+    }, [preferences.defaultSort, preferences.defaultSubject, searchParams, router]);
 
     // Helper function to build URLs that preserve existing filters
     const buildFilterUrl = (updates: Record<string, string | null>) => {
@@ -154,15 +187,12 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
     const totalQuestions = subjects.reduce((sum, s) => sum + s._count.questions, 0);
 
     const toggleCategory = (category: string) => {
-        setExpandedCategories(prev => {
-            const next = new Set(prev);
-            if (next.has(category)) {
-                next.delete(category);
-            } else {
-                next.add(category);
-            }
-            return next;
-        });
+        const currentExpanded = preferences.expandedCategories;
+        const isExpanded = currentExpanded.includes(category);
+        const updated = isExpanded
+            ? currentExpanded.filter(c => c !== category)
+            : [...currentExpanded, category];
+        setExpandedCategories(updated);
     };
 
     return (
@@ -188,6 +218,10 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
             {(searchParams.get('sort') || searchParams.get('activity') || searchParams.get('verified') || searchParams.get('verificationRequested') || searchParams.get('subject') || searchParams.get('q')) && (
                 <Link
                     href="/questoes"
+                    onClick={() => {
+                        setDefaultSort(null);
+                        setDefaultSubject(null);
+                    }}
                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition-all text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white shadow-sm"
                 >
                     <FaTimes className="text-xs" />
@@ -195,12 +229,19 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                 </Link>
             )}
 
+            {/* Recently Viewed */}
+            {questions.length > 0 && <RecentQuestions allQuestions={questions} />}
+
+            {/* Favorites */}
+            {questions.length > 0 && <FavoritesList allQuestions={questions} />}
+
             {/* Sort By Filter */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Ordenar Por</h3>
                 <div className="space-y-2">
                     <Link
                         href={buildFilterUrl({ sort: null })}
+                        onClick={() => setDefaultSort(null)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('sort')
                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -211,6 +252,7 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                     </Link>
                     <Link
                         href={buildFilterUrl({ sort: 'popular' })}
+                        onClick={() => setDefaultSort('popular')}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('sort') === 'popular'
                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -221,6 +263,7 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                     </Link>
                     <Link
                         href={buildFilterUrl({ sort: 'discussed' })}
+                        onClick={() => setDefaultSort('discussed')}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('sort') === 'discussed'
                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -354,6 +397,7 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                     {/* All Questions */}
                     <Link
                         href={buildFilterUrl({ subject: null })}
+                        onClick={() => setDefaultSubject(null)}
                         className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-sm ${!currentSubject
                             ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
@@ -380,7 +424,7 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                                     <span className="text-gray-500 dark:text-gray-400">
                                         {categorizedSubjects[category].length}
                                     </span>
-                                    {expandedCategories.has(category) ? (
+                                    {preferences.expandedCategories.includes(category) ? (
                                         <FaChevronDown className="text-[10px]" />
                                     ) : (
                                         <FaChevronRight className="text-[10px]" />
@@ -388,12 +432,13 @@ export function QuestionSidebar({ subjects }: QuestionSidebarProps) {
                                 </div>
                             </button>
 
-                            {expandedCategories.has(category) && (
+                            {preferences.expandedCategories.includes(category) && (
                                 <div className="mt-1 space-y-0.5 pl-2">
                                     {categorizedSubjects[category].map((subject) => (
                                         <Link
                                             key={subject.id}
                                             href={buildFilterUrl({ subject: subject.id })}
+                                            onClick={() => setDefaultSubject(subject.id)}
                                             className={`flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors text-sm ${currentSubject === subject.id
                                                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
                                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'

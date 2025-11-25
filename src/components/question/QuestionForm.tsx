@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createQuestion } from '@/actions/question-actions';
 import { FaSearch, FaTimes, FaChevronDown, FaExclamationTriangle } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface Subject {
     id: string;
@@ -16,7 +17,12 @@ interface Subject {
 export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) => {
     const router = useRouter();
     const { showToast } = useToast();
+    const { saveQuestionDraft, clearQuestionDraft, preferences } = useUserPreferences();
 
+    // Form State
+    const [title, setTitle] = useState('');
+    const [text, setText] = useState('');
+    const [week, setWeek] = useState('');
     const [alternatives, setAlternatives] = useState([
         { id: 'A', text: '' },
         { id: 'B', text: '' },
@@ -33,11 +39,54 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
     // Confirmation dialog
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
     // Filter subjects based on search
     const filteredSubjects = subjects.filter(s =>
         s.name.toLowerCase().includes(subjectSearch.toLowerCase())
     );
+
+    // Load draft on mount
+    useEffect(() => {
+        if (!isDraftLoaded && preferences.questionDraft) {
+            const draft = preferences.questionDraft;
+            setTitle(draft.title || '');
+            setText(draft.text || '');
+            setWeek(draft.week || '');
+            if (draft.subjectId) {
+                const subject = subjects.find(s => s.id === draft.subjectId);
+                if (subject) setSelectedSubject(subject);
+            }
+            if (draft.alternatives) {
+                // Merge draft alternatives with default structure to ensure IDs match
+                const mergedAlternatives = alternatives.map((alt, index) => ({
+                    ...alt,
+                    text: draft.alternatives?.[index]?.text || ''
+                }));
+                setAlternatives(mergedAlternatives);
+            }
+            setIsDraftLoaded(true);
+            showToast('Rascunho restaurado', 'info');
+        }
+    }, [preferences.questionDraft, subjects, isDraftLoaded, showToast]);
+
+    // Auto-save draft
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            // Only save if there's some content
+            if (title || text || week || selectedSubject || alternatives.some(a => a.text)) {
+                saveQuestionDraft({
+                    title,
+                    text,
+                    week,
+                    subjectId: selectedSubject?.id,
+                    alternatives: alternatives.map(a => ({ text: a.text, isCorrect: false })) // isCorrect not used in form yet?
+                });
+            }
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [title, text, week, selectedSubject, alternatives, saveQuestionDraft]);
 
     const handleAlternativeChange = (index: number, value: string) => {
         const newAlternatives = [...alternatives];
@@ -76,6 +125,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
             const result = await createQuestion(formData);
 
             showToast('Questão criada com sucesso!', 'success');
+            clearQuestionDraft();
 
             // Redirect to the created question
             if (result?.questionId) {
@@ -171,6 +221,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     <div className="relative">
                         <select
                             name="week"
+                            value={week}
+                            onChange={(e) => setWeek(e.target.value)}
                             className="w-full p-3 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                         >
                             <option value="">Não especificado</option>
@@ -193,6 +245,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     <input
                         type="text"
                         name="title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         placeholder="Resumo da dúvida..."
                         className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                         required
@@ -206,6 +260,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     <textarea
                         name="text"
                         rows={6}
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
                         placeholder="Cole o texto da questão aqui. Suporta Markdown básico."
                         className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                         required
