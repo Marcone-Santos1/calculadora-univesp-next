@@ -1,8 +1,9 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaRegMoon, FaRegSun, FaUser, FaUserShield, FaBars, FaTimes } from "react-icons/fa";
+import { FaRegMoon, FaRegSun, FaUser, FaUserShield, FaBars, FaTimes, FaSearch } from "react-icons/fa";
 import { useAppContext } from './AppStateProvider';
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
@@ -14,6 +15,8 @@ export const NavBar = () => {
   const { data: session } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -30,14 +33,36 @@ export const NavBar = () => {
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/busca?q=${encodeURIComponent(searchQuery)}`);
+      closeMobileMenu();
+    }
+  };
+
   return (
     <header className="bg-[#F0F7FF] dark:bg-gray-800 shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-4 gap-4">
           {/* Logo */}
           <Link href="/" className="text-xl font-bold text-black dark:text-white whitespace-nowrap">
             Calculadora UNIVESP
           </Link>
+
+          {/* Search Bar (Desktop) */}
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Buscar questões..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </form>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
@@ -88,6 +113,20 @@ export const NavBar = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4 space-y-3 animate-fadeIn">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="px-4 mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+            </form>
+
             <Link href="/" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
               Início
             </Link>

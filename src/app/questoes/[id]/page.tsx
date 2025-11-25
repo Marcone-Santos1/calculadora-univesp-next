@@ -8,6 +8,7 @@ import { ValidationButton } from '@/components/question/ValidationButton';
 import { CommentSection } from '@/components/question/CommentSection';
 import { ViewTracker } from '@/components/question/ViewTracker';
 import { QuestionViewTracker } from '@/components/question/QuestionViewTracker';
+import { ReportButton } from '@/components/report/ReportButton';
 import Link from 'next/link';
 import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
@@ -153,6 +154,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                                 <FaComment />
                                 <span>{question.comments.length} comentários</span>
                             </div>
+                            <ReportButton questionId={question.id} />
                         </div>
                     </div>
 
@@ -192,21 +194,18 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex flex-wrap justify-between gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                            <ValidationButton
+                                questionId={question.id}
+                                isVerified={question.isVerified}
+                                isLoggedIn={!!session}
+                                verificationRequested={(question as any).verificationRequested}
+                            />
+                            
                             <ShareButton
                                 questionId={question.id}
                                 questionTitle={question.title}
                             />
-
-                            {/* Only show validation button for admins or trusted users - simplified for now */}
-                            {session?.user?.isAdmin && (
-                                <ValidationButton
-                                    questionId={question.id}
-                                    isVerified={question.isVerified}
-                                    isLoggedIn={!!session}
-                                    verificationRequested={(question as any).verificationRequested}
-                                />
-                            )}
                         </div>
                     </div>
                 </div>

@@ -105,6 +105,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         setSubjectSearch('');
     };
 
+    const formRef = React.useRef<HTMLFormElement>(null);
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setShowConfirmation(true);
@@ -119,8 +121,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         setIsSubmitting(true);
 
         try {
-            const formElement = document.querySelector('form') as HTMLFormElement;
-            const formData = new FormData(formElement);
+            if (!formRef.current) return;
+            const formData = new FormData(formRef.current);
 
             const result = await createQuestion(formData);
 
@@ -142,7 +144,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <form ref={formRef} onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 {/* Searchable Subject Field */}
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

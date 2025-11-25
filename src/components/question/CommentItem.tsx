@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FaUser, FaReply } from 'react-icons/fa';
+import { ReportButton } from '../report/ReportButton';
 
 interface Comment {
     id: string;
@@ -41,6 +42,7 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
                     <FaUser className="text-gray-500 dark:text-gray-400 text-sm" />
                 </div>
                 <div className="flex-1 min-w-0">
+
                     <div className="flex items-center gap-2 mb-1">
                         <span className="font-semibold text-sm text-gray-900 dark:text-white">
                             {comment.userName}
@@ -48,6 +50,7 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
                         <span className="text-xs text-gray-500">
                             {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
                         </span>
+                        <ReportButton commentId={comment.id} />
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap break-words">
                         {comment.text}

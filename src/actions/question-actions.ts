@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { createNotification } from './notification-actions';
+import { awardReputation } from './reputation-actions';
 
 export async function getQuestions(
     query?: string,
@@ -73,12 +74,18 @@ export async function getQuestions(
             ...q,
             userName: q.user.name || 'Anônimo',
             subjectName: q.subject.name,
+            week: q.week || undefined,
             alternatives: q.alternatives.map(alt => ({
                 ...alt,
                 votes: alt.votes.length
             })),
             totalVotes,
-            commentsCount: q.comments.length
+            commentsCount: q.comments.length,
+            comments: q.comments.map(c => ({
+                ...c,
+                userName: 'Anônimo',
+                createdAt: c.createdAt.toISOString()
+            }))
         };
     });
 
@@ -184,7 +191,11 @@ export async function createQuestion(formData: FormData) {
     const text = formData.get('text') as string;
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
-    const alternatives = JSON.parse(formData.get('alternatives') as string);
+    const alternativesRaw = formData.get('alternatives');
+    if (!alternativesRaw) {
+        throw new Error('Alternatives are required');
+    }
+    const alternatives = JSON.parse(alternativesRaw as string);
 
     const question = await prisma.question.create({
         data: {
@@ -256,7 +267,13 @@ export async function voteOnAlternative(alternativeId: string) {
             message: `Alguém votou na sua questão: "${alternative.question.title.substring(0, 30)}..."`,
             link: `/questoes/${alternative.questionId}`
         });
+
+        // Award reputation to question author for receiving a vote
+        await awardReputation(alternative.question.userId, 2, 'VOTE_RECEIVED');
     }
+
+    // Award reputation to voter for participating
+    await awardReputation(session.user.id, 1, 'VOTE_CAST');
 
     revalidatePath(`/questoes`);
 }
@@ -304,8 +321,14 @@ export async function createComment(questionId: string, text: string, parentId?:
                 message: `Alguém comentou na sua questão "${comment.question.title.substring(0, 30)}..."`,
                 link: `/questoes/${questionId}`
             });
+
+            // Award reputation to question author for engagement
+            await awardReputation(comment.question.userId, 2, 'COMMENT_RECEIVED');
         }
     }
+
+    // Award reputation to commenter
+    await awardReputation(session.user.id, 3, 'COMMENT_CREATED');
 
     revalidatePath(`/questoes/${questionId}`);
 }

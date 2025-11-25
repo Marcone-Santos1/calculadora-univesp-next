@@ -10,10 +10,16 @@ export async function getUserStats(userId: string) {
         prisma.vote.count({ where: { userId } })
     ]);
 
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { reputation: true }
+    });
+
     return {
         questions: questionsCount,
         comments: commentsCount,
-        votes: votesCount
+        votes: votesCount,
+        reputation: user?.reputation || 0
     };
 }
 
