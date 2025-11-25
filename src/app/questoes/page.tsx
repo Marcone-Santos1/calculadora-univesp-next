@@ -4,11 +4,11 @@ import { QuestionCard } from '@/components/question/QuestionCard';
 import { QuestionSidebar } from '@/components/question/QuestionSidebar';
 import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions';
 import Link from 'next/link';
-import { FaPlus, FaFilter, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaFilter } from 'react-icons/fa';
 import { MobileFilterModal } from '@/components/question/MobileFilterModal';
 
 // Server Component
-const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string }> }) => {
+const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) => {
     const params = await searchParams;
     const query = params.q;
     const subjectId = params.subject;
@@ -112,7 +112,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
 
 import { Loading } from '@/components/Loading';
 
-export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string }> }) {
+export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) {
     return (
         <Suspense fallback={<Loading />}>
             <QuestionsContent searchParams={searchParams} />

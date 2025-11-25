@@ -10,8 +10,18 @@ interface SimpleQuestion {
     subjectId: string;
 }
 
+interface Subject {
+    id: string;
+    name: string;
+    icon?: string | null;
+    color?: string | null;
+    _count: {
+        questions: number;
+    };
+}
+
 interface MobileFilterModalProps {
-    subjects: any[];
+    subjects: Subject[];
     questions?: SimpleQuestion[];
 }
 

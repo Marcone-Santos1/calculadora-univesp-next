@@ -68,7 +68,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
             setIsDraftLoaded(true);
             showToast('Rascunho restaurado', 'info');
         }
-    }, [preferences.questionDraft, subjects, isDraftLoaded, showToast]);
+    }, [preferences.questionDraft, subjects, isDraftLoaded, showToast, alternatives]);
 
     // Auto-save draft
     useEffect(() => {
@@ -133,7 +133,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
             } else {
                 router.push('/questoes');
             }
-        } catch (error) {
+        } catch {
             showToast('Erro ao criar questão. Tente novamente.', 'error');
             setIsSubmitting(false);
             setShowConfirmation(false);
