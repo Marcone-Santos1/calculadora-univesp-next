@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import Image from "next/image";
 
-
-
 export const GuiaEstudoExatas = () => {
   return (
     <>
@@ -36,7 +34,6 @@ export const GuiaEstudoExatas = () => {
         alt="Visualizar a ideia de que aprender exatas é como construir um músculo, contrastando com a ideia de um 'dom inato'."
         width={1200}
         height={630}
-        priority
       />
       <p>
         A primeira barreira é mental. A maioria dos alunos reprova em exatas não por falta de capacidade, mas por adotar
@@ -58,7 +55,6 @@ export const GuiaEstudoExatas = () => {
         alt="Uma representação visual do processo de construção, tijolo por tijolo, ou um fluxo de 4 passos."
         width={1200}
         height={630}
-        priority
       />
       <p>
         Para construir esse "músculo", você precisa de um sistema. Esqueça o ciclo "assistir à aula -{">"} fazer a prova".
@@ -145,7 +141,6 @@ export const GuiaEstudoExatas = () => {
         alt="A mentalidade de 'debugar' e o processo de tentativa e erro na programação"
         width={1200}
         height={630}
-        priority
       />
       <p>
         Aprender a programar tem uma particularidade: você precisa "falar" a língua do computador.
