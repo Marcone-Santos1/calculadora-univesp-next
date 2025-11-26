@@ -1,10 +1,10 @@
 "use client";
 
-import {ChangeEvent, useEffect, useState} from "react";
-import {FaCalculator} from "react-icons/fa";
-import {FiArrowDown} from "react-icons/fi";
-import {GradeInput} from "@/components/GradeInput";
-import {Result} from "@/components/Result";
+import { ChangeEvent, useEffect, useState } from "react";
+import { FaCalculator } from "react-icons/fa";
+import { FiArrowDown } from "react-icons/fi";
+import { GradeInput } from "@/components/GradeInput";
+import { Result } from "@/components/Result";
 import {
   calcMediaFinal,
   calcMediaFinalExame,
@@ -12,21 +12,27 @@ import {
   simularExame,
   simularRegular
 } from "@/utils/functions";
-import {GradesProp} from "@/Contracts/GradesProp";
-import {ResultProp} from "@/Contracts/ResultProp";
-import {HistoryEntryProp} from "@/Contracts/HistoryEntryProp";
-import {History} from "@/components/History";
+import { GradesProp } from "@/Contracts/GradesProp";
+import { ResultProp } from "@/Contracts/ResultProp";
+import { HistoryEntryProp } from "@/Contracts/HistoryEntryProp";
+import { History } from "@/components/History";
 
 export const GradeCalculator = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const [grades, setGrades] = useState<GradesProp>({g1: 0, g2: 0});
-  const [result, setResult] = useState<ResultProp>({result: 0});
+  const [grades, setGrades] = useState<GradesProp>({ g1: 0, g2: 0 });
+  const [result, setResult] = useState<ResultProp>({ result: 0 });
   const [showResult, setShowResult] = useState(false);
 
-  const [history, setHistory] = useState<HistoryEntryProp[]>(loadHistoryFromStorage);
+  const [history, setHistory] = useState<HistoryEntryProp[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('univespCalcHistory', JSON.stringify(history));
+    setHistory(loadHistoryFromStorage());
+  }, []);
+
+  useEffect(() => {
+    if (history.length > 0) {
+      localStorage.setItem('univespCalcHistory', JSON.stringify(history));
+    }
   }, [history]);
 
 
@@ -38,15 +44,15 @@ export const GradeCalculator = () => {
   ];
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    let {value} = e.target;
-    const {name, max} = e.target;
+    let { value } = e.target;
+    const { name, max } = e.target;
 
     if (Number(value) >= Number(max)) {
       e.target.value = max;
       value = max
     }
 
-    setGrades((prev) => ({...prev, [name]: value}));
+    setGrades((prev) => ({ ...prev, [name]: value }));
   };
 
   const cleanInputs = () => {
@@ -61,7 +67,7 @@ export const GradeCalculator = () => {
       id: new Date().toISOString(),
       type: tabs[activeTab],
       result: calcResult.isSimulation ? `Precisa de ${calcResult.result.toFixed(2)}` : calcResult.result.toFixed(2),
-      date: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+      date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     };
     setHistory(prevHistory => [newEntry, ...prevHistory].slice(0, 10));
   };
@@ -80,16 +86,16 @@ export const GradeCalculator = () => {
 
     switch (activeTab) {
       case 0:
-        newResult = {result: calcMediaFinal(gradesInput)};
+        newResult = { result: calcMediaFinal(gradesInput) };
         break;
       case 1:
-        newResult = {result: calcMediaFinalExame(gradesInput)};
+        newResult = { result: calcMediaFinalExame(gradesInput) };
         break;
       case 2:
-        newResult = {result: simularRegular(gradesInput), isSimulation: true};
+        newResult = { result: simularRegular(gradesInput), isSimulation: true };
         break;
       case 3:
-        newResult = {result: simularExame(gradesInput), isSimulation: true};
+        newResult = { result: simularExame(gradesInput), isSimulation: true };
         break;
       default:
         break;
@@ -105,18 +111,18 @@ export const GradeCalculator = () => {
         return (
           <div className="space-y-4">
             <GradeInput onChange={handleInputChange} name={"g1"}
-                        placeholder={"Nota Prova Regular"}/>
+              placeholder={"Nota Prova Regular"} />
             <GradeInput onChange={handleInputChange} name={"g2"}
-                        placeholder={"Média final das avaliativas semanais"}/>
+              placeholder={"Média final das avaliativas semanais"} />
           </div>
         );
       case 1:
         return (
           <div className="space-y-4">
             <GradeInput onChange={handleInputChange} name={"g1"}
-                        placeholder={"Média final regular"} max={4.99}/>
+              placeholder={"Média final regular"} max={4.99} />
             <GradeInput onChange={handleInputChange} name={"g2"}
-                        placeholder={"Prova Exame"}/>
+              placeholder={"Prova Exame"} />
           </div>
         );
       case 2:
@@ -124,14 +130,14 @@ export const GradeCalculator = () => {
           <div className="space-y-4">
 
             <GradeInput onChange={handleInputChange} name={"g1"}
-                        placeholder={"média final das avaliativas semanais"}/>
+              placeholder={"média final das avaliativas semanais"} />
           </div>
         )
       case 3:
         return (
           <div className="space-y-4">
             <GradeInput onChange={handleInputChange} name={"g1"}
-                        placeholder={"média final regular"} max={4.99}/>
+              placeholder={"média final regular"} max={4.99} />
           </div>
         );
       default:
@@ -146,7 +152,7 @@ export const GradeCalculator = () => {
         <div
           className="max-w-screen-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-80">
           <div className="flex items-center justify-center space-x-2 mb-6">
-            <FaCalculator className="text-2xl text-blue-500 dark:text-blue-300"/>
+            <FaCalculator className="text-2xl text-blue-500 dark:text-blue-300" />
             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Calculadora Univesp</h2>
           </div>
 
@@ -158,14 +164,13 @@ export const GradeCalculator = () => {
                   onClick={() => {
                     setActiveTab(index);
                     setShowResult(false);
-                    setGrades({g1: 0, g2: 0});
+                    setGrades({ g1: 0, g2: 0 });
                     cleanInputs()
                   }}
-                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-                    activeTab === index
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${activeTab === index
                       ? "bg-blue-500 dark:bg-blue-700 text-white"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -181,19 +186,19 @@ export const GradeCalculator = () => {
                 onClick={calculateGrade}
                 className="w-1/2 py-3 bg-blue-500 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
               >
-                <FaCalculator/>
+                <FaCalculator />
                 <span>Calcular</span>
               </button>
             </div>
 
 
-            <Result showResult={showResult} result={result.result} isSimulation={result.isSimulation}/>
+            <Result showResult={showResult} result={result.result} isSimulation={result.isSimulation} />
 
             <History entries={history} onClear={clearHistory} />
           </div>
         </div>
         <div className="absolute bottom-8 animate-bounce">
-          <FiArrowDown className="text-3xl text-blue-500"/>
+          <FiArrowDown className="text-3xl text-blue-500" />
         </div>
       </div>
     </div>
