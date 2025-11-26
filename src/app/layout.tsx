@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 const CookieConsent = dynamic(() => import('@/components/CookieConsent').then(mod => mod.CookieConsent));
 import { UserPreferencesProvider } from "@/context/UserPreferencesContext";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 
 export const metadata: Metadata = {
