@@ -56,7 +56,6 @@ export const ManualNaoEscrito = () => {
         alt="Visualizar as duas esferas de operação da universidade de forma clara."
         width={1200}
         height={630}
-        priority
       />
 
       <h2>Navegando na "Nação": O Guia do Ecossistema Não-Oficial</h2>
@@ -70,7 +69,6 @@ export const ManualNaoEscrito = () => {
         alt="Visualizar as duas esferas de operação da universidade de forma clara."
         width={1200}
         height={630}
-        priority
       />
       <p>
         O grupo de WhatsApp da sua turma é, ao mesmo tempo, sua maior bênção e sua pior maldição.
@@ -92,7 +90,7 @@ export const ManualNaoEscrito = () => {
       <h3>O Desafio Real: A Gestão do Projeto Integrador (PI)</h3>
       <p>
         O Projeto Integrador não é um trabalho acadêmico. É um exercício brutal de <strong>gestão de projetos remotos
-        com estranhos</strong>. A nota acadêmica é quase secundária à habilidade de fazer o grupo funcionar.
+          com estranhos</strong>. A nota acadêmica é quase secundária à habilidade de fazer o grupo funcionar.
       </p>
       <p>
         No seu primeiro PI, você invariavelmente encontrará estes arquétipos:
@@ -112,7 +110,6 @@ export const ManualNaoEscrito = () => {
         alt="Os arquétipos clássicos de um grupo de PI em EAD."
         width={1200}
         height={630}
-        priority
       />
       <p>
         O segredo não é ter sorte de cair num grupo só de "Proativos". O segredo é ter <strong>método</strong>.
@@ -159,20 +156,19 @@ export const ManualNaoEscrito = () => {
       </p>
 
       <div className="bg-blue-100 dark:bg-blue-800 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 my-6"
-           role="alert">
+        role="alert">
         <p className="font-bold">Sua Bússola Estratégica: A Calculadora Univesp</p>
         <p>
           O caos da "Nação" vai te deixar ansioso sobre notas. O "Governo" (AVA) vai te dar as notas, mas não vai te
           dizer o que elas significam estrategicamente. A <Link href="https://univesp-calculadora.vercel.app/"
-                                                                className="font-semibold underline">Calculadora
-          Univesp</Link> é a sua bússola.
+            className="font-semibold underline">Calculadora
+            Univesp</Link> é a sua bússola.
         </p>
         <Image
           src="/images/blog/manual-nao-escrito-aluno-univesp/bussola_estrategica.png"
           alt="Os arquétipos clássicos de um grupo de PI em EAD."
           width={1200}
           height={630}
-          priority
         />
         <p>
           É nela que você traduz toda a informação em um plano de ação. "Preciso de um 6,5 na prova para passar", "Se eu
@@ -190,8 +186,8 @@ export const ManualNaoEscrito = () => {
       <p>
         Não se isole. A comunidade é sua maior força. Mas não se afogue nela. Mantenha os pés firmes na fonte oficial e
         use suas próprias ferramentas — especialmente a <Link href="https://univesp-calculadora.vercel.app/"
-                                                              className="font-semibold underline">Calculadora
-        Univesp</Link> — para ser o estrategista da sua própria aprovação. O AVA te dá o <em>conteúdo</em>, a comunidade
+          className="font-semibold underline">Calculadora
+          Univesp</Link> — para ser o estrategista da sua própria aprovação. O AVA te dá o <em>conteúdo</em>, a comunidade
         te dá o <em>apoio</em>, mas é você quem traça o <em>plano</em>.
       </p>
     </>
