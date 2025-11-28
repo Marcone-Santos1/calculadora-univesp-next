@@ -1,82 +1,84 @@
-import {notFound} from 'next/navigation';
-import {articles} from '@/data/articles';
-import {Metadata} from 'next';
-
-// Componentes dos artigos
-import {GradeSystemGuide} from '@/components/blog/articles/GradeSystemGuide';
-import {InPersonTestTips} from '@/components/blog/articles/InPersonTestTips';
-import {ProjetoIntegrador} from '@/components/blog/articles/ProjetoIntegrador';
-import {UseOfStudies} from '@/components/blog/articles/UseOfStudies';
-import {DisciplinaEAD} from '@/components/blog/articles/DisciplinaEAD';
-import {ExameUnivesp} from '@/components/blog/articles/ExameUnivesp';
-import {ComponentType} from "react";
-import {ArticleLayout} from "@/components/blog/ArticleLayout";
-import {GuiaAVA} from "@/components/blog/articles/AvaGuide";
-import {OQueCaiNaProva} from "@/components/blog/articles/OQueCaiNaProva";
-import {VestibularUnivesp} from "@/components/blog/articles/VestibularUnivesp";
-import {GuiaTCC} from "@/components/blog/articles/GuiaTCC";
-import {GuiaEstudoExatas} from "@/components/blog/articles/GuiaEstudoExatas";
-import {GuiaEixosUnivesp} from "@/components/blog/articles/GuiaEixosUnivesp";
-import {ManualNaoEscrito} from "@/components/blog/articles/ManualNaoEscrito";
-
-// Mapeia o slug do artigo ao seu componente React
-const articleComponents: Record<string, ComponentType> = {
-  'guia-sistema-avaliacao-univesp': GradeSystemGuide,
-  'dicas-prova-presencial-univesp': InPersonTestTips,
-  'desvendando-projeto-integrador-univesp': ProjetoIntegrador,
-  'aproveitamento-estudos-univesp': UseOfStudies,
-  'disciplina-e-procrastinacao-univesp': DisciplinaEAD,
-  'guia-exame-recuperacao-univesp': ExameUnivesp,
-  'guia-ava-univesp': GuiaAVA,
-  'o-que-cai-na-prova-univesp': OQueCaiNaProva,
-  'o-que-estudar-vestibular-univesp': VestibularUnivesp,
-  'guia-tcc-univesp-aprovacao': GuiaTCC,
-  'guia-estudo-exatas-univesp': GuiaEstudoExatas,
-  'guia-eixos-univesp-ciclo-basico': GuiaEixosUnivesp,
-  'manual-nao-escrito-aluno-univesp': ManualNaoEscrito,
-};
+import { notFound } from 'next/navigation';
+import { getBlogPost, getBlogPosts } from '@/actions/blog-actions';
+import { Metadata } from 'next';
+import { ArticleLayout } from "@/components/blog/ArticleLayout";
+import ReactMarkdown from 'react-markdown';
+import React from 'react';
+import Image from 'next/image';
 
 // Função para gerar metadados dinâmicos (SEO)
-export async function generateMetadata({params}: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
 
-  const {slug} = await params;
-
-  const article = articles.find(p => p.slug.endsWith(slug));
-  if (!article) {
+  if (!post) {
     return {};
   }
+
   return {
-    title: `${article.title} | Calculadora UNIVESP`,
-    description: article.description,
+    title: post.metaTitle || `${post.title} | Calculadora UNIVESP`,
+    description: post.metaDescription || post.excerpt,
+    keywords: post.keywords ? post.keywords.split(',').map(k => k.trim()) : [],
     openGraph: {
-      title: article.title,
-      description: article.description,
+      title: post.metaTitle || post.title,
+      description: post.metaDescription || post.excerpt,
       type: "article",
-      publishedTime: article.date,
+      publishedTime: post.createdAt.toISOString(),
+      images: post.coverImage ? [post.coverImage] : [],
     },
   };
 }
 
 // Função para gerar as páginas estaticamente
 export async function generateStaticParams() {
-  return articles.map(article => ({
-    slug: article.slug.split('/').pop(),
+  const posts = await getBlogPosts(true);
+  return posts.map(post => ({
+    slug: post.slug,
   }));
 }
 
-export default async function ArticlePage({params}: { params: Promise<{ slug: string }> }) {
-  const {slug} = await params;
-  const ArticleComponent = articleComponents[slug];
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
 
-  if (!ArticleComponent) {
+  if (!post) {
     notFound();
   }
 
-  const articleData = articles.find(p => p.slug.endsWith(slug));
+  const tags = post.keywords ? post.keywords.split(',').map(t => t.trim()) : [];
 
   return (
-    <ArticleLayout title={articleData?.title || 'Artigo'} date={articleData?.date} tags={articleData?.tags}>
-      <ArticleComponent/>
+    <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags}>
+      <ReactMarkdown
+        components={{
+          h1: ({ children }: { children?: React.ReactNode }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+          h2: ({ children }: { children?: React.ReactNode }) => <h2 className="text-2xl font-bold mt-8 mb-4">{children}</h2>,
+          h3: ({ children }: { children?: React.ReactNode }) => <h3 className="text-xl font-bold mt-6 mb-3">{children}</h3>,
+          p: ({ children }: { children?: React.ReactNode }) => <div className="mb-4 leading-relaxed">{children}</div>,
+          ul: ({ children }: { children?: React.ReactNode }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
+          ol: ({ children }: { children?: React.ReactNode }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
+          li: ({ children }: { children?: React.ReactNode }) => <li>{children}</li>,
+          a: ({ href, children }: { href?: string, children?: React.ReactNode }) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+          blockquote: ({ children }: { children?: React.ReactNode }) => <blockquote className="border-l-4 border-blue-500 pl-4 italic my-4 bg-gray-50 dark:bg-gray-800/50 py-2 pr-2 rounded-r">{children}</blockquote>,
+          img: ({ src, alt }: { src?: string, alt?: string }) => (
+            <figure className="my-8">
+              <div className="relative w-full h-auto">
+                <Image
+                  src={src || ''}
+                  alt={alt || ''}
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  className="rounded-xl shadow-lg w-full h-auto"
+                />
+              </div>
+              {alt && <figcaption className="text-center text-sm text-gray-500 mt-2">{alt}</figcaption>}
+            </figure>
+          ),
+        }}
+      >
+        {post.content}
+      </ReactMarkdown>
     </ArticleLayout>
   );
 }

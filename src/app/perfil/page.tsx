@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getUserStats, getUserQuestions, getUserComments } from '@/actions/user-actions';
+import { getUserStats, getUserQuestions, getUserComments, getUserProfile } from '@/actions/user-actions';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { UserActivityList } from '@/components/profile/UserActivityList';
 import { Metadata } from 'next';
@@ -17,18 +17,24 @@ export default async function ProfilePage() {
         redirect('/');
     }
 
-    const [stats, questions, comments] = await Promise.all([
+    const [stats, questions, comments, userProfile] = await Promise.all([
         getUserStats(session.user.id!),
         getUserQuestions(session.user.id!),
-        getUserComments(session.user.id!)
+        getUserComments(session.user.id!),
+        getUserProfile(session.user.id!)
     ]);
+
+    if (!userProfile) {
+        redirect('/');
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
             <div className="container mx-auto max-w-4xl">
                 <ProfileHeader
-                    user={session.user}
+                    user={userProfile}
                     stats={stats}
+                    isOwner={true}
                 />
 
                 <UserActivityList

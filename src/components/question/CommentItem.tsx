@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { FaUser, FaReply } from 'react-icons/fa';
 import { ReportButton } from '../report/ReportButton';
 import ReactMarkdown from 'react-markdown';
+import { UserBadge } from '@/components/gamification/UserBadge';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface Comment {
     id: string;
@@ -11,6 +14,13 @@ interface Comment {
     userName: string;
     createdAt: Date;
     replies?: Comment[];
+    isDeleted?: boolean;
+    user?: {
+        id: string;
+        name: string | null;
+        image: string | null;
+        reputation: number;
+    };
 }
 
 interface CommentItemProps {
@@ -39,30 +49,67 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
     return (
         <div className={`mt-4 ${indentClass}`}>
             <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                    <FaUser className="text-gray-500 dark:text-gray-400 text-sm" />
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                    {comment.user ? (
+                        <Link href={`/perfil/${comment.user.id}`} className="w-full h-full flex items-center justify-center hover:opacity-80 transition-opacity relative">
+                            {comment.user.image ? (
+                                <Image
+                                    src={comment.user.image}
+                                    alt={comment.userName}
+                                    fill
+                                    className="object-cover"
+                                    sizes="32px"
+                                />
+                            ) : (
+                                <FaUser className="text-gray-500 dark:text-gray-400 text-sm" />
+                            )}
+                        </Link>
+                    ) : (
+                        <FaUser className="text-gray-500 dark:text-gray-400 text-sm" />
+                    )}
                 </div>
                 <div className="flex-1 min-w-0">
 
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                            {comment.userName}
-                        </span>
+                        {comment.user ? (
+                            <Link
+                                href={`/perfil/${comment.user.id}`}
+                                className="font-semibold text-sm text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2"
+                            >
+                                {comment.userName}
+                            </Link>
+                        ) : (
+                            <span className="font-semibold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                                {comment.userName}
+                            </span>
+                        )}
+
+                        {comment.user && <UserBadge reputation={comment.user.reputation} />}
+
                         <span className="text-xs text-gray-500">
-                            {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
+                            • {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
                         </span>
                         <ReportButton commentId={comment.id} />
                     </div>
-                    <div className="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-gray-300 break-words leading-relaxed">
-                        <ReactMarkdown>{comment.text}</ReactMarkdown>
-                    </div>
 
-                    <button
-                        onClick={() => setIsReplying(!isReplying)}
-                        className="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 font-medium"
-                    >
-                        <FaReply /> Responder
-                    </button>
+                    {comment.isDeleted ? (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                            Conteúdo removido pela moderação.
+                        </div>
+                    ) : (
+                        <>
+                            <div className="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-gray-300 break-words leading-relaxed">
+                                <ReactMarkdown>{comment.text}</ReactMarkdown>
+                            </div>
+
+                            <button
+                                onClick={() => setIsReplying(!isReplying)}
+                                className="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 font-medium"
+                            >
+                                <FaReply /> Responder
+                            </button>
+                        </>
+                    )}
 
                     {isReplying && (
                         <div className="mt-3 animate-fadeIn">
@@ -102,7 +149,7 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
 
             {/* Recursive Replies */}
             {comment.replies && comment.replies.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-4 mt-4">
                     {comment.replies.map((reply) => (
                         <CommentItem
                             key={reply.id}

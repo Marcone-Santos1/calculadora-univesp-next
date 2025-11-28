@@ -1,6 +1,7 @@
-import { getReports, resolveReport } from '@/actions/report-actions';
-import { FaCheck, FaTimes, FaExternalLinkAlt } from 'react-icons/fa';
+import { getReports } from '@/actions/report-actions';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 import Link from 'next/link';
+import { ReportActions } from '@/components/admin/reports/ReportActions';
 
 export default async function AdminReportsPage() {
     const reports = await getReports();
@@ -50,41 +51,20 @@ export default async function AdminReportsPage() {
                                     </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${report.status === 'PENDING'
-                                                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                : report.status === 'RESOLVED'
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                            : report.status === 'RESOLVED'
+                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                             }`}>
                                             {report.status}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right">
-                                        {report.status === 'PENDING' && (
-                                            <div className="flex justify-end gap-2">
-                                                <form action={async () => {
-                                                    'use server';
-                                                    await resolveReport(report.id, 'DISMISSED');
-                                                }}>
-                                                    <button
-                                                        title="Ignorar"
-                                                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                                                    >
-                                                        <FaTimes />
-                                                    </button>
-                                                </form>
-                                                <form action={async () => {
-                                                    'use server';
-                                                    await resolveReport(report.id, 'RESOLVED');
-                                                }}>
-                                                    <button
-                                                        title="Resolver (Banir/Ocultar)"
-                                                        className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                                                    >
-                                                        <FaCheck />
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        )}
+                                        <ReportActions
+                                            reportId={report.id}
+                                            status={report.status}
+                                            contentType={report.questionId ? 'question' : 'comment'}
+                                        />
                                     </td>
                                 </tr>
                             ))}

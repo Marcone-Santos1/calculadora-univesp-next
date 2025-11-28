@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
-import { articles } from '@/data/articles';
+
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://univesp-calculadora.vercel.app';
@@ -32,10 +32,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
     ];
 
-        const blogRoutes: MetadataRoute.Sitemap = articles.map((article) => ({
-        url: `${baseUrl}${article.slug}`,
-        lastModified: new Date(article.date), // Usamos a data do artigo
-        changeFrequency: 'monthly', // Artigos, uma vez publicados, não mudam
+    // Dynamic routes (Blog Posts)
+    const blogPosts = await prisma.blogPost.findMany({
+        where: { published: true },
+        select: { slug: true, updatedAt: true },
+    });
+
+    const blogRoutes: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.updatedAt,
+        changeFrequency: 'monthly',
         priority: 0.7,
     }));
 

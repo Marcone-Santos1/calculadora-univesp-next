@@ -11,6 +11,7 @@ const navItems = [
     { href: '/admin/subjects', label: 'Subjects', icon: FaBook },
     { href: '/admin/users', label: 'Users', icon: FaUsers },
     { href: '/admin/reports', label: 'Report', icon: FaFlag },
+    { href: '/admin/blog', label: 'Blog', icon: FaBook },
 ];
 
 export function AdminSidebar() {

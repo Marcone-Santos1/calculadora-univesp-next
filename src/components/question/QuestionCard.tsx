@@ -7,9 +7,19 @@ import { FaCheckCircle, FaComment, FaEye, FaClock, FaUser, FaCheck } from 'react
 import { FavoriteButton } from './FavoriteButton';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import ReactMarkdown from 'react-markdown';
+import { UserBadge } from '@/components/gamification/UserBadge';
+
+import Image from 'next/image';
 
 interface QuestionCardProps {
-    question: Question;
+    question: Question & {
+        user?: {
+            id: string;
+            name: string | null;
+            image: string | null;
+            reputation: number;
+        };
+    };
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
@@ -24,18 +34,46 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     };
 
     return (
-        <Link href={`/questoes/${question.id}`} className="block group">
+        <div className="block group">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-900 transition-all duration-200">
                 {/* Header: User & Meta */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-bold">
-                            {question.userName?.charAt(0).toUpperCase() || <FaUser />}
+                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-bold overflow-hidden relative">
+                            {question.user ? (
+                                <Link href={`/perfil/${question.user.id}`} className="w-full h-full flex items-center justify-center hover:opacity-80 transition-opacity relative">
+                                    {question.user.image ? (
+                                        <Image
+                                            src={question.user.image}
+                                            alt={question.userName || 'User'}
+                                            fill
+                                            className="object-cover"
+                                            sizes="32px"
+                                        />
+                                    ) : (
+                                        question.userName?.charAt(0).toUpperCase() || <FaUser />
+                                    )}
+                                </Link>
+                            ) : (
+                                question.userName?.charAt(0).toUpperCase() || <FaUser />
+                            )}
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                {question.userName || 'Anônimo'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                {question.user ? (
+                                    <Link
+                                        href={`/perfil/${question.user.id}`}
+                                        className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                    >
+                                        {question.userName || 'Anônimo'}
+                                    </Link>
+                                ) : (
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                        {question.userName || 'Anônimo'}
+                                    </span>
+                                )}
+                                {question.user && <UserBadge reputation={question.user.reputation} />}
+                            </div>
                             <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                 <FaClock className="text-[10px]" />
                                 {formatDate(question.createdAt)}
@@ -58,9 +96,11 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
                 {/* Title & Content */}
                 <div className="mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                        {question.title}
-                    </h3>
+                    <Link href={`/questoes/${question.id}`} className="block">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                            {question.title}
+                        </h3>
+                    </Link>
                     <div className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 leading-relaxed prose dark:prose-invert prose-sm max-w-none">
                         <ReactMarkdown
                             components={{
@@ -105,6 +145,6 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                     )}
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
