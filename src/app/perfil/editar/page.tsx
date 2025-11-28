@@ -45,7 +45,7 @@ export default async function EditProfilePage() {
                     </p>
                 </div>
 
-                <ProfileEditForm user={user as any} />
+                <ProfileEditForm user={user} />
             </div>
         </div>
     );

@@ -2,8 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/auth'; // Assuming auth is available here, or use getSession
-import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 
 export async function getBlogPosts(publishedOnly = true) {
     const where = publishedOnly ? { published: true } : {};

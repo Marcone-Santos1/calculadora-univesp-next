@@ -43,16 +43,16 @@ export default async function PublicProfilePage({ params }: Props) {
     const isOwner = session?.user?.id === user.id;
 
     // Adapt user object to match what ProfileHeader expects
-    const typedUser = user as any;
     const profileUser = {
         id: user.id,
         name: user.name,
         email: isOwner ? user.email : null, // Only show email to owner
         image: user.image,
-        bio: typedUser.bio,
-        location: typedUser.location,
-        website: typedUser.website,
-        socialLinks: typedUser.socialLinks
+        bio: user.bio,
+        location: user.location,
+        website: user.website,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        socialLinks: user.socialLinks as any
     };
 
     return (

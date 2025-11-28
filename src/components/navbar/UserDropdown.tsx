@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
-import { FaUser, FaUserShield, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { FaUser, FaUserShield, FaSignOutAlt } from 'react-icons/fa';
 
 interface UserDropdownProps {
     user: {

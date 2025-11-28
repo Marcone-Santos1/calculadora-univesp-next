@@ -1,5 +1,4 @@
 import { BlogEditor } from '@/components/admin/blog/BlogEditor';
-import { getBlogPost } from '@/actions/blog-actions';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 

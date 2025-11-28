@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { getBlogPosts } from '@/actions/blog-actions';
 import { DeletePostButton } from '@/components/admin/blog/DeletePostButton';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { revalidatePath } from 'next/cache';
+import { FaPlus, FaEdit, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default async function AdminBlogPage() {
     const posts = await getBlogPosts(false); // Fetch all posts including drafts

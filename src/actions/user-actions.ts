@@ -98,11 +98,18 @@ import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 
+interface SocialLinks {
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+    instagram?: string;
+}
+
 export async function updateProfile(data: {
     bio?: string;
     location?: string;
     website?: string;
-    socialLinks?: any;
+    socialLinks?: SocialLinks;
 }) {
     const session = await auth();
     if (!session?.user?.email) {

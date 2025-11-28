@@ -60,19 +60,20 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           li: ({ children }: { children?: React.ReactNode }) => <li>{children}</li>,
           a: ({ href, children }: { href?: string, children?: React.ReactNode }) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
           blockquote: ({ children }: { children?: React.ReactNode }) => <blockquote className="border-l-4 border-blue-500 pl-4 italic my-4 bg-gray-50 dark:bg-gray-800/50 py-2 pr-2 rounded-r">{children}</blockquote>,
-          img: ({ src, alt }: { src?: string, alt?: string }) => (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          img: (props: any) => (
             <figure className="my-8">
               <div className="relative w-full h-auto">
                 <Image
-                  src={src || ''}
-                  alt={alt || ''}
+                  src={props.src || ''}
+                  alt={props.alt || ''}
                   width={0}
                   height={0}
                   sizes="100vw"
                   className="rounded-xl shadow-lg w-full h-auto"
                 />
               </div>
-              {alt && <figcaption className="text-center text-sm text-gray-500 mt-2">{alt}</figcaption>}
+              {props.alt && <figcaption className="text-center text-sm text-gray-500 mt-2">{props.alt}</figcaption>}
             </figure>
           ),
         }}

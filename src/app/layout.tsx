@@ -6,8 +6,6 @@ import { AppStateProvider } from '@/components/AppStateProvider';
 import { SessionProvider } from '@/components/SessionProvider';
 import { ToastProvider } from '@/components/ToastProvider';
 import { GoogleAnalytics } from '@next/third-parties/google'
-import AdsRefresher from "@/components/AdsRefresher";
-import { AdsenseScript } from "@/components/AdsenseScript";
 import dynamic from 'next/dynamic';
 const CookieConsent = dynamic(() => import('@/components/CookieConsent').then(mod => mod.CookieConsent));
 import { UserPreferencesProvider } from "@/context/UserPreferencesContext";

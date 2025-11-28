@@ -12,7 +12,12 @@ interface ProfileHeaderProps {
         bio?: string | null;
         location?: string | null;
         website?: string | null;
-        socialLinks?: any;
+        socialLinks?: {
+            twitter?: string;
+            github?: string;
+            linkedin?: string;
+            instagram?: string;
+        } | null;
     };
     stats: {
         questions: number;

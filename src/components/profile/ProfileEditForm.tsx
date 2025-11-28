@@ -6,6 +6,13 @@ import { updateProfile } from '@/actions/user-actions';
 import { FaSave, FaMapMarkerAlt, FaGlobe, FaTwitter, FaGithub, FaLinkedin, FaInstagram } from 'react-icons/fa';
 import { AvatarUpload } from './AvatarUpload';
 
+interface SocialLinks {
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+    instagram?: string;
+}
+
 interface ProfileEditFormProps {
     user: {
         id: string;
@@ -14,7 +21,7 @@ interface ProfileEditFormProps {
         bio: string | null;
         location: string | null;
         website: string | null;
-        socialLinks: any;
+        socialLinks: SocialLinks | null;
     };
 }
 
