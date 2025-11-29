@@ -30,6 +30,32 @@ export async function awardReputation(userId: string, amount: number, reason: st
     }
 }
 
+export async function deductReputation(userId: string, amount: number, reason: string) {
+    try {
+        // Update user reputation
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                reputation: {
+                    decrement: amount
+                },
+                reputationLogs: {
+                    create: {
+                        amount: -amount,
+                        reason
+                    }
+                }
+            }
+        });
+
+        // Revalidate paths where reputation might be shown
+        revalidatePath('/perfil');
+        revalidatePath('/questoes');
+    } catch (error) {
+        console.error('Error deducting reputation:', error);
+    }
+}
+
 export async function getUserReputation(userId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },

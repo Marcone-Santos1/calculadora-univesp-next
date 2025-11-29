@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { FaBell } from 'react-icons/fa';
 import Link from 'next/link';
 import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from '@/actions/notification-actions';
@@ -22,7 +22,7 @@ export function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         if (session?.user?.id) {
             const [data, count] = await Promise.all([
                 getNotifications(session.user.id),
@@ -31,14 +31,14 @@ export function NotificationBell() {
             setNotifications(data);
             setUnreadCount(count);
         }
-    };
+    }, [session]);
 
     useEffect(() => {
         fetchNotifications();
         // Poll every minute
         const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
-    }, [session]);
+    }, [fetchNotifications]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -51,7 +51,7 @@ export function NotificationBell() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleMarkAsRead = async (id: string, link?: string | null) => {
+    const handleMarkAsRead = async (id: string) => {
         await markAsRead(id);
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
@@ -108,7 +108,7 @@ export function NotificationBell() {
                                     {notification.link ? (
                                         <Link
                                             href={notification.link}
-                                            onClick={() => handleMarkAsRead(notification.id, notification.link)}
+                                            onClick={() => handleMarkAsRead(notification.id)}
                                             className="block"
                                         >
                                             <p className="text-sm text-gray-800 dark:text-gray-200 mb-1">

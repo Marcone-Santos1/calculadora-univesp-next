@@ -68,6 +68,7 @@ export const NavBar = () => {
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Início</Link>
             <Link href="/questoes" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Questões</Link>
+            <Link href="/placar" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Placar</Link>
             <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Blog</Link>
             <Link href="/sobre" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Sobre</Link>
 
@@ -132,6 +133,9 @@ export const NavBar = () => {
             </Link>
             <Link href="/questoes" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
               Questões
+            </Link>
+            <Link href="/placar" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+              Placar
             </Link>
             <Link href="/blog" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
               Blog

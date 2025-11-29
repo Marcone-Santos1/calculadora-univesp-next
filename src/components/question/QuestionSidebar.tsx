@@ -221,6 +221,7 @@ export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarPro
                     onClick={() => {
                         setDefaultSort(null);
                         setDefaultSubject(null);
+                        setSearchTerm('');
                     }}
                     className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition-all text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white shadow-sm"
                 >

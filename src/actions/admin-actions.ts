@@ -4,6 +4,8 @@
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/admin-auth';
 import { revalidatePath } from 'next/cache';
+import { createNotification } from './notification-actions';
+import { awardReputation, deductReputation } from './reputation-actions';
 
 // ============ Question Management ============
 
@@ -52,9 +54,27 @@ export async function getAdminQuestions(search?: string, verified?: boolean, ver
 export async function deleteQuestion(id: string) {
     await requireAdmin();
 
-    await prisma.question.delete({
-        where: { id }
+    const question = await prisma.question.findUnique({
+        where: { id },
+        select: { userId: true, title: true }
     });
+
+    if (question) {
+        await prisma.question.delete({
+            where: { id }
+        });
+
+        // Deduct reputation
+        await deductReputation(question.userId, 10, 'QUESTION_DELETED_BY_ADMIN');
+
+        // Notify user
+        await createNotification({
+            userId: question.userId,
+            type: 'VERIFICATION',
+            message: `Sua questão "${question.title.substring(0, 30)}..." foi removida pela administração.`,
+            link: '#'
+        });
+    }
 
     revalidatePath('/admin/questions');
     revalidatePath('/questoes');
@@ -65,7 +85,7 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
 
     const question = await prisma.question.findUnique({
         where: { id },
-        select: { isVerified: true }
+        select: { isVerified: true, userId: true }
     });
 
     if (!question) {
@@ -91,6 +111,17 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
                 data: { isCorrect: true }
             })
         ]);
+
+        // Award reputation to author
+        await awardReputation(question.userId, 10, 'QUESTION_VERIFIED');
+
+        // Notify author
+        await createNotification({
+            userId: question.userId,
+            type: 'VERIFICATION',
+            message: `Sua questão foi verificada e aceita! Você ganhou 10 pontos.`,
+            link: `/questoes/${id}`
+        });
     } else {
         // Unverifying or toggling without specific answer (fallback)
         await prisma.question.update({
@@ -136,21 +167,54 @@ export async function getAdminComments(search?: string) {
 export async function deleteComment(id: string) {
     await requireAdmin();
 
-    // Get the comment to find its question
+    // Get the comment to check for replies and get details for notification
     const comment = await prisma.comment.findUnique({
         where: { id },
-        select: { questionId: true }
+        select: {
+            questionId: true,
+            userId: true,
+            text: true,
+            question: { select: { title: true } },
+            _count: {
+                select: { replies: true }
+            }
+        }
     });
 
-    // Delete comment (cascade will delete replies)
-    await prisma.comment.delete({
-        where: { id }
+    if (!comment) return;
+
+    if (comment._count.replies > 0) {
+        // Soft delete if there are replies to preserve the thread
+        await prisma.comment.update({
+            where: { id },
+            data: {
+                isDeleted: true,
+                moderationReason: 'Conteúdo removido pela moderação'
+            }
+        });
+
+        // Deduct reputation
+        await deductReputation(comment.userId, 5, 'COMMENT_MODERATED');
+    } else {
+        // Hard delete if no replies
+        await prisma.comment.delete({
+            where: { id }
+        });
+
+        // Deduct reputation
+        await deductReputation(comment.userId, 5, 'COMMENT_DELETED_BY_ADMIN');
+    }
+
+    // Notify the user
+    await createNotification({
+        userId: comment.userId,
+        type: 'VERIFICATION', // Using VERIFICATION type as a generic system/admin notification for now, or add a new type
+        message: `Seu comentário na questão "${comment.question.title.substring(0, 30)}..." foi removido pela moderação.`,
+        link: `/questoes/${comment.questionId}`
     });
 
     revalidatePath('/admin/comments');
-    if (comment) {
-        revalidatePath(`/questoes/${comment.questionId}`);
-    }
+    revalidatePath(`/questoes/${comment.questionId}`);
 }
 
 // ============ Subject Management ============
@@ -273,12 +337,18 @@ export async function toggleUserAdmin(id: string) {
 export async function getAdminStats() {
     await requireAdmin();
 
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const [
         totalUsers,
         totalQuestions,
         totalComments,
         verifiedQuestions,
-        recentQuestions
+        recentQuestions,
+        questionsLast30Days,
+        usersLast30Days,
+        subjectsWithCount
     ] = await Promise.all([
         prisma.user.count(),
         prisma.question.count(),
@@ -291,14 +361,67 @@ export async function getAdminStats() {
                 user: { select: { name: true } },
                 subject: { select: { name: true } }
             }
+        }),
+        prisma.question.findMany({
+            where: { createdAt: { gte: thirtyDaysAgo } },
+            select: { createdAt: true }
+        }),
+        prisma.user.findMany({
+            where: { createdAt: { gte: thirtyDaysAgo } },
+            select: { createdAt: true }
+        }),
+        prisma.subject.findMany({
+            include: {
+                _count: {
+                    select: { questions: true }
+                }
+            }
         })
     ]);
+
+    // Process daily activity
+    const dailyActivityMap = new Map<string, { date: string; questions: number; users: number }>();
+
+    // Initialize last 30 days
+    for (let i = 0; i < 30; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toLocaleDateString('pt-BR'); // DD/MM/YYYY
+        // Store as YYYY-MM-DD for sorting if needed, or just use the string key
+        // Let's use a simple format for the chart
+        dailyActivityMap.set(dateStr, { date: dateStr.split('/').slice(0, 2).join('/'), questions: 0, users: 0 });
+    }
+
+    questionsLast30Days.forEach(q => {
+        const dateStr = new Date(q.createdAt).toLocaleDateString('pt-BR');
+        if (dailyActivityMap.has(dateStr)) {
+            dailyActivityMap.get(dateStr)!.questions++;
+        }
+    });
+
+    usersLast30Days.forEach(u => {
+        const dateStr = new Date(u.createdAt).toLocaleDateString('pt-BR');
+        if (dailyActivityMap.has(dateStr)) {
+            dailyActivityMap.get(dateStr)!.users++;
+        }
+    });
+
+    // Convert to array and reverse (oldest to newest)
+    const dailyActivity = Array.from(dailyActivityMap.values()).reverse();
+
+    // Process subject distribution
+    const subjectDistribution = subjectsWithCount.map(s => ({
+        name: s.name,
+        value: s._count.questions
+    })).sort((a, b) => b.value - a.value);
 
     return {
         totalUsers,
         totalQuestions,
         totalComments,
         verifiedQuestions,
-        recentQuestions
+        recentQuestions,
+        dailyActivity,
+        subjectDistribution
     };
 }

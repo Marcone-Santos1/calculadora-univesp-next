@@ -49,7 +49,11 @@ export async function getQuestions(
     const questions = await prisma.question.findMany({
         where,
         include: {
-            user: true,
+            user: {
+                include: {
+                    reputationLogs: false
+                }
+            },
             subject: true,
             alternatives: {
                 include: {
@@ -113,7 +117,11 @@ export async function getQuestion(id: string) {
     const question = await prisma.question.findUnique({
         where: { id },
         include: {
-            user: true,
+            user: {
+                include: {
+                    reputationLogs: false
+                }
+            },
             subject: true,
             alternatives: {
                 include: {
@@ -123,7 +131,14 @@ export async function getQuestion(id: string) {
             },
             comments: {
                 include: {
-                    user: true
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            image: true,
+                            reputation: true
+                        }
+                    }
                 },
                 orderBy: { createdAt: 'asc' }
             }
@@ -141,7 +156,7 @@ export async function getQuestion(id: string) {
         comments.forEach(comment => {
             commentMap.set(comment.id, {
                 ...comment,
-                userName: comment.user.name || 'Anônimo',
+                userName: comment.user?.name || 'Anônimo',
                 replies: []
             });
         });
@@ -215,10 +230,11 @@ export async function createQuestion(formData: FormData) {
 
     revalidatePath('/questoes');
 
+    // Award reputation for creating a question
+    await awardReputation(session.user.id, 5, 'QUESTION_CREATED');
+
     return { questionId: question.id };
 }
-
-
 
 export async function voteOnAlternative(alternativeId: string) {
     const session = await auth();

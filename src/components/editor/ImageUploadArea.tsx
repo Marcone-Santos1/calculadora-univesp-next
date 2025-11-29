@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { FaCloudUploadAlt, FaSpinner, FaImage } from 'react-icons/fa';
+import { FaCloudUploadAlt, FaSpinner } from 'react-icons/fa';
 
 interface ImageUploadAreaProps {
     onUpload: (markdown: string) => void;
@@ -12,7 +12,7 @@ export const ImageUploadArea: React.FC<ImageUploadAreaProps> = ({ onUpload, clas
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
 
-    const uploadImage = async (file: File) => {
+    const uploadImage = useCallback(async (file: File) => {
         if (!file.type.startsWith('image/')) {
             alert('Por favor, selecione apenas arquivos de imagem.');
             return;
@@ -45,7 +45,7 @@ export const ImageUploadArea: React.FC<ImageUploadAreaProps> = ({ onUpload, clas
         } finally {
             setIsUploading(false);
         }
-    };
+    }, [onUpload]);
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -64,7 +64,7 @@ export const ImageUploadArea: React.FC<ImageUploadAreaProps> = ({ onUpload, clas
         if (files.length > 0) {
             uploadImage(files[0]);
         }
-    }, []);
+    }, [uploadImage]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {

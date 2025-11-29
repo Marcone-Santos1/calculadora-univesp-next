@@ -3,6 +3,8 @@ import { getAdminStats } from '@/actions/admin-actions';
 import { StatsCard } from '@/components/admin/StatsCard';
 import { FaUsers, FaQuestionCircle, FaComments, FaCheckCircle } from 'react-icons/fa';
 import Link from 'next/link';
+import { ActivityChart } from '@/components/admin/charts/ActivityChart';
+import { SubjectChart } from '@/components/admin/charts/SubjectChart';
 
 export default async function AdminDashboard() {
     const stats = await getAdminStats();
@@ -39,6 +41,23 @@ export default async function AdminDashboard() {
                     icon={<FaCheckCircle className="text-2xl" />}
                     color="orange"
                 />
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                        Atividade (Últimos 30 dias)
+                    </h2>
+                    <ActivityChart data={stats.dailyActivity} />
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                        Distribuição por Matéria
+                    </h2>
+                    <SubjectChart data={stats.subjectDistribution} />
+                </div>
             </div>
 
             {/* Recent Questions */}

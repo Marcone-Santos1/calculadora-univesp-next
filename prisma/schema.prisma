@@ -57,6 +57,18 @@ model User {
   
   // Reporting
   reportsFiled  Report[]        @relation("Reporter")
+  
+  // Blog
+  posts         BlogPost[]
+
+  // Profile
+  bio           String?   @db.Text
+  location      String?
+  website       String?
+  socialLinks   Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Notification {
@@ -155,6 +167,10 @@ model Comment {
   replies    Comment[] @relation("CommentReplies")
   
   reports    Report[]
+
+  // Moderation
+  isDeleted        Boolean  @default(false)
+  moderationReason String?
 }
 
 model ReputationLog {
@@ -181,4 +197,25 @@ model Report {
   
   commentId  String?
   comment    Comment?  @relation(fields: [commentId], references: [id])
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  excerpt     String   @db.Text
+  content     String   @db.Text
+  coverImage  String?
+  published   Boolean  @default(false)
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  keywords        String? // Comma separated
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
 }
