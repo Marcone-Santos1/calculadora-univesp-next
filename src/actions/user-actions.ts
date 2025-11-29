@@ -29,6 +29,7 @@ export async function getUserProfile(userId: string) {
         select: {
             id: true,
             name: true,
+            email: true,
             image: true,
             reputation: true,
             createdAt: true,
@@ -129,7 +130,8 @@ export async function updateProfile(data: {
             bio: data.bio,
             location: data.location,
             website: data.website,
-            socialLinks: data.socialLinks
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            socialLinks: data.socialLinks as any
         }
     });
 

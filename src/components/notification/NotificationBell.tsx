@@ -108,7 +108,7 @@ export function NotificationBell() {
                                     {notification.link ? (
                                         <Link
                                             href={notification.link}
-                                            onClick={() => handleMarkAsRead(notification.id, notification.link)}
+                                            onClick={() => handleMarkAsRead(notification.id)}
                                             className="block"
                                         >
                                             <p className="text-sm text-gray-800 dark:text-gray-200 mb-1">

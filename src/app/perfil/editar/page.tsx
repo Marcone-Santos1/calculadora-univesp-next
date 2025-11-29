@@ -45,7 +45,8 @@ export default async function EditProfilePage() {
                     </p>
                 </div>
 
-                <ProfileEditForm user={user} />
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <ProfileEditForm user={user as any} />
             </div>
         </div>
     );
