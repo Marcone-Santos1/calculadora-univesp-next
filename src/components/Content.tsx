@@ -18,11 +18,11 @@ export const Content = () => {
           </div>
           <div className="p-6 bg-blue-50 dark:bg-gray-800 rounded-lg">
             <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Simulador de Nota
-              Final</h3>
+              Final Univesp</h3>
             <p className="text-gray-700 dark:text-gray-400 mb-4">Precisa tirar uma nota mínima no exame
               final de
               recuperação para
-              passar? Descubra qual é a nota necessária com nosso simulador.</p>
+              passar? Descubra qual é a nota necessária com nosso simulador de nota Univesp.</p>
             <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400">
               <li>Simulação da nota mínima</li>
               <li>Vários cenários de aprovação</li>
