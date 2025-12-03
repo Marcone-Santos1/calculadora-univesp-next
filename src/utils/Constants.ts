@@ -6,7 +6,7 @@ export const PESOS = {
 }
 
 export const SITE_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://univesp-calculadora.vercel.app',
+  BASE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://calculadoraunivesp.com.br',
   NAME: 'Calculadora Univesp',
   DESCRIPTION: 'Simulador de notas e média final da Univesp'
 }
