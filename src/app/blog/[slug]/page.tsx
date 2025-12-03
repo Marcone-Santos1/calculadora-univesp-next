@@ -3,6 +3,7 @@ import { getBlogPost, getBlogPosts } from '@/actions/blog-actions';
 import { Metadata } from 'next';
 import { ArticleLayout } from "@/components/blog/ArticleLayout";
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import React from 'react';
 import Image from 'next/image';
 
@@ -47,9 +48,30 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   const tags = post.keywords ? post.keywords.split(',').map(t => t.trim()) : [];
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    image: post.coverImage ? [post.coverImage] : [],
+    datePublished: post.createdAt.toISOString(),
+    dateModified: post.updatedAt?.toISOString() || post.createdAt.toISOString(),
+    author: [{
+      '@type': 'Person',
+      name: post.author?.name || 'Equipe Calculadora Univesp',
+      url: 'https://univesp-calculadora.vercel.app/sobre'
+    }]
+  };
+
   return (
     <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags}>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <ReactMarkdown
+        rehypePlugins={[rehypeRaw]}
         components={{
           h1: ({ children }: { children?: React.ReactNode }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
           h2: ({ children }: { children?: React.ReactNode }) => <h2 className="text-2xl font-bold mt-8 mb-4">{children}</h2>,

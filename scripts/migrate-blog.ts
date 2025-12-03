@@ -1,4 +1,5 @@
 
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
@@ -91,6 +92,7 @@ function jsxToMarkdown(content: string): string {
     body = body
         .replace(/&quot;/g, '"')
         .replace(/&nbsp;/g, ' ')
+        .replace(/className="/g, 'class="')
         .replace(/\n{3,}/g, '\n\n'); // Max 2 newlines
 
     return body.trim();
