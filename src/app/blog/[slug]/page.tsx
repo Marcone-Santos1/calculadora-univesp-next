@@ -16,14 +16,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {};
   }
 
+  const url = `https://univesp-calculadora.vercel.app/blog/${post.slug}`;
+
   return {
     title: post.metaTitle || `${post.title} | Calculadora UNIVESP`,
     description: post.metaDescription || post.excerpt,
     keywords: post.keywords ? post.keywords.split(',').map(k => k.trim()) : [],
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: post.metaTitle || post.title,
       description: post.metaDescription || post.excerpt,
       type: "article",
+      url: url,
       publishedTime: post.createdAt.toISOString(),
       images: post.coverImage ? [post.coverImage] : [],
     },
