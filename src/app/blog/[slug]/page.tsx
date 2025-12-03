@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import React from 'react';
 import Image from 'next/image';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 // Função para gerar metadados dinâmicos (SEO)
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {};
   }
 
-  const url = `https://univesp-calculadora.vercel.app/blog/${post.slug}`;
+  const url = `${SITE_CONFIG.BASE_URL}/blog/${post.slug}`;
 
   return {
     title: post.metaTitle || `${post.title} | Calculadora UNIVESP`,
@@ -64,8 +65,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     author: [{
       '@type': 'Person',
       name: post.author?.name || 'Equipe Calculadora Univesp',
-      url: 'https://univesp-calculadora.vercel.app/sobre'
+      url: `${SITE_CONFIG.BASE_URL}/sobre`
     }]
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${SITE_CONFIG.BASE_URL}` },
+      { '@type': 'ListItem', 'position': 2, 'name': 'Blog', 'item': `${SITE_CONFIG.BASE_URL}/blog` },
+      { '@type': 'ListItem', 'position': 3, 'name': post.title }
+    ]
   };
 
   return (
@@ -75,6 +86,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <ReactMarkdown
         rehypePlugins={[rehypeRaw]}

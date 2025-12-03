@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export const OQueCaiNaProva = () => {
   return (
@@ -57,7 +58,7 @@ export const OQueCaiNaProva = () => {
 
       <div className="bg-blue-100 dark:bg-blue-800 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 my-6" role="alert">
         <p className="font-bold">O Papel da Calculadora Univesp</p>
-        <p>Saber o que estudar é metade da batalha. A outra metade é saber o quanto você precisa se dedicar. Use a <Link href="https://univesp-calculadora.vercel.app/" className="font-semibold underline">Calculadora Univesp</Link> para simular sua média. Saber que você precisa de um 6,0 na prova, por exemplo, te dá um alvo claro e ajuda a calibrar seu esforço.</p>
+        <p>Saber o que estudar é metade da batalha. A outra metade é saber o quanto você precisa se dedicar. Use a <Link href={SITE_CONFIG.BASE_URL} className="font-semibold underline">Calculadora Univesp</Link> para simular sua média. Saber que você precisa de um 6,0 na prova, por exemplo, te dá um alvo claro e ajuda a calibrar seu esforço.</p>
       </div>
 
       <h2>Conclusão</h2>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export const GuiaEixosUnivesp = () => {
   return (
@@ -115,7 +116,7 @@ export const GuiaEixosUnivesp = () => {
 
       <div className="bg-blue-100 dark:bg-blue-800 border-l-4 border-blue-500 text-blue-700 dark:text-blue-200 p-4 my-6" role="alert">
         <p className="font-bold">O Ciclo Básico Exige Planejamento</p>
-        <p>Justamente por ser desafiador e decisivo para seu futuro, o Ciclo Básico exige que você seja um mestre na gestão das suas notas desde o primeiro dia. Cada atividade avaliativa, cada Projeto Integrador, conta. Para garantir que você está no caminho certo para a vaga que deseja, use a <Link href="https://univesp-calculadora.vercel.app/" className="font-semibold underline">Calculadora Univesp</Link> como sua ferramenta diária de planejamento. Não deixe sua nota ao acaso.</p>
+        <p>Justamente por ser desafiador e decisivo para seu futuro, o Ciclo Básico exige que você seja um mestre na gestão das suas notas desde o primeiro dia. Cada atividade avaliativa, cada Projeto Integrador, conta. Para garantir que você está no caminho certo para a vaga que deseja, use a <Link href={SITE_CONFIG.BASE_URL} className="font-semibold underline">Calculadora Univesp</Link> como sua ferramenta diária de planejamento. Não deixe sua nota ao acaso.</p>
       </div>
 
       <h2>Conclusão</h2>

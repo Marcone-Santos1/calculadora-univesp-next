@@ -6,6 +6,7 @@ import { AppStateProvider } from '@/components/AppStateProvider';
 import { SessionProvider } from '@/components/SessionProvider';
 import { ToastProvider } from '@/components/ToastProvider';
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { SITE_CONFIG } from '@/utils/Constants';
 import dynamic from 'next/dynamic';
 const CookieConsent = dynamic(() => import('@/components/CookieConsent').then(mod => mod.CookieConsent));
 import { UserPreferencesProvider } from "@/context/UserPreferencesContext";
@@ -15,8 +16,8 @@ const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Calculadora Univesp | Média, Exame e Simulação',
-  description: 'Calcule sua média final, simule a nota necessária no exame e planeje seus estudos na UNIVESP. A ferramenta mais completa para os alunos.',
-  metadataBase: new URL('https://univesp-calculadora.vercel.app'),
+  description: 'Calculadora de Notas Univesp - Simulador Oficial de Médias. Calcule sua média final, simule a nota necessária no exame e planeje seus estudos na UNIVESP.',
+  metadataBase: new URL(SITE_CONFIG.BASE_URL),
   robots: {
     index: true,
     follow: true,
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Calculadora Univesp | Média, Exame e Simulação',
     description: 'A ferramenta mais completa para os alunos da UNIVESP calcularem suas notas.',
-    url: 'https://univesp-calculadora.vercel.app',
+    url: SITE_CONFIG.BASE_URL,
     siteName: 'Calculadora Univesp',
     images: [
       {

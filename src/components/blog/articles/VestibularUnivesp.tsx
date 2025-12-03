@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export const VestibularUnivesp = () => {
   return (
@@ -116,7 +117,7 @@ export const VestibularUnivesp = () => {
            role="alert">
         <p className="font-bold">Sua Jornada Começa Agora</p>
         <p>A preparação para o vestibular é o primeiro passo da sua vida acadêmica. Uma vez aprovado, ferramentas como
-          a <Link href="https://univesp-calculadora.vercel.app/" className="font-semibold underline">Calculadora
+          a <Link href={SITE_CONFIG.BASE_URL} className="font-semibold underline">Calculadora
             Univesp</Link> serão suas aliadas para planejar suas notas e garantir o sucesso em cada disciplina.</p>
       </div>
 

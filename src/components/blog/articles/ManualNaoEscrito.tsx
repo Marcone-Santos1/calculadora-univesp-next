@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from "next/image";
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export const ManualNaoEscrito = () => {
   return (
@@ -160,7 +161,7 @@ export const ManualNaoEscrito = () => {
         <p className="font-bold">Sua Bússola Estratégica: A Calculadora Univesp</p>
         <p>
           O caos da "Nação" vai te deixar ansioso sobre notas. O "Governo" (AVA) vai te dar as notas, mas não vai te
-          dizer o que elas significam estrategicamente. A <Link href="https://univesp-calculadora.vercel.app/"
+          dizer o que elas significam estrategicamente. A <Link href={SITE_CONFIG.BASE_URL}
             className="font-semibold underline">Calculadora
             Univesp</Link> é a sua bússola.
         </p>
@@ -185,7 +186,7 @@ export const ManualNaoEscrito = () => {
       </p>
       <p>
         Não se isole. A comunidade é sua maior força. Mas não se afogue nela. Mantenha os pés firmes na fonte oficial e
-        use suas próprias ferramentas — especialmente a <Link href="https://univesp-calculadora.vercel.app/"
+        use suas próprias ferramentas — especialmente a <Link href={SITE_CONFIG.BASE_URL}
           className="font-semibold underline">Calculadora
           Univesp</Link> — para ser o estrategista da sua própria aprovação. O AVA te dá o <em>conteúdo</em>, a comunidade
         te dá o <em>apoio</em>, mas é você quem traça o <em>plano</em>.

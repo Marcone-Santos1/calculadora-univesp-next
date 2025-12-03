@@ -15,6 +15,7 @@ import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'r
 import { auth } from '@/lib/auth';
 import { Metadata } from 'next';
 import { Loading } from '@/components/Loading';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 // Generate Dynamic Metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -37,11 +38,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             title: question.title,
             description: description,
             type: 'article',
-            url: `https://univesp-calculadora.vercel.app/questoes/${question.id}`,
+            url: `${SITE_CONFIG.BASE_URL}/questoes/${question.id}`,
             siteName: 'Calculadora Univesp',
         },
         alternates: {
-            canonical: `https://univesp-calculadora.vercel.app/questoes/${question.id}`,
+            canonical: `${SITE_CONFIG.BASE_URL}/questoes/${question.id}`,
         },
     };
 }

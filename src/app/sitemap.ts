@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://univesp-calculadora.vercel.app';
+    const baseUrl = SITE_CONFIG.BASE_URL;
 
     const staticRoutes: MetadataRoute.Sitemap = [
         {

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export const GuiaTCC = () => {
   return (
@@ -94,7 +95,7 @@ export const GuiaTCC = () => {
            role="alert">
         <p className="font-bold">Uma Jornada de Foco</p>
         <p>O TCC é o momento em que todas as suas habilidades de gestão de tempo, aprendidas no EAD, são postas à prova.
-          Lembre-se de quando você usou a <Link href="https://univesp-calculadora.vercel.app/"
+          Lembre-se de quando você usou a <Link href={SITE_CONFIG.BASE_URL}
                                                 className="font-semibold underline">Calculadora Univesp</Link> para
           planejar uma nota de exame? O mesmo foco estratégico é necessário aqui, mas aplicado a um projeto de longo
           prazo.</p>

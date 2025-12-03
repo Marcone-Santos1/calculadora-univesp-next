@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export const GuiaAVA = () => {
   return (
@@ -72,7 +73,7 @@ export const GuiaAVA = () => {
         <p className="font-bold">Dica de Ouro</p>
         <p>A nota dessas atividades compõe 40% da sua média final. Negligenciá-las é um dos maiores erros que um aluno
           pode cometer. Para entender o impacto exato delas na sua aprovação, use a aba "Média Final" da nossa <Link
-            href="https://univesp-calculadora.vercel.app/" className="font-semibold underline">Calculadora
+            href={SITE_CONFIG.BASE_URL} className="font-semibold underline">Calculadora
             Univesp</Link>.</p>
       </div>
 
