@@ -16,7 +16,7 @@ export const Breadcrumb = ({ links }: BreadcrumbProps) => {
       className="mb-8 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300"
       aria-label="Breadcrumb"
     >
-      <ol className="flex flex-wrap items-center gap-1 md:gap-2">
+      <ol className="flex items-center gap-1 md:gap-2">
         {links.map((link, index) => {
           const isLast = index === links.length - 1;
 

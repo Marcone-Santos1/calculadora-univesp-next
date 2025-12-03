@@ -30,7 +30,7 @@ export const ArticleLayout = ({ title, date, tags = [], children }: ArticleLayou
 
             <header className="mb-12 text-center">
               <h1
-                className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text">
                 {title}
               </h1>
 
