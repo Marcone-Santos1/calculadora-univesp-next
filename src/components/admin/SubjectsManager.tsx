@@ -1,212 +1,179 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useTransition } from 'react';
-import { FaTrash, FaEdit, FaPlus } from 'react-icons/fa';
+import { useState, useTransition, useEffect, useRef } from 'react';
+import { FaTrash, FaEdit, FaPlus, FaTimes, FaCheck, FaBook } from 'react-icons/fa';
 import { createSubject, updateSubject, deleteSubject } from '@/actions/admin-actions';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { useToast } from '@/components/ToastProvider';
 import { useRouter } from 'next/navigation';
+import {SubjectFormModal} from "@/components/admin/SubjectFormModal";
 
 interface Subject {
-    id: string;
-    name: string;
-    color: string;
-    icon: string;
-    createdAt: Date;
-    updatedAt: Date;
-    _count: { questions: number };
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: { questions: number };
 }
 
 interface SubjectsManagerProps {
-    subjects: Subject[];
+  subjects: Subject[];
 }
 
 export function SubjectsManager({ subjects }: SubjectsManagerProps) {
-    const [isAdding, setIsAdding] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [deleteId, setDeleteId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ name: '', color: '#3B82F6', icon: '📚' });
-    const [isPending, startTransition] = useTransition();
-    const { showToast } = useToast();
-    const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ name: '', color: '#3B82F6', icon: '📚' });
+  const [isPending, startTransition] = useTransition();
+  const { showToast } = useToast();
+  const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+  const openCreateModal = () => {
+    setEditingId(null);
+    setFormData({ name: '', color: '#3B82F6', icon: '📚' });
+    setIsModalOpen(true);
+  };
 
-        startTransition(async () => {
-            try {
-                if (editingId) {
-                    await updateSubject(editingId, formData);
-                    showToast('Subject updated successfully', 'success');
-                    setEditingId(null);
-                } else {
-                    await createSubject(formData);
-                    showToast('Subject created successfully', 'success');
-                    setIsAdding(false);
-                }
-                setFormData({ name: '', color: '#3B82F6', icon: '📚' });
-                router.refresh();
-            } catch (error: any) {
-                showToast(error.message || 'Operation failed', 'error');
-            }
-        });
-    };
+  const handleEdit = (subject: Subject) => {
+    setEditingId(subject.id);
+    setFormData({ name: subject.name, color: subject.color, icon: subject.icon });
+    setIsModalOpen(true);
+  };
 
-    const handleEdit = (subject: Subject) => {
-        setEditingId(subject.id);
-        setFormData({ name: subject.name, color: subject.color, icon: subject.icon });
-        setIsAdding(true);
-    };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingId(null);
+    // Pequeno delay para limpar o form apenas após a animação (opcional)
+    setTimeout(() => setFormData({ name: '', color: '#3B82F6', icon: '📚' }), 300);
+  };
 
-    const handleDelete = (id: string) => {
-        startTransition(async () => {
-            try {
-                await deleteSubject(id);
-                showToast('Subject deleted successfully', 'success');
-                router.refresh();
-            } catch (error: any) {
-                showToast(error.message || 'Failed to delete subject', 'error');
-            }
-        });
-    };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const handleCancel = () => {
-        setIsAdding(false);
-        setEditingId(null);
-        setFormData({ name: '', color: '#3B82F6', icon: '📚' });
-    };
+    startTransition(async () => {
+      try {
+        if (editingId) {
+          await updateSubject(editingId, formData);
+          showToast('Subject updated successfully', 'success');
+        } else {
+          await createSubject(formData);
+          showToast('Subject created successfully', 'success');
+        }
+        handleCloseModal();
+        router.refresh();
+      } catch (error: any) {
+        showToast(error.message || 'Operation failed', 'error');
+      }
+    });
+  };
 
-    return (
-        <div>
-            {/* Add/Edit Form */}
-            {isAdding && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                        {editingId ? 'Edit Subject' : 'Add New Subject'}
-                    </h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Name
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Color
-                                </label>
-                                <input
-                                    type="color"
-                                    value={formData.color}
-                                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                    className="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-lg"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Icon (Emoji)
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.icon}
-                                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                                    maxLength={2}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                type="submit"
-                                disabled={isPending}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                            >
-                                {editingId ? 'Update' : 'Create'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+  const handleDelete = (id: string) => {
+    startTransition(async () => {
+      try {
+        await deleteSubject(id);
+        showToast('Subject deleted successfully', 'success');
+        router.refresh();
+      } catch (error: any) {
+        showToast(error.message || 'Failed to delete subject', 'error');
+      }
+    });
+  };
 
-            {/* Add Button */}
-            {!isAdding && (
-                <button
-                    onClick={() => setIsAdding(true)}
-                    className="mb-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
-                >
-                    <FaPlus /> Add Subject
-                </button>
-            )}
+  return (
+    <div>
+      {/* Header da Seção */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
 
-            {/* Subjects List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {subjects.map((subject) => (
-                    <div
-                        key={subject.id}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-                    >
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl">{subject.icon}</span>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-white">
-                                        {subject.name}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        {subject._count.questions} questions
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: subject.color }}
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleEdit(subject)}
-                                disabled={isPending}
-                                className="flex-1 p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center gap-2"
-                            >
-                                <FaEdit /> Edit
-                            </button>
-                            <button
-                                onClick={() => setDeleteId(subject.id)}
-                                disabled={isPending || subject._count.questions > 0}
-                                className="flex-1 p-2 bg-red-100 dark:bg-red-900/20 text-red-600 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                title={subject._count.questions > 0 ? 'Cannot delete subject with questions' : 'Delete'}
-                            >
-                                <FaTrash /> Delete
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+        <button
+          onClick={openCreateModal}
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+        >
+          <FaPlus /> Nova Matéria
+        </button>
+      </div>
 
-            <ConfirmDialog
-                isOpen={deleteId !== null}
-                onClose={() => setDeleteId(null)}
-                onConfirm={() => deleteId && handleDelete(deleteId)}
-                title="Delete Subject"
-                message="Are you sure you want to delete this subject? This action cannot be undone."
-                confirmText="Delete"
-                variant="danger"
-            />
+      {/* Modal Component */}
+      <SubjectFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmit}
+        formData={formData}
+        setFormData={setFormData}
+        isEditing={!!editingId}
+        isPending={isPending}
+      />
+
+      {/* Subjects List */}
+      {subjects.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+          <p className="text-gray-500 dark:text-gray-400 mb-2">Nenhuma matéria encontrada.</p>
+          <button onClick={openCreateModal} className="text-blue-600 hover:underline">
+            Adicione a primeira
+          </button>
         </div>
-    );
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {subjects.map((subject) => (
+            <div
+              key={subject.id}
+              className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700 text-2xl">
+                    {subject.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white leading-tight">
+                      {subject.name}
+                    </h3>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+                      {subject._count.questions} questões
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className="w-4 h-4 rounded-full shadow-sm ring-2 ring-white dark:ring-gray-800"
+                  style={{ backgroundColor: subject.color }}
+                  title={`Cor: ${subject.color}`}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700/50 mt-2">
+                <button
+                  onClick={() => handleEdit(subject)}
+                  disabled={isPending}
+                  className="flex-1 py-2 px-3 text-sm font-medium bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  <FaEdit className="text-xs" /> Editar
+                </button>
+                <button
+                  onClick={() => setDeleteId(subject.id)}
+                  disabled={isPending || subject._count.questions > 0}
+                  className="flex-1 py-2 px-3 text-sm font-medium bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  title={subject._count.questions > 0 ? 'Não é possível excluir matéria com questões' : 'Excluir'}
+                >
+                  <FaTrash className="text-xs" /> Excluir
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId && handleDelete(deleteId)}
+        title="Excluir Matéria"
+        message="Tem certeza que deseja excluir esta matéria? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        variant="danger"
+      />
+    </div>
+  );
 }
