@@ -6,6 +6,76 @@ import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions'
 import Link from 'next/link';
 import { FaPlus, FaFilter } from 'react-icons/fa';
 import { MobileFilterModal } from '@/components/question/MobileFilterModal';
+import {SITE_CONFIG} from "@/utils/Constants";
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }): Promise<Metadata> {
+    const params = await searchParams;
+    const { q: query, subject: subjectName } = params;
+
+    // Título e Descrição Padrão (Fallback)
+    let title = "Banco de Questões UNIVESP | Provas Anteriores e Gabaritos";
+    let description = "Acesse milhares de questões de provas passadas da UNIVESP. Estude por disciplina, veja gabaritos comentados e prepare-se para o bimestre.";
+    
+    // URL Canônica Base
+    const baseUrl = SITE_CONFIG.BASE_URL;
+    let canonical = baseUrl;
+
+    // Lógica Dinâmica: Se houver filtro de Matéria, ajustamos o SEO
+    if (subjectId) {
+        // Reutilizamos a server action para pegar o nome da matéria sem custo extra (cache do Next.js)
+        const subjects = await getSubjectsWithCounts(); 
+        const activeSubject = subjects.find(s => s.name === subjectName);
+        
+        if (activeSubject) {
+            title = `Questões de ${activeSubject.name} | UNIVESP - Provas e Exercícios`;
+            description = `Lista de exercícios e questões de prova de ${activeSubject.name} da Univesp. Estude com gabarito comentado e passe na matéria.`;
+            // IMPORTANTE: Indexamos a URL com parâmetro se for uma categoria relevante
+            canonical = `${baseUrl}?subject=${subjectName}`;
+        }
+    } else if (query) {
+        title = `Resultados para "${query}" | Questões Univesp`;
+        // Páginas de busca interna geralmente não devem ser indexadas para evitar spam, 
+        // mas aqui mantemos o canonical para a raiz para transferir autoridade.
+        canonical = baseUrl;
+    }
+
+    return {
+        title: title,
+        description: description,
+        alternates: {
+            canonical: canonical,
+        },
+        openGraph: {
+            title: title,
+            description: description,
+            url: canonical,
+            type: 'website',
+            siteName: 'Calculadora Univesp',
+            locale: 'pt_BR',
+            images: [
+                {
+                    url: '/og-questoes.png',
+                    width: 1200,
+                    height: 630,
+                    alt: 'Banco de Questões Univesp',
+                },
+            ],
+        },
+        robots: {
+            index: true,
+            follow: true,
+            // Evita que o Google indexe combinações infinitas de filtros (ex: sort + activity + verified)
+            // Focamos apenas na URL limpa ou na URL de Categoria (Materia)
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-video-preview': -1,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
+        },
+    };
+}
 
 // Server Component
 const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) => {
@@ -119,3 +189,4 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
         </Suspense>
     );
 }
+
