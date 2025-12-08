@@ -9,7 +9,7 @@ import { awardReputation } from './reputation-actions';
 
 export async function getQuestions(
     query?: string,
-    subjectId?: string,
+    subjectName?: string,
     verified?: string,
     verificationRequested?: string,
     activity?: string,
@@ -24,8 +24,13 @@ export async function getQuestions(
         ];
     }
 
-    if (subjectId) {
-        where.subjectId = subjectId;
+    if (subjectName) {
+        where.subject = {
+          name: {
+            equals: subjectName,
+            mode: 'insensitive',
+          }
+        };
     }
 
     if (verified === 'true') {

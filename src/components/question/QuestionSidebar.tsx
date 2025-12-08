@@ -1,472 +1,276 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaSearch, FaChevronDown, FaChevronRight, FaTimes, FaClock, FaCheckCircle, FaBan } from 'react-icons/fa';
+import {
+  FaSearch, FaChevronDown, FaTimes,
+  FaClock, FaCheckCircle, FaBan, FaFilter, FaFire,
+  FaComment, FaSortAmountDown
+} from 'react-icons/fa';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { RecentQuestions } from './RecentQuestions';
 import { FavoritesList } from './FavoritesList';
+import {FilterSection} from "@/components/question/FilterSection";
+import {FilterOption} from "@/components/question/FilterOption";
 
-// Custom scrollbar styles
-const scrollbarStyles = `
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(209 213 219) transparent;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgb(209 213 219);
-    border-radius: 9999px;
-    transition: background-color 0.2s;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(156 163 175);
-  }
-  
-  .dark .custom-scrollbar {
-    scrollbar-color: rgb(75 85 99) transparent;
-  }
-  
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgb(75 85 99);
-  }
-  
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(107 114 128);
-  }
-`;
-
+// --- Interfaces ---
 interface Subject {
-    id: string;
-    name: string;
-    icon?: string | null;
-    color?: string | null;
-    _count: { questions: number };
+  id: string;
+  name: string;
+  _count: { questions: number };
 }
 
 interface SimpleQuestion {
-    id: string;
-    title: string;
-    subjectId: string;
+  id: string;
+  title: string;
+  subjectId: string;
 }
 
 interface QuestionSidebarProps {
-    subjects: Subject[];
-    questions?: SimpleQuestion[];
+  subjects: Subject[];
+  questions?: SimpleQuestion[];
 }
 
-// Categorize subjects by detecting keywords
+// Função de categorização (mantida igual)
 const categorizeSubject = (name: string): string => {
-    const lower = name.toLowerCase();
-
-    // Computação
-    if (lower.match(/(computação|programação|algoritmo|software|dados|web|internet|sistemas|rede|banco|segurança|inteligência|ia|machine|aprendizado)/)) {
-        return 'Computação';
-    }
-    // Matemática
-    if (lower.match(/(matemática|cálculo|álgebra|geometria|estatística|numérico|probabilístico)/)) {
-        return 'Matemática';
-    }
-    // Engenharia
-    if (lower.match(/(engenharia|circuito|eletrônica|automação|produção|industrial|resistência|materiais)/)) {
-        return 'Engenharia';
-    }
-    // Administração
-    if (lower.match(/(administração|gestão|negócio|empreendedor|marketing|financeiro|projeto|qualidade|recursos humanos|rh)/)) {
-        return 'Gestão e Negócios';
-    }
-    // Linguagens e Educação
-    if (lower.match(/(português|inglês|libras|linguística|literatura|educação|didática|pedagogia)/)) {
-        return 'Educação e Linguagens';
-    }
-    // Ciências
-    if (lower.match(/(física|química|biologia|ambiente|sustentabilidade)/)) {
-        return 'Ciências';
-    }
-    // Direito e Ética
-    if (lower.match(/(direito|ética|legislação|cidadania|sociedade|política|responsabilidade)/)) {
-        return 'Direito e Sociedade';
-    }
-
-    return 'Outras';
+  const lower = name.toLowerCase();
+  if (lower.match(/(computação|programação|algoritmo|software|dados|web|internet|sistemas|rede|banco|segurança|inteligência|ia|machine|aprendizado)/)) return 'Computação';
+  if (lower.match(/(matemática|cálculo|álgebra|geometria|estatística|numérico|probabilístico)/)) return 'Matemática';
+  if (lower.match(/(engenharia|circuito|eletrônica|automação|produção|industrial|resistência|materiais)/)) return 'Engenharia';
+  if (lower.match(/(administração|gestão|negócio|empreendedor|marketing|financeiro|projeto|qualidade|recursos humanos|rh)/)) return 'Gestão e Negócios';
+  if (lower.match(/(português|inglês|libras|linguística|literatura|educação|didática|pedagogia)/)) return 'Educação e Linguagens';
+  if (lower.match(/(física|química|biologia|ambiente|sustentabilidade)/)) return 'Ciências';
+  if (lower.match(/(direito|ética|legislação|cidadania|sociedade|política|responsabilidade)/)) return 'Direito e Sociedade';
+  return 'Outras';
 };
 
 export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarProps) {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const currentSubject = searchParams.get('subject');
-    const currentQuery = searchParams.get('q') || '';
-    const [searchTerm, setSearchTerm] = useState(currentQuery);
-    const [subjectFilter, setSubjectFilter] = useState('');
-    const { preferences, setExpandedCategories, setDefaultSort, setDefaultSubject } = useUserPreferences();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentSubject = searchParams.get('subject');
+  const currentSort = searchParams.get('sort');
+  const currentActivity = searchParams.get('activity');
+  const currentVerified = searchParams.get('verified');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const [subjectFilter, setSubjectFilter] = useState('');
+  const { preferences, setExpandedCategories, setDefaultSort, setDefaultSubject } = useUserPreferences();
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        const params = new URLSearchParams(searchParams.toString());
-        if (searchTerm) {
-            params.set('q', searchTerm);
-        } else {
-            params.delete('q');
-        }
-        router.push(`/questoes?${params.toString()}`);
-    };
+  // Sticky Search Handler
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams(searchParams.toString());
+    if (searchTerm) params.set('q', searchTerm);
+    else params.delete('q');
+    router.push(`/questoes?${params.toString()}`);
+  };
 
-    // Apply default filters on mount if no params present
-    useEffect(() => {
-        // Only apply if we are on the main questions page without params
-        if (searchParams.toString() === '') {
-            const params = new URLSearchParams();
-            let hasDefaults = false;
+  // Helper para preservar filtros
+  const buildFilterUrl = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      value === null ? params.delete(key) : params.set(key, value);
+    });
+    return `/questoes?${params.toString()}`;
+  };
 
-            if (preferences.defaultSort) {
-                params.set('sort', preferences.defaultSort);
-                hasDefaults = true;
-            }
+  const categorizedSubjects = useMemo(() => {
+    const filtered = subjects.filter(s => s.name.toLowerCase().includes(subjectFilter.toLowerCase()));
+    const grouped: Record<string, Subject[]> = {};
+    filtered.forEach(subject => {
+      const category = categorizeSubject(subject.name);
+      if (!grouped[category]) grouped[category] = [];
+      grouped[category].push(subject);
+    });
+    Object.keys(grouped).forEach(cat => grouped[cat].sort((a, b) => a.name.localeCompare(b.name)));
+    return grouped;
+  }, [subjects, subjectFilter]);
 
-            if (preferences.defaultSubject) {
-                params.set('subject', preferences.defaultSubject);
-                hasDefaults = true;
-            }
+  const toggleCategory = (category: string) => {
+    const current = preferences.expandedCategories;
+    setExpandedCategories(current.includes(category)
+      ? current.filter(c => c !== category)
+      : [...current, category]);
+  };
 
-            if (hasDefaults) {
-                router.replace(`/questoes?${params.toString()}`);
-            }
-        }
-    }, [preferences.defaultSort, preferences.defaultSubject, searchParams, router]);
+  const hasActiveFilters = currentSubject || currentSort || currentActivity || currentVerified || searchTerm;
 
-    // Helper function to build URLs that preserve existing filters
-    const buildFilterUrl = (updates: Record<string, string | null>) => {
-        const params = new URLSearchParams(searchParams.toString());
+  return (
+    <aside className="w-full lg:w-72 flex-shrink-0 space-y-6">
+      {/* Sticky Container */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden sticky top-24">
 
-        // Apply updates
-        Object.entries(updates).forEach(([key, value]) => {
-            if (value === null) {
-                params.delete(key);
-            } else {
-                params.set(key, value);
-            }
-        });
+        {/* Header Search */}
+        <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
+          <div className="relative">
+            <form onSubmit={handleSearch}>
+              <input
+                type="text"
+                placeholder="Pesquisar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+              />
+              <FaSearch className="absolute left-3 top-3.5 text-gray-400 text-xs" />
+            </form>
+          </div>
 
-        const paramString = params.toString();
-        return `/questoes${paramString ? `?${paramString}` : ''}`;
-    };
-
-    // Group subjects by category
-    const categorizedSubjects = useMemo(() => {
-        const filtered = subjects.filter(s =>
-            s.name.toLowerCase().includes(subjectFilter.toLowerCase())
-        );
-
-        const grouped: Record<string, Subject[]> = {};
-        filtered.forEach(subject => {
-            const category = categorizeSubject(subject.name);
-            if (!grouped[category]) {
-                grouped[category] = [];
-            }
-            grouped[category].push(subject);
-        });
-
-        // Sort subjects within each category
-        Object.keys(grouped).forEach(cat => {
-            grouped[cat].sort((a, b) => a.name.localeCompare(b.name));
-        });
-
-        return grouped;
-    }, [subjects, subjectFilter]);
-
-    const totalQuestions = subjects.reduce((sum, s) => sum + s._count.questions, 0);
-
-    const toggleCategory = (category: string) => {
-        const currentExpanded = preferences.expandedCategories;
-        const isExpanded = currentExpanded.includes(category);
-        const updated = isExpanded
-            ? currentExpanded.filter(c => c !== category)
-            : [...currentExpanded, category];
-        setExpandedCategories(updated);
-    };
-
-    return (
-        <div className="space-y-6">
-            <style jsx>{scrollbarStyles}</style>
-
-            {/* Search Box */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Buscar</h3>
-                <form onSubmit={handleSearch} className="relative">
-                    <input
-                        type="text"
-                        placeholder="Pesquisar questões..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-sm text-gray-900 dark:text-white placeholder-gray-500"
-                    />
-                    <FaSearch className="absolute left-3 top-3 text-gray-400 text-sm" />
-                </form>
-            </div>
-
-            {/* Clear Filters Button */}
-            {(searchParams.get('sort') || searchParams.get('activity') || searchParams.get('verified') || searchParams.get('verificationRequested') || searchParams.get('subject') || searchParams.get('q')) && (
-                <Link
-                    href="/questoes"
-                    onClick={() => {
-                        setDefaultSort(null);
-                        setDefaultSubject(null);
-                        setSearchTerm('');
-                    }}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition-all text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white shadow-sm"
-                >
-                    <FaTimes className="text-xs" />
-                    <span>Limpar Filtros</span>
-                </Link>
-            )}
-
-            {/* Recently Viewed */}
-            {questions.length > 0 && <RecentQuestions allQuestions={questions} />}
-
-            {/* Favorites */}
-            {questions.length > 0 && <FavoritesList allQuestions={questions} />}
-
-            {/* Sort By Filter */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Ordenar Por</h3>
-                <div className="space-y-2">
-                    <Link
-                        href={buildFilterUrl({ sort: null })}
-                        onClick={() => setDefaultSort(null)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('sort')
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>🕒</span>
-                        <span>Mais Recentes</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ sort: 'popular' })}
-                        onClick={() => setDefaultSort('popular')}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('sort') === 'popular'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>🔥</span>
-                        <span>Mais Populares</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ sort: 'discussed' })}
-                        onClick={() => setDefaultSort('discussed')}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('sort') === 'discussed'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>💬</span>
-                        <span>Mais Discutidas</span>
-                    </Link>
-                </div>
-            </div>
-
-            {/* Activity Filter */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Atividade</h3>
-                <div className="space-y-2">
-                    <Link
-                        href={buildFilterUrl({ activity: null })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('activity')
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>Todas</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ activity: 'no-votes' })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('activity') === 'no-votes'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>🆘</span>
-                        <span>Sem Votos</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ activity: 'no-comments' })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('activity') === 'no-comments'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>💭</span>
-                        <span>Sem Comentários</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ activity: 'trending' })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('activity') === 'trending'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>📈</span>
-                        <span>Em Alta (7 dias)</span>
-                    </Link>
-                </div>
-            </div>
-
-            {/* Verification Status Filter */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Status de Verificação</h3>
-                <div className="space-y-2">
-                    <Link
-                        href={buildFilterUrl({ verified: null, verificationRequested: null })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${!searchParams.get('verified') && !searchParams.get('verificationRequested')
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>Todas</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ verified: 'true', verificationRequested: null })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verified') === 'true'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <FaCheckCircle />
-                        <span>Verificadas</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ verified: 'false', verificationRequested: null })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verified') === 'false'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <FaBan />
-                        <span> Não Verificadas</span>
-                    </Link>
-                    <Link
-                        href={buildFilterUrl({ verified: null, verificationRequested: 'true' })}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${searchParams.get('verificationRequested') === 'true'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <FaClock />
-                        <span> Pendentes</span>
-                    </Link>
-                </div>
-            </div>
-
-            {/* Subjects Filter */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">
-                        Matérias ({subjects.length})
-                    </h3>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Filtrar matérias..."
-                            value={subjectFilter}
-                            onChange={(e) => setSubjectFilter(e.target.value)}
-                            className="w-full pl-10 pr-8 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-sm text-gray-900 dark:text-white placeholder-gray-500"
-                        />
-                        <FaSearch className="absolute left-3 top-3 text-gray-400 text-sm" />
-                        {subjectFilter && (
-                            <button
-                                onClick={() => setSubjectFilter('')}
-                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                            >
-                                <FaTimes className="text-sm" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="max-h-[600px] overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                    {/* All Questions */}
-                    <Link
-                        href={buildFilterUrl({ subject: null })}
-                        onClick={() => setDefaultSubject(null)}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors text-sm ${!currentSubject
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                            }`}
-                    >
-                        <span>Todas as Questões</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${!currentSubject
-                            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}>
-                            {totalQuestions}
-                        </span>
-                    </Link>
-
-                    {/* Categorized Subjects */}
-                    {Object.keys(categorizedSubjects).sort().map(category => (
-                        <div key={category} className="border-t border-gray-100 dark:border-gray-700 pt-2 first:border-0 first:pt-0">
-                            <button
-                                onClick={() => toggleCategory(category)}
-                                className="w-full flex items-center justify-between px-2 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded transition-colors"
-                            >
-                                <span>{category}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-500 dark:text-gray-400">
-                                        {categorizedSubjects[category].length}
-                                    </span>
-                                    {preferences.expandedCategories.includes(category) ? (
-                                        <FaChevronDown className="text-[10px]" />
-                                    ) : (
-                                        <FaChevronRight className="text-[10px]" />
-                                    )}
-                                </div>
-                            </button>
-
-                            {preferences.expandedCategories.includes(category) && (
-                                <div className="mt-1 space-y-0.5 pl-2">
-                                    {categorizedSubjects[category].map((subject) => (
-                                        <Link
-                                            key={subject.id}
-                                            href={buildFilterUrl({ subject: subject.id })}
-                                            onClick={() => setDefaultSubject(subject.id)}
-                                            className={`flex items-center justify-between px-2 py-1.5 rounded-lg transition-colors text-sm ${currentSubject === subject.id
-                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                }`}
-                                            title={subject.name}
-                                        >
-                                            <span className="truncate">{subject.name}</span>
-                                            <span className={`text-xs px-1.5 py-0.5 rounded-full ml-2 flex-shrink-0 ${currentSubject === subject.id
-                                                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                                                }`}>
-                                                {subject._count.questions}
-                                            </span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-
-                    {Object.keys(categorizedSubjects).length === 0 && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-                            Nenhuma matéria encontrada
-                        </p>
-                    )}
-                </div>
-            </div>
+          {hasActiveFilters && (
+            <Link
+              href="/questoes"
+              onClick={() => {
+                setDefaultSort(null);
+                setDefaultSubject(null);
+                setSearchTerm('');
+              }}
+              className="mt-3 flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+            >
+              <FaTimes /> Limpar todos os filtros
+            </Link>
+          )}
         </div>
-    );
+
+        {/* Scrollable Filters Area */}
+        <div className="max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar p-4">
+
+          {/* Quick Stats / Recent / Favorites */}
+          <div className="mb-6 space-y-4">
+            {questions.length > 0 && <RecentQuestions allQuestions={questions} />}
+            {questions.length > 0 && <FavoritesList allQuestions={questions} />}
+          </div>
+
+          <div className="space-y-1">
+            {/* Filter: Sort */}
+            <FilterSection
+              title="Ordenar"
+              icon={FaSortAmountDown}
+              isActive={!!currentSort}
+            >
+              <FilterOption
+                href={buildFilterUrl({ sort: null })}
+                active={!currentSort}
+                label="Mais Recentes"
+                icon={() => <span>🕒</span>}
+                onClick={() => setDefaultSort(null)}
+              />
+              <FilterOption
+                href={buildFilterUrl({ sort: 'popular' })}
+                active={currentSort === 'popular'}
+                label="Populares"
+                icon={FaFire}
+                onClick={() => setDefaultSort('popular')}
+              />
+              <FilterOption
+                href={buildFilterUrl({ sort: 'discussed' })}
+                active={currentSort === 'discussed'}
+                label="Mais Discutidas"
+                icon={FaComment}
+                onClick={() => setDefaultSort('discussed')}
+              />
+            </FilterSection>
+
+            {/* Filter: Activity */}
+            <FilterSection
+              title="Atividade"
+              icon={FaFilter}
+              isActive={!!currentActivity}
+              defaultOpen={false}
+            >
+              <FilterOption href={buildFilterUrl({ activity: null })} active={!currentActivity} label="Qualquer atividade" />
+              <FilterOption href={buildFilterUrl({ activity: 'no-votes' })} active={currentActivity === 'no-votes'} label="Sem Votos" icon={() => <span>🆘</span>} />
+              <FilterOption href={buildFilterUrl({ activity: 'no-comments' })} active={currentActivity === 'no-comments'} label="Sem Comentários" icon={() => <span>💭</span>} />
+              <FilterOption href={buildFilterUrl({ activity: 'trending' })} active={currentActivity === 'trending'} label="Em Alta (7 dias)" icon={() => <span>📈</span>} />
+            </FilterSection>
+
+            {/* Filter: Status */}
+            <FilterSection
+              title="Status"
+              icon={FaCheckCircle}
+              isActive={!!currentVerified || !!searchParams.get('verificationRequested')}
+              defaultOpen={false}
+            >
+              <FilterOption href={buildFilterUrl({ verified: null, verificationRequested: null })} active={!currentVerified && !searchParams.get('verificationRequested')} label="Todos" />
+              <FilterOption href={buildFilterUrl({ verified: 'true', verificationRequested: null })} active={currentVerified === 'true'} label="Verificadas" icon={FaCheckCircle} />
+              <FilterOption href={buildFilterUrl({ verified: 'false', verificationRequested: null })} active={currentVerified === 'false'} label="Não Verificadas" icon={FaBan} />
+              <FilterOption href={buildFilterUrl({ verified: null, verificationRequested: 'true' })} active={searchParams.get('verificationRequested') === 'true'} label="Pendentes" icon={FaClock} />
+            </FilterSection>
+
+            {/* Filter: Subjects */}
+            <div className="pt-4">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Matérias</h3>
+                <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">
+                  {subjects.length}
+                </span>
+              </div>
+
+              <div className="relative mb-3">
+                <input
+                  type="text"
+                  placeholder="Filtrar..."
+                  value={subjectFilter}
+                  onChange={(e) => setSubjectFilter(e.target.value)}
+                  className="w-full pl-8 pr-2 py-1.5 bg-gray-50 dark:bg-gray-800 border-none rounded-lg text-xs focus:ring-1 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+                />
+                <FaSearch className="absolute left-2.5 top-2 text-gray-400 text-xs" />
+              </div>
+
+              <div className="space-y-1">
+                <FilterOption
+                  href={buildFilterUrl({ subject: null })}
+                  active={!currentSubject}
+                  label="Todas as Matérias"
+                  onClick={() => setDefaultSubject(null)}
+                />
+
+                {Object.keys(categorizedSubjects).sort().map(category => (
+                  <div key={category} className="mt-2">
+                    <button
+                      onClick={() => toggleCategory(category)}
+                      className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    >
+                      {category}
+                      <FaChevronDown className={`text-[10px] transition-transform ${preferences.expandedCategories.includes(category) ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {preferences.expandedCategories.includes(category) && (
+                      <div className="mt-1 pl-2 space-y-0.5 border-l-2 border-gray-100 dark:border-gray-800 ml-3">
+                        {categorizedSubjects[category].map((subject) => (
+                          <FilterOption
+                            key={subject.id}
+                            href={buildFilterUrl({ subject: subject.name })}
+                            active={currentSubject === subject.name}
+                            label={subject.name}
+                            count={subject._count.questions}
+                            onClick={() => setDefaultSubject(subject.name)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Styles for scrollbar */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: rgba(156, 163, 175, 0.3);
+          border-radius: 20px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+          background-color: rgba(156, 163, 175, 0.5);
+        }
+      `}</style>
+    </aside>
+  );
 }

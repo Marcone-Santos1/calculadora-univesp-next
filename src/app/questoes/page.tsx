@@ -11,18 +11,18 @@ import { MobileFilterModal } from '@/components/question/MobileFilterModal';
 const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) => {
     const params = await searchParams;
     const query = params.q;
-    const subjectId = params.subject;
+    const subject = params.subject;
     const verified = params.verified;
     const verificationRequested = params.verificationRequested;
     const activity = params.activity;
     const sort = params.sort;
 
     const [questions, subjects] = await Promise.all([
-        getQuestions(query, subjectId, verified, verificationRequested, activity, sort),
+        getQuestions(query, subject, verified, verificationRequested, activity, sort),
         getSubjectsWithCounts()
     ]);
 
-    const activeSubject = subjects.find(s => s.id === subjectId);
+    const activeSubject = subjects.find(s => s.name === subject);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

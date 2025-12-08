@@ -41,7 +41,7 @@ interface UserPreferencesContextType {
     isRead: (questionId: string) => boolean;
     getReadingStats: (totalQuestions: number) => { read: number; total: number; percentage: number };
     setDefaultSort: (sort: string | null) => void;
-    setDefaultSubject: (subjectId: string | null) => void;
+    setDefaultSubject: (subjectName: string | null) => void;
     saveQuestionDraft: (draft: UserPreferences['questionDraft']) => void;
     clearQuestionDraft: () => void;
 }
@@ -159,10 +159,10 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
     }, []);
 
     // Default Filters: Set default subject
-    const setDefaultSubject = useCallback((subjectId: string | null) => {
-        setPreferences(prev => ({ ...prev, defaultSubject: subjectId || undefined }));
-        if (subjectId) {
-            storage.setItem(STORAGE_KEYS.DEFAULT_SUBJECT, subjectId);
+    const setDefaultSubject = useCallback((subjectName: string | null) => {
+        setPreferences(prev => ({ ...prev, defaultSubject: subjectName || undefined }));
+        if (subjectName) {
+            storage.setItem(STORAGE_KEYS.DEFAULT_SUBJECT, subjectName);
         } else {
             storage.removeItem(STORAGE_KEYS.DEFAULT_SUBJECT);
         }
