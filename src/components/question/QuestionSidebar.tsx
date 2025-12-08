@@ -24,7 +24,7 @@ interface Subject {
 interface SimpleQuestion {
   id: string;
   title: string;
-  subjectId: string;
+  subjectName: string;
 }
 
 interface QuestionSidebarProps {

@@ -8,7 +8,7 @@ import { useUserPreferences } from '@/hooks/useUserPreferences';
 interface Question {
     id: string;
     title: string;
-    subjectId: string;
+    subjectName: string;
 }
 
 interface RecentQuestionsProps {

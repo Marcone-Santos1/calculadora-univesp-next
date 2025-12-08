@@ -7,7 +7,7 @@ import { QuestionSidebar } from './QuestionSidebar';
 interface SimpleQuestion {
     id: string;
     title: string;
-    subjectId: string;
+    subjectName: string;
 }
 
 interface Subject {
