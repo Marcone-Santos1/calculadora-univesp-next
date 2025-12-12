@@ -17,7 +17,6 @@ interface BlogCardProps {
 
 export const BlogCard = ({ post }: BlogCardProps) => {
   const tags = post.keywords ? post.keywords.split(",").map((t) => t.trim()) : [];
-  console.log(post)
   return (
     <Link
       href={`/blog/${post.slug}`}

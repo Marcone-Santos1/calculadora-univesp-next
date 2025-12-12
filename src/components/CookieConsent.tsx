@@ -48,7 +48,7 @@ export function CookieConsent() {
                                 Cookies não essenciais são usados apenas para melhorar sua experiência (tema, preferências de visualização).
                                 {' '}
                                 <Link
-                                    href="/privacidade"
+                                    href="/politica-de-privacidade"
                                     className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                 >
                                     Saiba mais
