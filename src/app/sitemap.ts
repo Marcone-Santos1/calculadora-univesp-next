@@ -58,6 +58,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         take: 5000, // Limit for sitemap size, can implement pagination if needed
     });
 
+    const subjects = await prisma.subject.findMany({ select: { id: true, name: true } });
+
     const questionRoutes = questions.map((question) => ({
         url: `${baseUrl}/questoes/${question.id}`,
         lastModified: question.updatedAt,
@@ -65,5 +67,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
     }));
 
-    return [...staticRoutes, ...blogRoutes, ...questionRoutes];
+  const subjectRoutes: MetadataRoute.Sitemap = subjects.map((subject) => ({
+    url: `${baseUrl}/questoes?subject=${encodeURIComponent(subject.name)}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+    return [...staticRoutes, ...blogRoutes, ...questionRoutes, ...subjectRoutes];
 }
