@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getQuestion, voteOnAlternative } from '@/actions/question-actions';
+import { getQuestion, getRelatedQuestions, voteOnAlternative } from '@/actions/question-actions';
 import { AlternativeItem } from '@/components/question/AlternativeItem';
 import { ShareButton } from '@/components/question/ShareButton';
 import { ValidationButton } from '@/components/question/ValidationButton';
@@ -11,11 +11,12 @@ import { QuestionViewTracker } from '@/components/question/QuestionViewTracker';
 import { ReportButton } from '@/components/report/ReportButton';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
-import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock, FaPlus, FaQuestionCircle, FaBan } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
 import { Metadata } from 'next';
 import { Loading } from '@/components/Loading';
 import { SITE_CONFIG } from "@/utils/Constants";
+import { QuestionCard } from '@/components/question/QuestionCard';
 
 // Generate Dynamic Metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             title: 'Questão não encontrada | Calculadora Univesp',
             description: 'A questão que você procura não foi encontrada.',
         };
-    }
+    }   
 
     const description = question.text.substring(0, 155) + (question.text.length > 155 ? '...' : '');
 
@@ -61,6 +62,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 // Server Component
 const QuestionDetailContent = async ({ id }: { id: string }) => {
     const question = await getQuestion(id);
+    const relatedQuestions = await getRelatedQuestions(question?.subject?.id || '', id);
+
     const session = await auth();
 
     if (!question) {
@@ -108,6 +111,19 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                 author: {
                     '@type': 'Person',
                     name: comment.userName || 'Usuário',
+                },
+            })),
+            relatedQuestions: relatedQuestions.map((question: any) => ({
+                '@type': 'Question',
+                name: question.title,
+                text: question.text,
+                answerCount: question.comments.length,
+                upvoteCount: question.totalVotes,
+                dateCreated: question.createdAt.toISOString(),
+                url: `${SITE_CONFIG.BASE_URL}/questoes/${question.id}`,
+                author: {
+                    '@type': 'Person',
+                    name: question.userName || 'Usuário da Univesp',
                 },
             })),
         },
@@ -158,7 +174,16 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex items-center gap-1">
                                 <FaUser />
-                                <span>{question.userName || 'Anônimo'}</span>
+                                {question.userId ? (
+                                    <Link 
+                                        href={`/perfil/${question.userId}`}
+                                        className="hover:text-blue-600 hover:underline transition-colors font-medium"
+                                    >
+                                        {question.userName || 'Usuário Univesp'}
+                                    </Link>
+                                ) : (
+                                    <span>{question.userName || 'Anônimo'}</span>
+                                )}
                             </div>
                             <div className="flex items-center gap-1">
                                 <FaClock />
@@ -238,6 +263,40 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                         comments={question.comments}
                         isLoggedIn={!!session}
                     />
+                </div>
+
+                {/* Related Questions */}
+                <div className="mt-8">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <FaQuestionCircle className="text-blue-500" />
+                        Questões Relacionadas
+                    </h2>
+
+                    <div className="space-y-4">
+                        {relatedQuestions.map((question: any) => (
+                            <QuestionCard key={question.id} question={question} />
+                        ))}
+                    </div>
+
+                    {relatedQuestions.length === 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaBan className="text-2xl text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                                Nenhuma questão encontrada
+                            </h3>
+                            <p className="text-gray-500 dark:text-gray-400 mb-6">
+                                Nenhuma questão relacionada foi encontrada para esta pergunta.
+                            </p>
+                            <Link
+                                href="/questoes/nova"
+                                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                            >
+                                <FaPlus /> Adicionar Questão
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

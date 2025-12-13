@@ -49,13 +49,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const getBgColor = (type: ToastType) => {
         switch (type) {
             case 'success':
-                return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+                return 'bg-green-50 dark:bg-green-900/90 border-green-200 dark:border-green-800';
             case 'error':
-                return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+                return 'bg-red-50 dark:bg-red-900/90 border-red-200 dark:border-red-800';
             case 'warning':
-                return 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800';
+                return 'bg-orange-50 dark:bg-orange-900/90 border-orange-200 dark:border-orange-800';
             default:
-                return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
+                return 'bg-blue-50 dark:bg-blue-900/90 border-blue-200 dark:border-blue-800';
         }
     };
 

@@ -25,6 +25,8 @@ interface QuestionCardProps {
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     const { isRead } = useUserPreferences();
 
+    console.log(question);
+
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('pt-BR', {
             day: '2-digit',
@@ -89,7 +91,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                         )}
                         <FavoriteButton questionId={question.id} className="text-lg" />
                         <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            {question.subjectName}
+                            {question.subject?.name}
                         </span>
                     </div>
                 </div>

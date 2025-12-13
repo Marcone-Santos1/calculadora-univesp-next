@@ -26,10 +26,10 @@ export async function getQuestions(
 
     if (subjectName) {
         where.subject = {
-          name: {
-            equals: subjectName,
-            mode: 'insensitive',
-          }
+            name: {
+                equals: subjectName,
+                mode: 'insensitive',
+            }
         };
     }
 
@@ -116,6 +116,44 @@ export async function getQuestions(
     // Default is already sorted by createdAt desc
 
     return processedQuestions;
+}
+
+
+export async function getRelatedQuestions(
+    subjectId: string,
+    currentQuestionId: string
+) {
+    const questions = await prisma.question.findMany({
+        where: {
+            subjectId,
+            id: {
+                not: currentQuestionId
+            }
+        },
+        include: {
+            user: {
+                include: {
+                    reputationLogs: false
+                }
+            },
+            subject: true,
+            alternatives: {
+                include: {
+                    votes: true
+                }
+            },
+            comments: true,
+            _count: {
+                select: {
+                    comments: true,
+                }
+            }
+        },
+        take: 3,
+        orderBy: { createdAt: 'desc' }
+    });
+
+    return questions;
 }
 
 export async function getQuestion(id: string) {
