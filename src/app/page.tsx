@@ -12,11 +12,20 @@ export default function HomePage() {
     "name": "Calculadora Univesp",
     "url": SITE_CONFIG.BASE_URL,
     "applicationCategory": "EducationalApplication",
-    "operatingSystem": "Any",
+    "operatingSystem": "Web",
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "BRL"
+    },
+    "featureList": "Calculadora de Notas Univesp - Simulador de Médias. Calcule sua média final, simule a nota necessária no exame e planeje seus estudos na UNIVESP.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${SITE_CONFIG.BASE_URL}/questoes?q={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
     }
   };
 

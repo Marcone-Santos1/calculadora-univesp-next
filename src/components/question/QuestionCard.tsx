@@ -25,8 +25,6 @@ interface QuestionCardProps {
 export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
     const { isRead } = useUserPreferences();
 
-    console.log(question);
-
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString('pt-BR', {
             day: '2-digit',

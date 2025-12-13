@@ -1,51 +1,65 @@
-import { FaChevronRight, FaHome } from "react-icons/fa";
-import Link from "next/link";
-
-interface BreadcrumbLink {
-  name: string;
-  path?: string;
-}
+import Link from 'next/link';
+import { FaChevronRight, FaHome } from 'react-icons/fa';
+import { SITE_CONFIG } from '@/utils/Constants'; // Importe a config
 
 interface BreadcrumbProps {
-  links: BreadcrumbLink[];
+  links: {
+    name: string;
+    path?: string;
+  }[];
 }
 
-export const Breadcrumb = ({ links }: BreadcrumbProps) => {
+export function Breadcrumb({ links }: BreadcrumbProps) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Início",
+        "item": SITE_CONFIG.BASE_URL
+      },
+      ...links.map((item, index) => ({
+        "@type": "ListItem",
+        "position": index + 2,
+        "name": item.name,
+        "item": item.path ? `${SITE_CONFIG.BASE_URL}${item.path}` : undefined
+      }))
+    ]
+  };
+
   return (
-    <nav
-      className="mb-8 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300"
-      aria-label="Breadcrumb"
-    >
-      <ol className="flex items-center gap-1 md:gap-2">
-        {links.map((link, index) => {
-          const isLast = index === links.length - 1;
+    <nav aria-label="Breadcrumb" className="mb-6">
+      {/* INJEÇÃO DO SCHEMA INVISÍVEL */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-          return (
-            <li key={index} className="flex items-center">
-              {index === 0 && (
-                <FaHome className="mr-2 text-gray-400 dark:text-gray-500 w-3 h-3" />
-              )}
-
-              {index > 0 && (
-                <FaChevronRight className="mx-2 text-gray-400 dark:text-gray-600 w-3 h-3" />
-              )}
-
-              {link.path && !isLast ? (
-                <Link
-                  href={link.path}
-                  className="hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ) : (
-                <span className="font-semibold text-gray-700 dark:text-gray-200">
-                  {link.name}
-                </span>
-              )}
-            </li>
-          );
-        })}
+      <ol className="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <li>
+          <Link href="/" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+            <FaHome />
+            <span className="sr-only">Início</span>
+          </Link>
+        </li>
+        {links.map((item, index) => (
+          <li key={item.path || ''} className="flex items-center gap-2">
+            <FaChevronRight className="text-xs text-gray-300" />
+            <Link
+              href={item.path || ''}
+              className={`hover:text-blue-600 transition-colors ${index === links.length - 1
+                ? 'text-gray-900 dark:text-white font-medium pointer-events-none'
+                : ''
+                }`}
+              aria-current={index === links.length - 1 ? 'page' : undefined}
+            >
+              {item.name}
+            </Link>
+          </li>
+        ))}
       </ol>
     </nav>
   );
-};
+}

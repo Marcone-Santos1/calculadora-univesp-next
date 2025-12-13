@@ -13,7 +13,6 @@ interface ArticleLayoutProps {
 
 export const ArticleLayout = ({ title, date, tags = [], children }: ArticleLayoutProps) => {
   const breadcrumbLinks = [
-    { name: "Início", path: "/" },
     { name: "Blog", path: "/blog" },
     { name: title },
   ];

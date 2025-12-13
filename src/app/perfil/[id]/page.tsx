@@ -4,6 +4,7 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { UserActivityList } from '@/components/profile/UserActivityList';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { getLevel } from '@/utils/reputation';
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -19,9 +20,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         };
     }
 
+    const stats = await getUserStats(id);
+    const hasContent = stats.questions > 0 || stats.comments > 0;
+    
+    const { title: userTitle, level } = getLevel(user.reputation || 0);
+    const seoTitle = `${user.name} (${userTitle} - Lvl ${level}) | Comunidade Univesp`;
+
     return {
-        title: `${user.name || 'Usuário'} | Calculadora Univesp`,
+        title: seoTitle,
         description: `Perfil de ${user.name || 'usuário'} na Calculadora Univesp.`,
+        robots: {
+            index: hasContent, 
+            follow: true,
+        },
     };
 }
 
