@@ -15,7 +15,7 @@ import { FaArrowLeft, FaCheckCircle, FaEye, FaComment, FaUser, FaClock } from 'r
 import { auth } from '@/lib/auth';
 import { Metadata } from 'next';
 import { Loading } from '@/components/Loading';
-import {SITE_CONFIG} from "@/utils/Constants";
+import { SITE_CONFIG } from "@/utils/Constants";
 
 // Generate Dynamic Metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -31,8 +31,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     const description = question.text.substring(0, 155) + (question.text.length > 155 ? '...' : '');
 
+    let seoTitle = question.title;
+
+    const isGenericTitle = question.title.length < 20 || /^(dúvida|ajuda|questão|pergunta|exercício)/i.test(question.title);
+
+    if (isGenericTitle) {
+        const cleanText = question.text.replace(/[#*`]/g, '').substring(0, 60);
+        seoTitle = `${question.subjectName}: ${cleanText}...`;
+    } else {
+        seoTitle = `${question.title} | ${question.subjectName}`;
+    }
+
     return {
-        title: `${question.title} | Calculadora Univesp`,
+        title: `${seoTitle} | Calculadora Univesp`,
         description: description,
         openGraph: {
             title: question.title,
@@ -122,9 +133,14 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                     {/* Header */}
                     <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-700">
                         <div className="flex flex-wrap gap-2 mb-4">
-                            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+
+                            <Link
+                                href={`/questoes?subject=${encodeURIComponent(question.subjectName)}`}
+                                className="px-3 py-1 bg-blue-100 hover:bg-blue-200 transition-colors text-blue-700 rounded-full text-sm font-medium cursor-pointer"
+                            >
                                 {question.subjectName}
-                            </span>
+                            </Link>
+
                             <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm font-medium">
                                 Semana {question.week}
                             </span>
