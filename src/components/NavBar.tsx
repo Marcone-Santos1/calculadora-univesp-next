@@ -49,6 +49,7 @@ export const NavBar = () => {
     { label: 'Blog', href: '/blog' },
     { label: 'Sobre', href: '/sobre' },
     { label: 'Calculadora CR', href: '/calculadora-cr' },
+    { label: 'AAC', href: '/aac' },
   ];
 
   return (
