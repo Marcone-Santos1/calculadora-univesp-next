@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaRegMoon, FaRegSun, FaUser, FaUserShield, FaBars, FaTimes, FaSearch } from "react-icons/fa";
@@ -17,6 +17,7 @@ export const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -41,68 +42,87 @@ export const NavBar = () => {
     }
   };
 
+  const navItems = [
+    { label: 'Início', href: '/' },
+    { label: 'Questões', href: '/questoes' },
+    { label: 'Placar', href: '/placar' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Sobre', href: '/sobre' },
+    { label: 'Calculadora CR', href: '/calculadora-cr' },
+  ];
+
   return (
-    <header className="bg-[#F0F7FF] dark:bg-gray-800 shadow-md sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4 gap-4">
-          {/* Logo */}
-          <Link href="/" className="text-xl font-bold text-black dark:text-white whitespace-nowrap">
+    <header className="fixed top-0 w-full z-50 transition-all duration-300 bg-[#F0F7FF]/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-white/5">
+      <div className="container mx-auto px-4 h-20">
+        <div className="flex h-full items-center justify-between gap-4">
+          {/* Left: Brand */}
+          <Link href="/" className="text-xl font-extrabold text-gray-900 dark:text-white whitespace-nowrap tracking-tight hover:opacity-80 transition-opacity">
             Calculadora UNIVESP
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Início</Link>
-            <Link href="/questoes" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Questões</Link>
-            <Link href="/placar" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Placar</Link>
-            <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Blog</Link>
-            <Link href="/sobre" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Sobre</Link>
-            <Link href="/calculadora-cr" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Calculadora CR</Link>
+          {/* Center: Navigation */}
+          <nav className="hidden md:flex items-center justify-center space-x-2">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${isActive
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400'
+                    }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
-
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-              aria-label="Theme button"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              aria-label="Toggle theme"
             >
-              {isDarkMode ? <FaRegSun className="text-xl" /> : <FaRegMoon className="text-xl" />}
+              {isDarkMode ? <FaRegSun className="text-lg" /> : <FaRegMoon className="text-lg" />}
             </button>
 
             {session ? (
-              <div className="flex items-center gap-4">
-                <NotificationBell />
-                <UserDropdown user={session.user!} isAdmin={isAdmin} />
-              </div>
+              <>
+                <div className="hidden md:block">
+                  <NotificationBell />
+                </div>
+                <div className="hidden md:block pl-2">
+                  <UserDropdown user={session.user!} isAdmin={isAdmin} />
+                </div>
+              </>
             ) : (
               <button
                 onClick={() => signIn('google')}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-sm hover:shadow"
+                className="hidden md:block px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-full transition-all shadow-sm hover:shadow-md active:transform active:scale-95"
               >
                 Entrar
               </button>
             )}
-          </nav>
 
-          {/* Mobile Actions (Right side) */}
-          <div className="flex items-center gap-2 md:hidden">
-            {session && <NotificationBell />}
-
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="Toggle menu"
+              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
-              {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+              {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4 space-y-3 animate-fadeIn">
+          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4 space-y-3 animate-fadeIn bg-[#F0F7FF] dark:bg-gray-900 rounded-b-xl shadow-lg absolute left-0 right-0 px-4 top-20 border-b">
             {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="px-4 mb-4">
+            <form onSubmit={handleSearch} className="mb-4">
               <div className="relative">
                 <input
                   type="text"
@@ -115,53 +135,26 @@ export const NavBar = () => {
               </div>
             </form>
 
-            <Link href="/" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-              Início
-            </Link>
-            <Link href="/questoes" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-              Questões
-            </Link>
-            <Link href="/placar" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-              Placar
-            </Link>
-            <Link href="/blog" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-              Blog
-            </Link>
-            <Link href="/sobre" onClick={closeMobileMenu} className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-              Sobre
-            </Link>
-
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3 px-4 space-y-3">
-              <button
-                onClick={() => { toggleDarkMode(); closeMobileMenu(); }}
-                className="w-full flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-gray-700/50 rounded-lg transition-colors"
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeMobileMenu}
+                className={`block px-4 py-2 rounded-lg transition-colors ${pathname === item.href
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
               >
-                <span className="text-gray-700 dark:text-gray-300 font-medium">Tema</span>
-                <span className="p-2 bg-white dark:bg-gray-600 text-gray-800 dark:text-white rounded-full shadow-sm">
-                  {isDarkMode ? <FaRegSun /> : <FaRegMoon />}
-                </span>
-              </button>
+                {item.label}
+              </Link>
+            ))}
 
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3 space-y-3">
               {session ? (
                 <>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    {session.user?.image ? (
-                      <Image
-                        src={session.user.image}
-                        alt="Profile"
-                        width={40}
-                        height={40}
-                        className="rounded-full border-2 border-white dark:border-gray-800"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                        <FaUser />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{session.user?.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{session.user?.email}</p>
-                    </div>
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    {/* Mobile User Info simplified */}
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Conectado como {session.user?.name}</p>
                   </div>
 
                   <Link
@@ -186,7 +179,7 @@ export const NavBar = () => {
 
                   <button
                     onClick={() => { signOut(); closeMobileMenu(); }}
-                    className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-lg font-medium transition-colors"
+                    className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-lg font-medium transition-colors text-left"
                   >
                     Sair
                   </button>

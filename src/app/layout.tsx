@@ -79,7 +79,7 @@ export default function RootLayout({
           <AppStateProvider>
             <UserPreferencesProvider>
               <NavBar/>
-              <main>{children}</main>
+              <main className="mt-20">{children}</main>
               <Footer />
 
               <FeedbackWidget />
