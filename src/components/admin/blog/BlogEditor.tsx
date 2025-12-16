@@ -97,7 +97,7 @@ export const BlogEditor: React.FC<BlogEditorProps> = ({ post }) => {
     return (
         <form onSubmit={handleSubmit} className="max-w-5xl mx-auto pb-20">
             {/* Header Actions */}
-            <div className="flex items-center justify-between mb-8 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-4 flex-wrap justify-between mb-8 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 py-4 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center gap-4">
                     <button
                         type="button"

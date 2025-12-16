@@ -11,21 +11,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function AdminLayout({
-                                            children,
-                                          }: {
-  children: React.ReactNode;
-}) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const isAdmin = await checkIsAdmin();
 
   if (!isAdmin) {
-    redirect('/questoes');
+    redirect('/');
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      <AdminSidebar/>
-      <main className="flex-1 p-8">
+      {/* Sidebar agora controla sua própria largura */}
+      <AdminSidebar />
+      
+      {/* Conteúdo Principal (flex-1 faz ele ocupar o resto do espaço) */}
+      <main className="flex-1 p-4 md:p-8 overflow-x-hidden w-full">
         {children}
       </main>
     </div>

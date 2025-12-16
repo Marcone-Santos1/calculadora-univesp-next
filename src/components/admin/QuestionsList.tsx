@@ -121,7 +121,7 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                 {displayQuestions.map((question) => (
                     <div
                         key={question.id}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                        className="bg-white dark:bg-gray-800 rounded-lg overflow-x-auto shadow-sm border border-gray-200 dark:border-gray-700 p-6"
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">

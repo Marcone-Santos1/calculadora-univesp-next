@@ -250,7 +250,7 @@ export const CrCalculator = () => {
               onClick={handleSave}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 active:scale-95 transition-all font-bold text-sm"
             >
-              <FaSave /> Salvar Histórico
+              <FaSave /> Salvar Alterações
             </button>
           </div>
         </div>
