@@ -101,7 +101,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                         <div className="sticky top-24">
                             <Link
                                 href="/questoes/nova"
-                                className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/40 mb-6"
+                                className="flex items-center justify-center gap-2 w-full lg:w-72 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/40 mb-6"
                             >
                                 <FaPlus /> Nova Pergunta
                             </Link>

@@ -109,7 +109,7 @@ export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarPro
                 placeholder="Pesquisar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-950 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
               />
               <FaSearch className="absolute left-3 top-3.5 text-gray-400 text-xs" />
             </form>

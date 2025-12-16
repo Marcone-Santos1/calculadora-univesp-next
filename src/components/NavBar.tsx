@@ -36,7 +36,7 @@ export const NavBar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/busca?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/questoes?q=${encodeURIComponent(searchQuery)}`);
       closeMobileMenu();
     }
   };
