@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaHome, FaQuestionCircle, FaComments, FaBook, FaUsers, FaFlag } from 'react-icons/fa';
+import { FaHome, FaQuestionCircle, FaComments, FaBook, FaUsers, FaFlag, FaExclamationCircle } from 'react-icons/fa';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: FaHome },
@@ -12,6 +12,7 @@ const navItems = [
     { href: '/admin/users', label: 'Users', icon: FaUsers },
     { href: '/admin/reports', label: 'Report', icon: FaFlag },
     { href: '/admin/blog', label: 'Blog', icon: FaBook },
+    { href: '/admin/feedbacks', label: 'Feedbacks', icon: FaExclamationCircle },
 ];
 
 export function AdminSidebar() {

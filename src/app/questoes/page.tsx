@@ -6,73 +6,73 @@ import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions'
 import Link from 'next/link';
 import { FaPlus, FaFilter } from 'react-icons/fa';
 import { MobileFilterModal } from '@/components/question/MobileFilterModal';
-import {SITE_CONFIG} from "@/utils/Constants";
+import { SITE_CONFIG } from "@/utils/Constants";
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }): Promise<Metadata> {
-  const params = await searchParams;
-  const { q: query, subject: subjectName } = params;
+    const params = await searchParams;
+    const { q: query, subject: subjectName } = params;
 
-  // URL base para Canonical (Evita duplicação de conteúdo)
-  const baseUrl = SITE_CONFIG.BASE_URL;
-  let canonical = baseUrl;
+    // URL base para Canonical (Evita duplicação de conteúdo)
+    const baseUrl = SITE_CONFIG.BASE_URL;
+    let canonical = baseUrl;
 
-  // 1. Copywriting Padrão (Forte e Focado em Resultado)
-  let title = "Questões Univesp Resolvidas: Estude para as Provas (Comunidade)";
-  let description = "Prepare-se para o bimestre com questões reais e exercícios compartilhados por alunos. Filtre por disciplina, veja gabaritos comentados e passe sem sufoco.";
+    // 1. Copywriting Padrão (Forte e Focado em Resultado)
+    let title = "Questões Univesp Resolvidas: Estude para as Provas (Comunidade)";
+    let description = "Prepare-se para o bimestre com questões reais e exercícios compartilhados por alunos. Filtre por disciplina, veja gabaritos comentados e passe sem sufoco.";
 
-  // 2. Lógica Dinâmica para Matérias (O Pulo do Gato para o Google)
-  if (subjectName) {
-    // Buscamos o nome da matéria para colocar no Título do Google
-    const subjects = await getSubjectsWithCounts();
-    const activeSubject = subjects.find(s => s.name === subjectName); // Ajuste se seu objeto usar 'id' ou 'name'
+    // 2. Lógica Dinâmica para Matérias (O Pulo do Gato para o Google)
+    if (subjectName) {
+        // Buscamos o nome da matéria para colocar no Título do Google
+        const subjects = await getSubjectsWithCounts();
+        const activeSubject = subjects.find(s => s.name === subjectName); // Ajuste se seu objeto usar 'id' ou 'name'
 
-    if (activeSubject) {
-      title = `Questões de ${activeSubject.name} Univesp | Gabaritos e Revisão`;
-      description = `Está estudando ${activeSubject.name}? Acesse exercícios resolvidos e questões de provas anteriores da Univesp para treinar e tirar suas dúvidas.`;
-      canonical = `${baseUrl}?subject=${subjectName}`;
+        if (activeSubject) {
+            title = `Questões de ${activeSubject.name} Univesp | Gabaritos e Revisão`;
+            description = `Está estudando ${activeSubject.name}? Acesse exercícios resolvidos e questões de provas anteriores da Univesp para treinar e tirar suas dúvidas.`;
+            canonical = `${baseUrl}?subject=${subjectName}`;
+        }
     }
-  }
-  // 3. Lógica para Busca Interna
-  else if (query) {
-    title = `Busca por "${query}" | Questões e Dúvidas Univesp`;
-    description = `Resultados encontrados para "${query}" na nossa base colaborativa de questões e estudos.`;
-    canonical = baseUrl; // Mantém a autoridade na raiz em buscas aleatórias
-  }
+    // 3. Lógica para Busca Interna
+    else if (query) {
+        title = `Busca por "${query}" | Questões e Dúvidas Univesp`;
+        description = `Resultados encontrados para "${query}" na nossa base colaborativa de questões e estudos.`;
+        canonical = baseUrl; // Mantém a autoridade na raiz em buscas aleatórias
+    }
 
-  return {
-    title: title,
-    description: description,
-    alternates: {
-      canonical: canonical,
-    },
-    openGraph: {
-      title: title,
-      description: description,
-      url: canonical,
-      type: 'website',
-      siteName: 'Calculadora Univesp',
-      locale: 'pt_BR',
-      images: [
-        {
-          url: '/og-questoes.png',
-          width: 1200,
-          height: 630,
-          alt: 'Plataforma de Estudos Univesp',
+    return {
+        title: title,
+        description: description,
+        alternates: {
+            canonical: canonical,
         },
-      ],
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
-    },
-  };
+        openGraph: {
+            title: title,
+            description: description,
+            url: canonical,
+            type: 'website',
+            siteName: 'Calculadora Univesp',
+            locale: 'pt_BR',
+            images: [
+                {
+                    url: '/og-questoes.png',
+                    width: 1200,
+                    height: 630,
+                    alt: 'Plataforma de Estudos Univesp',
+                },
+            ],
+        },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-video-preview': -1,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
+        },
+    };
 }
 
 // Server Component
@@ -179,7 +179,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
 };
 
 import { Loading } from '@/components/Loading';
-import {Metadata} from "next";
+import { Metadata } from "next";
 
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) {
     return (

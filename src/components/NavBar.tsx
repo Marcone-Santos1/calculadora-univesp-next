@@ -57,6 +57,7 @@ export const NavBar = () => {
             <Link href="/placar" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Placar</Link>
             <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Blog</Link>
             <Link href="/sobre" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Sobre</Link>
+            <Link href="/calculadora-cr" className="text-gray-700 dark:text-gray-300 hover:text-blue-500 transition-colors font-medium">Calculadora CR</Link>
 
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
 

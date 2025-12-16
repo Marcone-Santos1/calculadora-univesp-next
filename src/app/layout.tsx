@@ -14,6 +14,7 @@ import {UserPreferencesProvider} from "@/context/UserPreferencesContext";
 import {ReactNode} from "react";
 import Script from "next/script";
 import {Footer} from "@/components/Footer";
+import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 
 const inter = Inter({subsets: ['latin'], display: 'swap'});
 
@@ -80,6 +81,8 @@ export default function RootLayout({
               <NavBar/>
               <main>{children}</main>
               <Footer />
+
+              <FeedbackWidget />
             </UserPreferencesProvider>
           </AppStateProvider>
         </SessionProvider>

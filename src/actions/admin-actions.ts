@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server';
 
-import {prisma} from '@/lib/prisma';
-import {requireAdmin} from '@/lib/admin-auth';
-import {revalidatePath} from 'next/cache';
-import {createNotification} from './notification-actions';
-import {awardReputation, deductReputation} from './reputation-actions';
+import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/admin-auth';
+import { revalidatePath } from 'next/cache';
+import { createNotification } from './notification-actions';
+import { awardReputation, deductReputation } from './reputation-actions';
 
 // ============ Question Management ============
 
@@ -16,8 +16,8 @@ export async function getAdminQuestions(search?: string, verified?: boolean, ver
 
   if (search) {
     where.OR = [
-      {title: {contains: search, mode: 'insensitive'}},
-      {text: {contains: search, mode: 'insensitive'}}
+      { title: { contains: search, mode: 'insensitive' } },
+      { text: { contains: search, mode: 'insensitive' } }
     ];
   }
 
@@ -32,11 +32,11 @@ export async function getAdminQuestions(search?: string, verified?: boolean, ver
   const questions = await prisma.question.findMany({
     where,
     include: {
-      user: {select: {name: true, email: true}},
-      subject: {select: {name: true}},
+      user: { select: { name: true, email: true } },
+      subject: { select: { name: true } },
       alternatives: {
-        select: {id: true, letter: true, text: true, isCorrect: true},
-        orderBy: {letter: 'asc'}
+        select: { id: true, letter: true, text: true, isCorrect: true },
+        orderBy: { letter: 'asc' }
       },
       _count: {
         select: {
@@ -45,7 +45,7 @@ export async function getAdminQuestions(search?: string, verified?: boolean, ver
         }
       }
     },
-    orderBy: {createdAt: 'desc'}
+    orderBy: { createdAt: 'desc' }
   });
 
   return questions;
@@ -55,13 +55,13 @@ export async function deleteQuestion(id: string) {
   await requireAdmin();
 
   const question = await prisma.question.findUnique({
-    where: {id},
-    select: {userId: true, title: true}
+    where: { id },
+    select: { userId: true, title: true }
   });
 
   if (question) {
     await prisma.question.delete({
-      where: {id}
+      where: { id }
     });
 
     // Deduct reputation
@@ -84,8 +84,8 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
   await requireAdmin();
 
   const question = await prisma.question.findUnique({
-    where: {id},
-    select: {isVerified: true, userId: true}
+    where: { id },
+    select: { isVerified: true, userId: true }
   });
 
   if (!question) {
@@ -96,19 +96,19 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
     // Verifying: Set verified and mark correct answer
     await prisma.$transaction([
       prisma.question.update({
-        where: {id},
+        where: { id },
         data: {
           isVerified: true,
           verificationRequested: false // Clear request
         }
       }),
       prisma.alternative.updateMany({
-        where: {questionId: id},
-        data: {isCorrect: false}
+        where: { questionId: id },
+        data: { isCorrect: false }
       }),
       prisma.alternative.update({
-        where: {id: correctAlternativeId},
-        data: {isCorrect: true}
+        where: { id: correctAlternativeId },
+        data: { isCorrect: true }
       })
     ]);
 
@@ -125,7 +125,7 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
   } else {
     // Unverifying or toggling without specific answer (fallback)
     await prisma.question.update({
-      where: {id},
+      where: { id },
       data: {
         isVerified: !question.isVerified,
         verificationRequested: false // Clear request if verifying
@@ -145,19 +145,19 @@ export async function getAdminComments(search?: string) {
   const where: any = {};
 
   if (search) {
-    where.text = {contains: search, mode: 'insensitive'};
+    where.text = { contains: search, mode: 'insensitive' };
   }
 
   const comments = await prisma.comment.findMany({
     where,
     include: {
-      user: {select: {name: true, email: true}},
-      question: {select: {id: true, title: true}},
+      user: { select: { name: true, email: true } },
+      question: { select: { id: true, title: true } },
       _count: {
-        select: {replies: true}
+        select: { replies: true }
       }
     },
-    orderBy: {createdAt: 'desc'},
+    orderBy: { createdAt: 'desc' },
     take: 100
   });
 
@@ -169,14 +169,14 @@ export async function deleteComment(id: string) {
 
   // Get the comment to check for replies and get details for notification
   const comment = await prisma.comment.findUnique({
-    where: {id},
+    where: { id },
     select: {
       questionId: true,
       userId: true,
       text: true,
-      question: {select: {title: true}},
+      question: { select: { title: true } },
       _count: {
-        select: {replies: true}
+        select: { replies: true }
       }
     }
   });
@@ -186,7 +186,7 @@ export async function deleteComment(id: string) {
   if (comment._count.replies > 0) {
     // Soft delete if there are replies to preserve the thread
     await prisma.comment.update({
-      where: {id},
+      where: { id },
       data: {
         isDeleted: true,
         moderationReason: 'Conteúdo removido pela moderação'
@@ -198,7 +198,7 @@ export async function deleteComment(id: string) {
   } else {
     // Hard delete if no replies
     await prisma.comment.delete({
-      where: {id}
+      where: { id }
     });
 
     // Deduct reputation
@@ -225,10 +225,10 @@ export async function getAdminSubjects() {
   const subjects = await prisma.subject.findMany({
     include: {
       _count: {
-        select: {questions: true}
+        select: { questions: true }
       }
     },
-    orderBy: {name: 'asc'}
+    orderBy: { name: 'asc' }
   });
 
   return subjects;
@@ -251,7 +251,7 @@ export async function updateSubject(id: string, data: { name?: string; color?: s
   await requireAdmin();
 
   const subject = await prisma.subject.update({
-    where: {id},
+    where: { id },
     data
   });
 
@@ -266,7 +266,7 @@ export async function deleteSubject(id: string) {
 
   // Check if subject has questions
   const count = await prisma.question.count({
-    where: {subjectId: id}
+    where: { subjectId: id }
   });
 
   if (count > 0) {
@@ -274,7 +274,7 @@ export async function deleteSubject(id: string) {
   }
 
   await prisma.subject.delete({
-    where: {id}
+    where: { id }
   });
 
   revalidatePath('/admin/subjects');
@@ -290,8 +290,8 @@ export async function getAdminUsers(search?: string) {
 
   if (search) {
     where.OR = [
-      {name: {contains: search, mode: 'insensitive'}},
-      {email: {contains: search, mode: 'insensitive'}}
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } }
     ];
   }
 
@@ -306,7 +306,7 @@ export async function getAdminUsers(search?: string) {
         }
       }
     },
-    orderBy: {name: 'asc'}
+    orderBy: { name: 'asc' }
   });
 
   return users;
@@ -316,8 +316,8 @@ export async function toggleUserAdmin(id: string) {
   await requireAdmin();
 
   const user = await prisma.user.findUnique({
-    where: {id},
-    select: {isAdmin: true}
+    where: { id },
+    select: { isAdmin: true }
   });
 
   if (!user) {
@@ -325,8 +325,8 @@ export async function toggleUserAdmin(id: string) {
   }
 
   await prisma.user.update({
-    where: {id},
-    data: {isAdmin: !user.isAdmin}
+    where: { id },
+    data: { isAdmin: !user.isAdmin }
   });
 
   revalidatePath('/admin/users');
@@ -348,34 +348,44 @@ export async function getAdminStats() {
     recentQuestions,
     questionsLast30Days,
     usersLast30Days,
-    subjectsWithCount
+    subjectsWithCount,
+    feedbackCount,
+    recentFeedback
   ] = await Promise.all([
     prisma.user.count(),
     prisma.question.count(),
     prisma.comment.count(),
-    prisma.question.count({where: {isVerified: true}}),
+    prisma.question.count({ where: { isVerified: true } }),
     prisma.question.findMany({
       take: 5,
-      orderBy: {createdAt: 'desc'},
+      orderBy: { createdAt: 'desc' },
       include: {
-        user: {select: {name: true}},
-        subject: {select: {name: true}}
+        user: { select: { name: true } },
+        subject: { select: { name: true } }
       }
     }),
     prisma.question.findMany({
-      where: {createdAt: {gte: thirtyDaysAgo}},
-      select: {createdAt: true}
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true }
     }),
     prisma.user.findMany({
-      where: {createdAt: {gte: thirtyDaysAgo}},
-      select: {createdAt: true}
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true }
     }),
     prisma.subject.findMany({
       take: 6,
       include: {
         _count: {
-          select: {questions: true}
+          select: { questions: true }
         }
+      }
+    }),
+    prisma.feedback.count(),
+    prisma.feedback.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true } },
       }
     })
   ]);
@@ -390,7 +400,7 @@ export async function getAdminStats() {
     const dateStr = date.toLocaleDateString('pt-BR'); // DD/MM/YYYY
     // Store as YYYY-MM-DD for sorting if needed, or just use the string key
     // Let's use a simple format for the chart
-    dailyActivityMap.set(dateStr, {date: dateStr.split('/').slice(0, 2).join('/'), questions: 0, users: 0});
+    dailyActivityMap.set(dateStr, { date: dateStr.split('/').slice(0, 2).join('/'), questions: 0, users: 0 });
   }
 
   questionsLast30Days.forEach(q => {
@@ -411,7 +421,7 @@ export async function getAdminStats() {
   const dailyActivity = Array.from(dailyActivityMap.values()).reverse();
 
   // Process subject distribution
-  const subjectDistribution = subjectsWithCount.map(s => ({
+  const subjectDistribution = subjectsWithCount.map((s: any) => ({
     name: s.name,
     value: s._count.questions
   }))
@@ -424,6 +434,8 @@ export async function getAdminStats() {
     verifiedQuestions,
     recentQuestions,
     dailyActivity,
-    subjectDistribution
+    subjectDistribution,
+    feedbackCount,
+    recentFeedback
   };
 }

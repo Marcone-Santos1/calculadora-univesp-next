@@ -16,6 +16,7 @@ import { GradesProp } from "@/Contracts/GradesProp";
 import { ResultProp } from "@/Contracts/ResultProp";
 import { HistoryEntryProp } from "@/Contracts/HistoryEntryProp";
 import { History } from "@/components/History";
+import { ScenarioMatrix } from "./ScenarioMatrix";
 
 export const GradeCalculator = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -146,60 +147,58 @@ export const GradeCalculator = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-67px)]">
+    <div className="min-h-[calc(100vh-67px)] flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 px-4 py-12 relative">
       <div
-        className="h-[calc(100vh-67px)] flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 relative px-4">
-        <div
-          className="max-w-screen-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-80">
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <FaCalculator className="text-2xl text-blue-500 dark:text-blue-300" />
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Calculadora de Notas UNIVESP</h1>
-          </div>
+        className="max-w-screen-lg w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-80 transition-all duration-300">
+        <div className="flex items-center justify-center space-x-2 mb-6">
+          <FaCalculator className="text-2xl text-blue-500 dark:text-blue-300" />
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Calculadora de Notas UNIVESP</h1>
+        </div>
 
-          <div className="mb-6">
-            <div className="flex justify-center flex-wrap gap-2">
-              {tabs.map((tab, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setActiveTab(index);
-                    setShowResult(false);
-                    setGrades({ g1: 0, g2: 0 });
-                    cleanInputs()
-                  }}
-                  className={`px-4 py-2 rounded-lg transition-all duration-200 ${activeTab === index
-                      ? "bg-blue-500 dark:bg-blue-700 text-white"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                    }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {getInputFields()}
-
-            <div className="flex align-middle justify-center">
+        <div className="mb-6">
+          <div className="flex justify-center flex-wrap gap-2">
+            {tabs.map((tab, index) => (
               <button
-                onClick={calculateGrade}
-                className="w-1/2 py-3 bg-blue-500 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+                key={index}
+                onClick={() => {
+                  setActiveTab(index);
+                  setShowResult(false);
+                  setGrades({ g1: 0, g2: 0 });
+                  cleanInputs()
+                }}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 ${activeTab === index
+                  ? "bg-blue-500 dark:bg-blue-700 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
               >
-                <FaCalculator />
-                <span>Calcular</span>
+                {tab}
               </button>
-            </div>
-
-
-            <Result showResult={showResult} result={result.result} isSimulation={result.isSimulation} />
-
-            <History entries={history} onClear={clearHistory} />
+            ))}
           </div>
         </div>
-        <div className="absolute bottom-8 animate-bounce">
-          <FiArrowDown className="text-3xl text-blue-500" />
+
+        <div className="space-y-6">
+          {getInputFields()}
+
+          <div className="flex align-middle justify-center">
+            <button
+              onClick={calculateGrade}
+              className="w-1/2 py-3 bg-blue-500 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <FaCalculator />
+              <span>Calcular</span>
+            </button>
+          </div>
+
+
+          <Result showResult={showResult} result={result.result} isSimulation={result.isSimulation} />
+          <ScenarioMatrix showResult={showResult} />
+
+          <History entries={history} onClear={clearHistory} />
         </div>
+      </div>
+      <div className="absolute bottom-8 animate-bounce">
+        <FiArrowDown className="text-3xl text-blue-500" />
       </div>
     </div>
   );

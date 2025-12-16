@@ -1,15 +1,17 @@
 import {MdCheck, MdClose, MdMenuBook} from "react-icons/md";
 import {ResultProp} from "@/Contracts/ResultProp";
 import Link from "next/link";
+import { FaExternalLinkAlt } from "react-icons/fa";
 
 export function Result({showResult, result, isSimulation}: ResultProp) {
 
   const showStudyGuide = showResult && !isSimulation && result < 4.95;
+  const isApproved = showResult && !isSimulation && result >= 4.95;
 
   return <>
     {showResult && (
       <div
-        className="mt-6 p-4 flex flex-col gap-4 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg">
+        className="mt-6 p-4 flex flex-col gap-4 bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300  rounded-lg">
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">Resultado</h3>
           <div className="text-3xl font-bold mb-2">{result.toFixed(2)}</div>
@@ -27,7 +29,8 @@ export function Result({showResult, result, isSimulation}: ResultProp) {
                 <MdCheck className="text-xl"/>
                 <span>Nota para passar</span>
               </>
-            ) : result >= 4.95 ? result >= 5 ? (
+            ) : isApproved ?
+              result >= 5 ? (
               <>
                 <MdCheck className="text-xl"/>
                 <span>Aprovado</span>
@@ -69,6 +72,20 @@ export function Result({showResult, result, isSimulation}: ResultProp) {
                 </Link>
               </div>
             </div>
+          </div>
+        )}
+
+        {!isSimulation && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Link 
+              href="/questoes"
+              className="text-sm text-blue-600 flex items-center dark:text-blue-400 hover:underline flex items-center justify-center gap-1"
+            >
+              {isApproved 
+                ? "🧠 Você manja muito! Ajude outros alunos nas Questões!" 
+                : "📚 Precisa estudar? Acesse o Banco de Questões da Univesp"}
+              <FaExternalLinkAlt className="ml-1 transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
         )}
 

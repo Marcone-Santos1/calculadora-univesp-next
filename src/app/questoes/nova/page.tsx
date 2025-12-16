@@ -2,12 +2,10 @@ import React from 'react';
 import { QuestionForm } from '@/components/question/QuestionForm';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
-import { prisma } from '@/lib/prisma';
+import { getAllSubjects } from '@/actions/subject-actions';
 
 export default async function NewQuestionPage() {
-    const subjects = await prisma.subject.findMany({
-        orderBy: { name: 'asc' }
-    });
+    const subjects = await getAllSubjects();
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
