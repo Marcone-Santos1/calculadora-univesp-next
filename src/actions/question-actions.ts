@@ -250,9 +250,24 @@ export async function createQuestion(formData: FormData) {
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
+    
+    const existingQuestion = await prisma.question.findFirst({
+        where: {
+            title: {
+                equals: title,
+                mode: 'insensitive'
+            }
+        }
+    });
+
+    if (existingQuestion) {
+        throw new Error('Já existe uma questão cadastrada com esse título.');
+    }
+
     if (!alternativesRaw) {
         throw new Error('Alternatives are required');
     }
+    
     const alternatives = JSON.parse(alternativesRaw as string);
 
     const question = await prisma.question.create({
