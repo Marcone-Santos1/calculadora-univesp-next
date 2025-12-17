@@ -143,8 +143,8 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
             } else {
                 router.push('/questoes');
             }
-        } catch {
-            showToast('Erro ao criar questão. Tente novamente.', 'error');
+        } catch (error: any) {
+            showToast(error.message || 'Erro ao criar questão', 'error');
             setIsSubmitting(false);
             setShowConfirmation(false);
         }

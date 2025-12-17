@@ -250,24 +250,35 @@ export async function createQuestion(formData: FormData) {
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
-    
+
     const existingQuestion = await prisma.question.findFirst({
         where: {
-            title: {
-                equals: title,
-                mode: 'insensitive'
-            }
-        }
+            OR: [
+                {
+                    title: {
+                        equals: title.trim(),
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    text: {
+                        equals: text.trim(),
+                        mode: 'insensitive'
+                    }
+                }
+            ]
+        },
+        select: { id: true, title: true } // Otimização: selecionar apenas o necessário
     });
 
     if (existingQuestion) {
-        throw new Error('Já existe uma questão cadastrada com esse título.');
+        throw new Error('Atenção: Já existe uma questão idêntica cadastrada (mesmo título ou mesma descrição). Por favor, verifique antes de postar.');
     }
 
     if (!alternativesRaw) {
-        throw new Error('Alternatives are required');
+        throw new Error('Alternativas são obrigatórias');
     }
-    
+
     const alternatives = JSON.parse(alternativesRaw as string);
 
     const question = await prisma.question.create({
