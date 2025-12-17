@@ -70,6 +70,9 @@ model User {
   website       String?
   socialLinks   Json?
 
+  aacActivities AacActivity[]
+  aacReportConfig AacReportConfig?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -240,4 +243,49 @@ model Feedback {
 
   createdAt DateTime     @default(now())
   isRead    Boolean      @default(false)
+}
+
+// ARC / Horas Complementares
+enum AacCategory {
+  COURSE      // Cursos
+  CULTURAL    // Cultural (Filmes, Livros, Museus)
+  EXPERIENCE  // Vivência Profissional
+  INTERNSHIP  // Estágio
+  OTHER       // Outros
+}
+
+model AacActivity {
+  id            String      @id @default(cuid())
+  title         String
+  description   String?     @db.Text
+  category      AacCategory
+  institution   String?
+  
+  startDate     DateTime?
+  endDate       DateTime?   // Se null, considera pontual? Ou obrigatório?
+  
+  originalHours Int         // Horas no certificado
+  validHours    Int         // Horas computadas após regras (pode ser recalculado no backend, mas persistido para performance)
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt // Importante para sync
+
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AacReportConfig {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  ra              String?
+  polo            String?
+  ingressDate     String?
+  intro           String?  @db.Text
+  conclusion      String?  @db.Text
+  
+  activityDetails Json?    // Record<activityId, { description, relation }>
+
+  updatedAt       DateTime @updatedAt
 }
