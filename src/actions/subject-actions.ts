@@ -19,3 +19,28 @@ export async function getAllSubjects() {
         return [];
     }
 }
+
+export async function getSubjectByName(name: string) {
+    try {
+        // search insensitive
+        const subject = await prisma.subject.findFirst({
+            where: {
+                name: {
+                    contains: name,
+                    mode: 'insensitive',
+                },
+            },
+            select: {
+                id: true,
+                name: true,
+                icon: true,
+                color: true,
+            },
+        });
+
+        return subject;
+    } catch (error) {
+        console.error("Erro ao buscar matéria:", error);
+        return null;
+    }
+}

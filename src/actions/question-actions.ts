@@ -250,6 +250,7 @@ export async function createQuestion(formData: FormData) {
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
+    const isValidated = formData.get('isValidated') === 'isValidated';
 
     const existingQuestion = await prisma.question.findFirst({
         where: {
@@ -287,11 +288,13 @@ export async function createQuestion(formData: FormData) {
             text,
             subjectId,
             week,
+            isVerified: isValidated,
             userId: session.user.id,
             alternatives: {
                 create: alternatives.map((alt: any) => ({
-                    letter: alt.id,
-                    text: alt.text
+                    letter: alt.id || alt.letter,
+                    text: alt.text || alt.content,
+                    isCorrect: alt.isCorrect || false
                 }))
             }
         }

@@ -6,7 +6,8 @@ import { useState, useEffect } from 'react';
 import { 
   FaHome, FaUsers, FaBook, FaQuestionCircle, 
   FaChartBar, FaFlag, FaCommentDots, FaChevronLeft, 
-  FaChevronRight, FaGraduationCap, FaBars 
+  FaChevronRight, FaGraduationCap, FaBars, 
+  FaDownload
 } from 'react-icons/fa';
 
 // Definição dos links para fácil manutenção
@@ -18,6 +19,7 @@ const MENU_ITEMS = [
   { href: '/admin/blog', label: 'Blog', icon: <FaBook /> },
   { href: '/admin/reports', label: 'Denúncias', icon: <FaFlag /> },
   { href: '/admin/feedbacks', label: 'Feedbacks', icon: <FaCommentDots /> },
+  { href: '/admin/importar', label: 'Importar', icon: <FaDownload /> },
   { href: '/', label: 'Voltar ao Site', icon: <FaHome /> },
 ];
 
