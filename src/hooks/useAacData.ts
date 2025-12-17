@@ -8,6 +8,17 @@ import { AacCategory } from "@prisma/client";
 
 const STORAGE_KEY = "univesp_aac_data_v2";
 
+function mapServerActivity(a: any): ActivityData {
+    return {
+        ...a,
+        startDate: a.startDate ? new Date(a.startDate) : undefined,
+        endDate: a.endDate ? new Date(a.endDate) : undefined,
+        category: a.category as AacCategory,
+        description: a.description ?? undefined,
+        institution: a.institution ?? undefined
+    };
+}
+
 export function useAacData() {
     const { data: session, status } = useSession();
     const [activities, setActivities] = useState<ActivityData[]>([]);
@@ -24,13 +35,7 @@ export function useAacData() {
                 // Logged in: Fetch from server
                 try {
                     const serverData = await getActivities();
-                    setActivities(serverData.map(a => ({
-                        // Adapt Prisma date objects to Date if needed (server actions usually return Date objects if using standard setup, but sometimes JSON/plain objects over wire)
-                        // Prisma dates are Date objects in server side, but over network (Server Action) they are serialized.
-                        // Next.js Server Actions serialize Date objects fine.
-                        ...a,
-                        category: a.category as AacCategory // cast enum
-                    })));
+                    setActivities((serverData as any[]).map(mapServerActivity));
                 } catch (e) {
                     console.error("Failed to load server activities", e);
                 }
@@ -95,7 +100,7 @@ export function useAacData() {
 
             // Refresh list
             const serverData = await getActivities();
-            setActivities(serverData);
+            setActivities((serverData as any[]).map(mapServerActivity));
 
             // Toast success (caller should handle UI feedback, but we can do simple alert or return success)
         } catch (e) {
@@ -129,7 +134,7 @@ export function useAacData() {
                 await saveActivity(newActivity);
                 // Re-fetch to get real ID and confirmed state
                 const refreshed = await getActivities();
-                setActivities(refreshed);
+                setActivities((refreshed as any[]).map(mapServerActivity));
             } catch (e) {
                 console.error("Failed to save", e);
                 // Revert?
@@ -163,7 +168,7 @@ export function useAacData() {
                 await saveActivity(updatedActivity);
                 // Re-fetch
                 const refreshed = await getActivities();
-                setActivities(refreshed);
+                setActivities((refreshed as any[]).map(mapServerActivity));
             } catch (e) {
                 console.error("Failed to update", e);
                 // Revert? (Complex without previous state clone, skipping for now)

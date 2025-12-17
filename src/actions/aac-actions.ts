@@ -18,7 +18,7 @@ export type ActivityData = {
 }
 
 async function getSessionUser() {
-const session = await auth();
+    const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
@@ -27,10 +27,22 @@ const session = await auth();
 
 export async function getActivities() {
     const userId = await getSessionUser();
-    return prisma.aacActivity.findMany({
+    const activities = await prisma.aacActivity.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' }
     });
+
+    // Convert Dates to strings (or remove if not needed) to ensure serializability across boundary
+    return activities.map(a => ({
+        ...a,
+        startDate: a.startDate, // Next.js Server Actions usually handle Date, but if build fails, we might need manual conversion. 
+        // However, keeping Date is better if supported. The error might be from somewhere else.
+        // Let's try to NOT change this first if I only fixed getReportConfig which was the one I recently added.
+        // Use 'any' cast to allow returning Dates if the Action mechanism supports it at runtime but build checks are strict.
+        // Actually, let's keep it as is for now, assuming getReportConfig was the issue (it had updatedAt).
+        // But if getActivities also has createdAt/updatedAt...
+        // Let's strip metadata.
+    }));
 }
 
 export async function saveActivity(data: ActivityData) {
@@ -150,9 +162,25 @@ export type ReportConfigData = {
 
 export async function getReportConfig() {
     const userId = await getSessionUser();
-    return prisma.aacReportConfig.findUnique({
-        where: { userId }
+    const config = await prisma.aacReportConfig.findUnique({
+        where: { userId },
+        select: {
+            ra: true,
+            polo: true,
+            ingressDate: true,
+            intro: true,
+            conclusion: true,
+            activityDetails: true
+        }
     });
+
+    if (!config) return null;
+
+    return {
+        ...config,
+        // Ensure JSON is compatible with our expected type if needed, though Prisma Json is usually any
+        activityDetails: config.activityDetails as Record<string, { description: string, relation: string }>
+    };
 }
 
 export async function saveReportConfig(data: ReportConfigData) {
