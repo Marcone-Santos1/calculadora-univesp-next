@@ -18,7 +18,7 @@ export type ActivityData = {
 }
 
 async function getSessionUser() {
-    const session = await auth();
+const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
@@ -135,4 +135,52 @@ export async function syncActivities(localActivities: ActivityData[]) {
 
     revalidatePath("/aac");
     return { added: addedCount, total: existing.length + addedCount };
+}
+
+// --- Report Config Persistence ---
+
+export type ReportConfigData = {
+    ra?: string;
+    polo?: string;
+    ingressDate?: string;
+    intro?: string;
+    conclusion?: string;
+    activityDetails?: Record<string, { description: string, relation: string }>;
+}
+
+export async function getReportConfig() {
+    const userId = await getSessionUser();
+    return prisma.aacReportConfig.findUnique({
+        where: { userId }
+    });
+}
+
+export async function saveReportConfig(data: ReportConfigData) {
+    const userId = await getSessionUser();
+
+    // Convert undefined to null for Prisma where needed, or just pass data if fields match
+    // JSON field needs to be compatible.
+
+    await prisma.aacReportConfig.upsert({
+        where: { userId },
+        create: {
+            userId,
+            ra: data.ra,
+            polo: data.polo,
+            ingressDate: data.ingressDate,
+            intro: data.intro,
+            conclusion: data.conclusion,
+            activityDetails: data.activityDetails as any // JSON compatibility
+        },
+        update: {
+            ra: data.ra,
+            polo: data.polo,
+            ingressDate: data.ingressDate,
+            intro: data.intro,
+            conclusion: data.conclusion,
+            activityDetails: data.activityDetails as any
+        }
+    });
+
+    // No need to revalidate path aggressively unless we show this on another page
 }

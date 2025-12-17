@@ -105,7 +105,7 @@ export function ActivityList({ activities, onDelete, onView, onEdit }: Props) {
                                     <h3 className="font-bold text-gray-900 dark:text-white text-lg">{activity.title}</h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
                                         {activity.institution && <span className="font-medium mr-2">{activity.institution}</span>}
-                                        {activity.startDate && <span>• {new Date(activity.startDate).toLocaleDateString()}</span>}
+                                        {activity.endDate && <span>• {new Date(activity.endDate).toLocaleDateString()}</span>}
                                     </p>
                                 </div>
                             </div>

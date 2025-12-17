@@ -59,11 +59,10 @@ export function ActivityDetailsModal({ activity, onClose, onEdit, onDelete }: Pr
                                 <span className="font-medium">{activity.institution}</span>
                             </div>
                         )}
-                        {activity.startDate && (
+                        {activity.endDate && (
                             <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                                 <FaCalendarAlt className="text-gray-400" />
-                                <span>{new Date(activity.startDate).toLocaleDateString()}</span>
-                                {activity.endDate && <span> - {new Date(activity.endDate).toLocaleDateString()}</span>}
+                                <span>{new Date(activity.endDate).toLocaleDateString()}</span>
                             </div>
                         )}
                     </div>

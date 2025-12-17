@@ -46,7 +46,7 @@ export default function AacPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestão de Horas (AAC)</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gestão de Horas Complementares(AAC)</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">Gerencie suas atividades acadêmico-científico-culturais.</p>
                     </div>
 

@@ -18,7 +18,7 @@ export function ActivityForm({ onSubmit, existingActivities, onCancel, initialDa
     const [category, setCategory] = useState<AacCategory>((initialData?.category as AacCategory) || AacCategory.COURSE);
     const [originalHours, setOriginalHours] = useState(initialData?.originalHours || 0);
     const [institution, setInstitution] = useState(initialData?.institution || "");
-    const [date, setDate] = useState(initialData?.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : "");
+    const [date, setDate] = useState(initialData?.endDate ? new Date(initialData.endDate).toISOString().split('T')[0] : "");
     const [description, setDescription] = useState(initialData?.description || "");
 
     // Update state when initialData changes (re-opening form for diff item)
@@ -28,7 +28,7 @@ export function ActivityForm({ onSubmit, existingActivities, onCancel, initialDa
             setCategory(initialData.category as AacCategory);
             setOriginalHours(initialData.originalHours);
             setInstitution(initialData.institution || "");
-            setDate(initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : "");
+            setDate(initialData.endDate ? new Date(initialData.endDate).toISOString().split('T')[0] : "");
             setDescription(initialData.description || "");
         } else {
             // Reset if closed/cleared
@@ -42,7 +42,7 @@ export function ActivityForm({ onSubmit, existingActivities, onCancel, initialDa
         title,
         category,
         originalHours,
-        startDate: date ? new Date(date) : null,
+        endDate: date ? new Date(date) : null,
         institution,
         description
     }, existingActivities.filter(a => a.id !== initialData?.id)); // Exclude self from limits check during edit
@@ -57,8 +57,8 @@ export function ActivityForm({ onSubmit, existingActivities, onCancel, initialDa
             originalHours,
             institution,
             description,
-            startDate: date ? new Date(date) : undefined,
-            endDate: undefined // Simplified for now
+            endDate: date ? new Date(date) : undefined,
+            startDate: undefined // Simplified for now
         });
 
         // Reset or close

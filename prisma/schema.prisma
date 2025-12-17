@@ -71,6 +71,7 @@ model User {
   socialLinks   Json?
 
   aacActivities AacActivity[]
+  aacReportConfig AacReportConfig?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -271,4 +272,20 @@ model AacActivity {
 
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AacReportConfig {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  ra              String?
+  polo            String?
+  ingressDate     String?
+  intro           String?  @db.Text
+  conclusion      String?  @db.Text
+  
+  activityDetails Json?    // Record<activityId, { description, relation }>
+
+  updatedAt       DateTime @updatedAt
 }
