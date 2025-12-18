@@ -5,21 +5,25 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import {
     Play, Terminal, CheckCircle, AlertTriangle,
     Info, Loader2, Hourglass, Lock,
-    Check, ArrowLeft, Trophy, Box, Key, User, ShieldCheck, Activity
+    Check, ArrowLeft, Trophy, Box, Key, User, ShieldCheck, Activity,
+    StopCircle, X
 } from 'lucide-react';
-import { createQuestion } from '@/actions/question-actions';
+import { createComment, createQuestion } from '@/actions/question-actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import confetti from 'canvas-confetti';
 import { getSubjectByName } from '@/actions/subject-actions';
+import { capitalize } from '@/utils/functions';
+import { createSubject } from '@/actions/admin-actions';
+import { getCompletedExams, markExamAsCompleted } from '@/actions/history-actions';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
 // Configuração de Ambiente
-const MICROSERVICE_URL = process.env.NEXT_PUBLIC_MICROSERVICE_URL || 'http://localhost:3033';
+const MICROSERVICE_URL = process.env.NEXT_PUBLIC_MICROSERVICE_URL || 'http://localhost:3001';
 const API_KEY = process.env.NEXT_PUBLIC_SCRAPER_API_KEY || process.env.NEXT_PUBLIC_SCAPER_API_KEY || '';
 
 // Tipos
@@ -37,6 +41,70 @@ interface Metrics {
     xp: number;
 }
 
+const ConfirmationModal = ({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    description
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    title: string;
+    description: string;
+}) => {
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm"
+                    >
+                        <div className="flex items-center gap-4 mb-4 text-amber-500">
+                            <div className="p-3 bg-amber-100 dark:bg-amber-900/20 rounded-full">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white leading-tight">
+                                {title}
+                            </h3>
+                        </div>
+
+                        <p className="text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">
+                            {description}
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl font-medium transition-colors"
+                            >
+                                Continuar
+                            </button>
+                            <button
+                                onClick={onConfirm}
+                                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-red-500/20"
+                            >
+                                Parar Tudo
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 export default function AvaImporter() {
     const [appState, setAppState] = useState<'idle' | 'running' | 'done'>('idle');
     const [login, setLogin] = useState('');
@@ -46,6 +114,7 @@ export default function AvaImporter() {
     const [logs, setLogs] = useState<LogMessage[]>([]);
     const [statusText, setStatusText] = useState('Pronto para iniciar');
     const [metrics, setMetrics] = useState<Metrics>({ found: 0, imported: 0, skipped: 0, xp: 0 });
+    const [showCancelModal, setShowCancelModal] = useState(false);
 
     // Referências de Controle
     const ctrlRef = useRef<AbortController | null>(null);
@@ -65,7 +134,7 @@ export default function AvaImporter() {
         };
     }, []);
 
-    // Efeito de Confete ao finalizar
+    // Efeito de Confete ao finalizar e Proteção de Saída
     useEffect(() => {
         if (appState === 'done') {
             const duration = 2 * 1000;
@@ -81,7 +150,35 @@ export default function AvaImporter() {
                 confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
             }, 250);
         }
+
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (appState === 'running') {
+                e.preventDefault();
+                e.returnValue = ''; // Exibe o diálogo nativo do navegador
+                return '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
     }, [appState]);
+
+    const handleRequestCancel = () => {
+        setShowCancelModal(true);
+    };
+
+    const confirmCancel = () => {
+        if (ctrlRef.current) {
+            ctrlRef.current.abort(); // Mata a conexão
+        }
+        addLog('Operação cancelada pelo usuário.', 'error');
+        setStatusText('Cancelado');
+        setAppState('idle');
+        setShowCancelModal(false);
+    };
 
     const addLog = (msg: string, type: LogMessage['type'] = 'info') => {
         const time = new Date().toLocaleTimeString('pt-BR');
@@ -98,6 +195,13 @@ export default function AvaImporter() {
         setStatusText('Estabelecendo conexão segura...');
         addLog('Iniciando handshake criptografado...', 'info');
 
+        addLog('Verificando histórico de importações...', 'info');
+        const completedExams = await getCompletedExams();
+
+        if (completedExams.length > 0) {
+            addLog(`Encontradas ${completedExams.length} provas já importadas. Serão puladas.`, 'info');
+        }
+
         const ctrl = new AbortController();
         ctrlRef.current = ctrl;
 
@@ -105,15 +209,15 @@ export default function AvaImporter() {
             console.log('Iniciando handshake criptografado...');
             console.log('MICROSERVICE_URL', `${MICROSERVICE_URL}/scrape-stream`);
             console.log('API_KEY', API_KEY);
-            console.log('login', login);
-            console.log('password', password);
+            // console.log('login', login); // Evitar logar credenciais em prod
+
             await fetchEventSource(`${MICROSERVICE_URL}/scrape-stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-api-key': API_KEY,
                 },
-                body: JSON.stringify({ email: login, password }),
+                body: JSON.stringify({ email: login, password, ignoredExams: completedExams }),
                 signal: ctrl.signal,
 
                 async onopen(response) {
@@ -157,6 +261,11 @@ export default function AvaImporter() {
                                 setStatusText('Falha na execução');
                                 break;
 
+                            case 'exam_done':
+                                markExamAsCompleted(data.year, data.examId, data.examName);
+                                addLog(`🏁 Prova concluída e salva: ${data.examName}`, 'success');
+                                break;
+
                             case 'done':
                                 addLog(`Processo finalizado. Total: ${data.total}`, 'success');
                                 setStatusText('Sincronização Concluída');
@@ -185,47 +294,83 @@ export default function AvaImporter() {
             if (ctrl.signal.aborted) return;
             addLog(`Falha crítica: ${err.message}`, 'error');
             // Não volta pro idle automaticamente para o usuário ver o erro
-            // setAppState('idle'); 
+        } finally {
+            addLog('Finalizando processo...', 'info');
+            setTimeout(() => {
+                ctrl.abort();
+                setAppState('idle');
+            }, 3500);
         }
     };
 
     const handleSaveQuestion = async (rawData: any) => {
-
         try {
             const formData = new FormData();
-            formData.append('title', `#${rawData.title}` || '#Sem título');
 
-            if (rawData.images) {
-                rawData.text += '\n\nImagens:\n';
-                rawData.images.forEach((image: any) => {
-                    if (image.startsWith('http')) {
-                        rawData.text += `\n\n- ![image](${image})`;
+            // 1. Separação Inteligente (Título vs Texto)
+            const fullStatement = rawData.statement || '';
+
+            // TÍTULO: Gera um resumo para a listagem
+            let title = fullStatement.split('\n')[0].substring(0, 150).trim();
+            if (fullStatement.length > 150) title += '...';
+            if (!title) title = `Questão Importada ${new Date().toLocaleTimeString()}`;
+
+            // TEXTO: Recebe o enunciado completo
+            let textBody = fullStatement;
+
+            // 2. Processamento de Imagens
+            if (rawData.images && Array.isArray(rawData.images)) {
+                rawData.images.forEach((image: string) => {
+                    if (image && image.startsWith('http')) {
+                        textBody += `\n\n![Imagem de Apoio](${image})`;
                     }
                 });
             }
 
-            const subject = await getSubjectByName(rawData.subjectName);
+            // 3. Busca da Matéria
+            let subject = await getSubjectByName(rawData.subjectName);
             if (!subject) {
-                addLog('⚠️ Matéria não encontrada', 'warning');
-                return;
+                addLog('⚠️ Matéria não encontrada: ' + rawData.subjectName, 'warning');
+                const subjectName = capitalize(rawData.subjectName.toLowerCase());
+                subject = await createSubject({
+                    name: subjectName,
+                    color: '#3BB2F6',
+                    icon: '📚'
+                });
+                if (!subject) {
+                    console.warn('Matéria não encontrada ao criar', rawData.subjectName);
+                }
             }
 
-            formData.append('text', rawData.text || rawData.description || '');
-            formData.append('subjectId', subject.id);
-            formData.append('week', '');
+            // 4. Montagem do FormData Final
+            formData.append('title', title);
+            formData.append('text', textBody);
+            formData.append('subjectId', subject?.id || '');
+            formData.append('week', rawData.metadata?.semana || '');
             formData.append('alternatives', JSON.stringify(rawData.alternatives || []));
             formData.append('isValidated', 'isValidated');
 
-            await createQuestion(formData);
+            // 5. Envio
+            const result = await createQuestion(formData);
 
+            // 2. Se tiver Justificativa, cria como Comentário
+            if (result?.questionId && rawData.justification) {
+                const justificationText = `**🎓 Gabarito Comentado (AVA):**\n\n${rawData.justification}`;
+                await createComment(result.questionId, justificationText);
+            }
+
+            // Sucesso
             setMetrics(prev => ({ ...prev, imported: prev.imported + 1, xp: prev.xp + 10 }));
             addLog('✅ Persistido no banco de dados', 'success');
+
         } catch (err: any) {
+            console.error("Erro ao salvar questão:", err);
             setMetrics(prev => ({ ...prev, skipped: prev.skipped + 1 }));
+
             if (err.message?.includes('exist')) {
-                addLog('⚠️ Ignorada (Duplicada)', 'warning');
+                addLog('⚠️ Questão duplicada (Título ou Conteúdo idênticos)', 'warning');
             } else {
-                addLog('❌ Falha na persistência', 'error');
+                addLog('❌ Erro ao salvar: ' + err.message, 'error');
             }
         }
     };
@@ -238,6 +383,13 @@ export default function AvaImporter() {
 
     return (
         <div className="w-full font-sans">
+            <ConfirmationModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={confirmCancel}
+                title="Interromper Sincronização?"
+                description="Se você parar agora, as questões já importadas serão mantidas, mas o processo será encerrado imediatamente."
+            />
 
             <AnimatePresence mode="wait">
                 {/* STATE: IDLE */}
@@ -396,6 +548,14 @@ export default function AvaImporter() {
                                         <span className="text-xs text-emerald-600/50 dark:text-emerald-400/50 font-medium">un</span>
                                     </div>
                                 </div>
+
+                                <button
+                                    onClick={handleRequestCancel}
+                                    className="ml-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors group tooltip-trigger"
+                                    title="Cancelar Operação"
+                                >
+                                    <StopCircle className="w-6 h-6" />
+                                </button>
                             </div>
                         </div>
 

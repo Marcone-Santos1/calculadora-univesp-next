@@ -251,7 +251,7 @@ export async function createQuestion(formData: FormData) {
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
     const isValidated = formData.get('isValidated') === 'isValidated';
-
+    
     const existingQuestion = await prisma.question.findFirst({
         where: {
             OR: [
