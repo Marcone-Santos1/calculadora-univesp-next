@@ -219,6 +219,7 @@ export default function AvaImporter() {
                 },
                 body: JSON.stringify({ email: login, password, ignoredExams: completedExams }),
                 signal: ctrl.signal,
+                openWhenHidden: true,
 
                 async onopen(response) {
                     if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
@@ -238,6 +239,7 @@ export default function AvaImporter() {
                     if (msg.event === 'keepalive') return;
 
                     try {
+                        if (!msg.data) return; // Ignora mensagens vazias e evita SyntaxError
                         const data = JSON.parse(msg.data);
 
                         switch (msg.event) {
@@ -286,7 +288,9 @@ export default function AvaImporter() {
                     console.error("Erro na stream:", err);
                     addLog(`Conexão interrompida: ${err.message}`, 'error');
                     setStatusText('Conexão perdida');
-                    throw err;
+
+                    ctrl.abort();
+                    return;
                 }
             });
 
@@ -299,7 +303,7 @@ export default function AvaImporter() {
             setTimeout(() => {
                 ctrl.abort();
                 setAppState('idle');
-            }, 3500);
+            }, 10500);
         }
     };
 
