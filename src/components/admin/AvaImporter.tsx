@@ -110,6 +110,11 @@ export default function AvaImporter() {
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
 
+    const [saveQueue, setSaveQueue] = useState<any[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const [isScrapingFinished, setIsScrapingFinished] = useState(false);
+
     // Estado de Logs e Métricas
     const [logs, setLogs] = useState<LogMessage[]>([]);
     const [statusText, setStatusText] = useState('Pronto para iniciar');
@@ -126,6 +131,38 @@ export default function AvaImporter() {
             terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [logs]);
+
+    useEffect(() => {
+        const processQueue = async () => {
+            if (saveQueue.length === 0 || isSaving) return;
+
+            setIsSaving(true);
+            const currentItem = saveQueue[0]; // Pega o primeiro
+
+            try {
+                await handleSaveQuestion(currentItem);
+            } catch (error) {
+                console.error("Erro ao processar item da fila", error);
+            } finally {
+                // Remove o item processado e libera para o próximo
+                setSaveQueue(prev => prev.slice(1));
+                setIsSaving(false);
+            }
+        };
+
+        processQueue();
+    }, [saveQueue, isSaving]); // Roda sempre que a fila mudar ou terminar de salvar
+
+    useEffect(() => {
+        if (isScrapingFinished && saveQueue.length === 0 && !isSaving) {
+            // Pequeno delay para UX (ver o último log)
+            const timeout = setTimeout(() => {
+                setAppState('done');
+                setIsScrapingFinished(false); // Reseta flag
+            }, 3000);
+            return () => clearTimeout(timeout);
+        }
+    }, [isScrapingFinished, saveQueue.length, isSaving]);
 
     // Cleanup ao desmontar o componente
     useEffect(() => {
@@ -177,6 +214,7 @@ export default function AvaImporter() {
         addLog('Operação cancelada pelo usuário.', 'error');
         setStatusText('Cancelado');
         setAppState('idle');
+        setSaveQueue([]);
         setShowCancelModal(false);
     };
 
@@ -191,6 +229,7 @@ export default function AvaImporter() {
 
         setAppState('running');
         setLogs([]);
+        setSaveQueue([]);
         setMetrics({ found: 0, imported: 0, skipped: 0, xp: 0 });
         setStatusText('Estabelecendo conexão segura...');
         addLog('Iniciando handshake criptografado...', 'info');
@@ -255,7 +294,8 @@ export default function AvaImporter() {
                             case 'question':
                                 setMetrics(prev => ({ ...prev, found: prev.found + 1 }));
                                 addLog(`Questão ID ${data.id?.substring(0, 8) || '?'} capturada`, 'question');
-                                handleSaveQuestion(data);
+                                // handleSaveQuestion(data);
+                                setSaveQueue(prev => [...prev, data]);
                                 break;
 
                             case 'error':
@@ -271,11 +311,8 @@ export default function AvaImporter() {
                             case 'done':
                                 addLog(`Processo finalizado. Total: ${data.total}`, 'success');
                                 setStatusText('Sincronização Concluída');
+                                setIsScrapingFinished(true);
                                 ctrl.abort();
-                                // Delay para experiência de usuário (ver ultimo log)
-                                setTimeout(() => {
-                                    setAppState('done');
-                                }, 1500);
                                 break;
                         }
                     } catch (err) {
@@ -284,13 +321,20 @@ export default function AvaImporter() {
                 },
 
                 onerror(err) {
-                    if ((err as any).name === 'AbortError') return;
+                    if ((err as any).name === 'AbortError') {
+                        // Se foi cancelado manualmente pelo usuário (ctrl.abort),
+                        // relançamos para parar, mas sem logs de erro grave.
+                        throw err; 
+                    }
+
                     console.error("Erro na stream:", err);
                     addLog(`Conexão interrompida: ${err.message}`, 'error');
                     setStatusText('Conexão perdida');
-
-                    ctrl.abort();
-                    return;
+                    
+                    // --- A CORREÇÃO MÁGICA ---
+                    // Você DEVE lançar o erro novamente. 
+                    // Se você der apenas 'return', a lib vai tentar reconectar (reiniciando o scraper).
+                    throw err; 
                 }
             });
 
@@ -298,7 +342,7 @@ export default function AvaImporter() {
             if (ctrl.signal.aborted) return;
             addLog(`Falha crítica: ${err.message}`, 'error');
             // Não volta pro idle automaticamente para o usuário ver o erro
-        } finally {
+
             addLog('Finalizando processo...', 'info');
             setTimeout(() => {
                 ctrl.abort();
@@ -336,13 +380,21 @@ export default function AvaImporter() {
             if (!subject) {
                 addLog('⚠️ Matéria não encontrada: ' + rawData.subjectName, 'warning');
                 const subjectName = capitalize(rawData.subjectName.toLowerCase());
-                subject = await createSubject({
-                    name: subjectName,
-                    color: '#3BB2F6',
-                    icon: '📚'
-                });
+                try {
+                    subject = await createSubject({
+                        name: subjectName,
+                        color: '#3BB2F6',
+                        icon: '📚'
+                    });
+                } catch (err) {
+                    // Race Condition: Se falhar (P2002), tenta buscar novamente
+                    console.warn('Conflito ao criar matéria, tentando recuperar...', rawData.subjectName);
+                    subject = await getSubjectByName(rawData.subjectName);
+                }
+
                 if (!subject) {
-                    console.warn('Matéria não encontrada ao criar', rawData.subjectName);
+                    console.warn('Matéria não encontrada mesmo após tentativa de criação/recuperação', rawData.subjectName);
+                    addLog('⚠️ Matéria não encontrada mesmo após tentativa de criação/recuperação: ' + rawData.subjectName, 'warning');
                 }
             }
 
@@ -512,6 +564,17 @@ export default function AvaImporter() {
                         transition={{ duration: 0.3 }}
                         className="space-y-6"
                     >
+                        
+                        <div className={cn(
+                            "text-center py-2 rounded-lg font-mono text-xs transition-colors",
+                            isScrapingFinished ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-zinc-100 text-zinc-500"
+                        )}>
+                            {isScrapingFinished 
+                                ? `⏳ Extração finalizada! Salvando últimos ${saveQueue.length} itens no banco...`
+                                : `💾 Fila de salvamento: ${saveQueue.length} itens pendentes`
+                            }
+                        </div>
+
                         {/* Status Header */}
                         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between shadow-sm gap-6">
                             <div className="flex items-center gap-4 w-full md:w-auto">
