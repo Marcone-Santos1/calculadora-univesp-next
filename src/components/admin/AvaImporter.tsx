@@ -359,6 +359,7 @@ export default function AvaImporter() {
 
             // 2. Se tiver Justificativa, cria como Comentário
             if (result?.questionId && rawData.justification) {
+                addLog('✅ Justificativa encontrada e salva', 'success');
                 const justificationText = `**🎓 Gabarito Comentado (AVA):**\n\n${rawData.justification}`;
                 await createComment(result.questionId, justificationText);
             }
