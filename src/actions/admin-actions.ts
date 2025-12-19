@@ -78,6 +78,55 @@ export async function deleteQuestion(id: string) {
 
   revalidatePath('/admin/questions');
   revalidatePath('/questoes');
+  revalidatePath('/admin/questions');
+  revalidatePath('/questoes');
+}
+
+export async function deleteQuestions(ids: string[]) {
+  await requireAdmin();
+
+  if (!ids || ids.length === 0) return;
+
+  // 1. Get questions to identify authors for reputation deduction
+  const questions = await prisma.question.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, userId: true, title: true }
+  });
+
+  // 2. Delete in bulk
+  await prisma.question.deleteMany({
+    where: { id: { in: ids } }
+  });
+
+  // 3. Process reputation and notifications (Grouped by User)
+  const usersMap = new Map<string, number>(); // UserId -> Count
+
+  questions.forEach(q => {
+    const current = usersMap.get(q.userId) || 0;
+    usersMap.set(q.userId, current + 1);
+  });
+
+  // Execute async notification/reputation updates
+  // We don't await this to keep UI snappy, or we await if consistency is critical.
+  // Given Next.js Server Action lifecycle, better to await or use `waitUntil` (if available), but standard await is safer.
+
+  const updates = Array.from(usersMap.entries()).map(async ([userId, count]) => {
+    // Bulk deduct reputation
+    await deductReputation(userId, 10 * count, 'BULK_QUESTION_DELETE');
+
+    // Single notification per user
+    await createNotification({
+      userId,
+      type: 'VERIFICATION',
+      message: `${count} questões suas foram removidas pela administração.`,
+      link: '#'
+    });
+  });
+
+  await Promise.all(updates);
+
+  revalidatePath('/admin/questions');
+  revalidatePath('/questoes');
 }
 
 export async function toggleQuestionVerification(id: string, correctAlternativeId?: string) {
