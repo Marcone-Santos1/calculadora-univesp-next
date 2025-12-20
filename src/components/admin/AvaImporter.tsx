@@ -105,7 +105,7 @@ const ConfirmationModal = ({
     );
 };
 
-export default function AvaImporter() {
+export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user' }) {
     const [appState, setAppState] = useState<'idle' | 'running' | 'done'>('idle');
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
@@ -324,17 +324,17 @@ export default function AvaImporter() {
                     if ((err as any).name === 'AbortError') {
                         // Se foi cancelado manualmente pelo usuário (ctrl.abort),
                         // relançamos para parar, mas sem logs de erro grave.
-                        throw err; 
+                        throw err;
                     }
 
                     console.error("Erro na stream:", err);
                     addLog(`Conexão interrompida: ${err.message}`, 'error');
                     setStatusText('Conexão perdida');
-                    
+
                     // --- A CORREÇÃO MÁGICA ---
                     // Você DEVE lançar o erro novamente. 
                     // Se você der apenas 'return', a lib vai tentar reconectar (reiniciando o scraper).
-                    throw err; 
+                    throw err;
                 }
             });
 
@@ -418,7 +418,11 @@ export default function AvaImporter() {
 
             // Sucesso
             setMetrics(prev => ({ ...prev, imported: prev.imported + 1, xp: prev.xp + 10 }));
-            addLog('✅ Persistido no banco de dados', 'success');
+            if (mode === 'user') {
+                addLog('✨ +10 XP! Questão importada com sucesso.', 'success');
+            } else {
+                addLog('✅ Persistido no banco de dados', 'success');
+            }
 
         } catch (err: any) {
             console.error("Erro ao salvar questão:", err);
@@ -564,12 +568,12 @@ export default function AvaImporter() {
                         transition={{ duration: 0.3 }}
                         className="space-y-6"
                     >
-                        
+
                         <div className={cn(
                             "text-center py-2 rounded-lg font-mono text-xs transition-colors",
                             isScrapingFinished ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-zinc-100 text-zinc-500"
                         )}>
-                            {isScrapingFinished 
+                            {isScrapingFinished
                                 ? `⏳ Extração finalizada! Salvando últimos ${saveQueue.length} itens no banco...`
                                 : `💾 Fila de salvamento: ${saveQueue.length} itens pendentes`
                             }
@@ -721,13 +725,29 @@ export default function AvaImporter() {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={handleReset}
-                                    className="w-full py-4 rounded-xl border-2 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-600 dark:text-zinc-300 font-bold transition-all flex items-center justify-center gap-2 group hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                                >
-                                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                                    Voltar ao Início
-                                </button>
+                                {mode === 'user' ? (
+                                    <div className="space-y-3">
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 p-4 rounded-xl text-center mb-6">
+                                            <p className="text-emerald-700 dark:text-emerald-400 font-medium">
+                                                Parabéns! Você subiu no ranking. 🚀
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => window.location.href = '/perfil'}
+                                            className="w-full py-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold hover:shadow-lg transition-all"
+                                        >
+                                            Ver Minha Reputação
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleReset}
+                                        className="w-full py-4 rounded-xl border-2 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-600 dark:text-zinc-300 font-bold transition-all flex items-center justify-center gap-2 group hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                    >
+                                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                                        Voltar ao Início
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </motion.div>
