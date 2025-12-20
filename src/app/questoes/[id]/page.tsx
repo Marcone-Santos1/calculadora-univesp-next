@@ -88,7 +88,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
         }
     }
 
-    // JSON-LD Structured Data for Q&A Page
+// JSON-LD Structured Data for Q&A Page
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'QAPage',
@@ -102,17 +102,23 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
             author: {
                 '@type': 'Person',
                 name: question.userName || 'Usuário da Univesp',
+                url: question.userId ? `${SITE_CONFIG.BASE_URL}/perfil/${question.userId}` : undefined,
             },
-            suggestedAnswer: question.comments.map((comment: any) => ({
-                '@type': 'Answer',
-                text: comment.content,
-                dateCreated: comment.createdAt.toISOString(),
-                upvoteCount: 0, // Assuming no comment voting yet
-                author: {
-                    '@type': 'Person',
-                    name: comment.userName || 'Usuário',
-                },
-            })),
+            // CORREÇÃO 2: Filtrar comentários vazios para evitar erro crítico de "text missing"
+            suggestedAnswer: question.comments
+                .filter((comment: any) => comment.text && comment.text.trim() !== "") 
+                .map((comment: any) => ({
+                    '@type': 'Answer',
+                    text: comment.text,
+                    dateCreated: comment.createdAt.toISOString(),
+                    upvoteCount: 0, 
+                    url: `${SITE_CONFIG.BASE_URL}/questoes/${question.id}#comment-${comment.id}`,
+                    author: {
+                        '@type': 'Person',
+                        name: comment.userName || 'Usuário',
+                        url: comment.userId ? `${SITE_CONFIG.BASE_URL}/perfil/${comment.userId}` : undefined,
+                    },
+                })),
             relatedQuestions: relatedQuestions.map((question: any) => ({
                 '@type': 'Question',
                 name: question.title,
@@ -124,6 +130,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                 author: {
                     '@type': 'Person',
                     name: question.userName || 'Usuário da Univesp',
+                    url: question.userId ? `${SITE_CONFIG.BASE_URL}/perfil/${question.userId}` : undefined,
                 },
             })),
         },

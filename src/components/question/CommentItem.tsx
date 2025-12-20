@@ -47,7 +47,7 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
     const indentClass = depth > 0 ? 'ml-4 md:ml-8 border-l-2 border-gray-200 dark:border-gray-700 pl-4' : '';
 
     return (
-        <div className={`mt-4 ${indentClass}`}>
+        <div className={`mt-4 ${indentClass}`} id={`comment-${comment.id}`}>
             <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
                     {comment.user ? (
