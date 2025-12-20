@@ -19,10 +19,6 @@ export default async function ImportarPage() {
         <div className="p-6 md:p-12 max-w-5xl mx-auto space-y-8">
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-sm font-bold animate-fade-in">
-                    <Sparkles className="w-4 h-4" />
-                    <span>Beta</span>
-                </div>
                 <h1 className="text-3xl md:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                     Transforme suas provas antigas em <span className="text-amber-500">Reputação</span>!
                 </h1>

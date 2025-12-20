@@ -33,8 +33,7 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
         {
             href: '/perfil/importar',
             label: 'Importar Provas',
-            icon: Upload,
-            badge: 'BETA'
+            icon: Upload
         }
     ];
 
@@ -111,17 +110,6 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
                                         >
                                             <item.icon className={cn("w-5 h-5", active && "animate-pulse")} />
                                             <span>{item.label}</span>
-
-                                            {item.badge && (
-                                                <span className={cn(
-                                                    "ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full",
-                                                    active
-                                                        ? "bg-white/20 text-white"
-                                                        : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                                                )}>
-                                                    {item.badge}
-                                                </span>
-                                            )}
                                         </Link>
                                     );
                                 })}
