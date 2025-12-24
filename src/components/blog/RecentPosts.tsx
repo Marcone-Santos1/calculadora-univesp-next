@@ -2,15 +2,52 @@ import Link from 'next/link';
 import { getBlogPosts } from '@/actions/blog-actions';
 import { FaArrowRight } from 'react-icons/fa';
 
-export async function RecentPosts() {
+export async function RecentPosts({
+    limit,
+    exclude,
+    variant = 'default'
+}: {
+    limit: number,
+    exclude?: string,
+    variant?: 'default' | 'sidebar' | 'mixed'
+}) {
     const allPosts = await getBlogPosts(true);
-    const recentPosts = allPosts.slice(0, 9);
+    const recentPosts = allPosts.slice(0, limit).filter((post) => post.id !== exclude);
 
     if (recentPosts.length === 0) {
         return null;
     }
 
-    return (
+    const SidebarContent = (
+        <div className="mt-4 space-y-6">
+            {recentPosts.map((post) => (
+                <article key={post.id} className="group">
+                    <Link href={`/blog/${post.slug}`} className="block">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                            {new Date(post.createdAt).toLocaleDateString('pt-BR', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                            })}
+                        </span>
+                        <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug">
+                            {post.title}
+                        </h3>
+                    </Link>
+                </article>
+            ))}
+            <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                <Link
+                    href="/blog"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                >
+                    Ver todos <FaArrowRight className="w-3 h-3" />
+                </Link>
+            </div>
+        </div>
+    );
+
+    const DefaultContent = (
         <section className="py-16 bg-white dark:bg-gray-900">
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-end mb-8">
@@ -84,4 +121,23 @@ export async function RecentPosts() {
             </div>
         </section>
     );
+
+    if (variant === 'sidebar') {
+        return SidebarContent;
+    }
+
+    if (variant === 'mixed') {
+        return (
+            <>
+                <div className="block xl:hidden">
+                    {DefaultContent}
+                </div>
+                <div className="hidden xl:block">
+                    {SidebarContent}
+                </div>
+            </>
+        );
+    }
+
+    return DefaultContent;
 }

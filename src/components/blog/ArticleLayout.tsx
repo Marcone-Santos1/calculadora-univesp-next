@@ -1,17 +1,19 @@
 import { ReactNode } from "react";
 import { Breadcrumb } from "../Breadcrumb";
-import {ReadingProgress} from "@/components/blog/ReadingProgress";
-import {TableOfContents} from "@/components/blog/TableOfContents";
-import {FaCalendarAlt, FaTag} from "react-icons/fa";
+import { ReadingProgress } from "@/components/blog/ReadingProgress";
+import { TableOfContents } from "@/components/blog/TableOfContents";
+import { RecentPosts } from "./RecentPosts";
+import { FaCalendarAlt, FaTag } from "react-icons/fa";
 
 interface ArticleLayoutProps {
   title: string;
   date?: string;
   tags?: string[];
+  id?: string;
   children: ReactNode;
 }
 
-export const ArticleLayout = ({ title, date, tags = [], children }: ArticleLayoutProps) => {
+export const ArticleLayout = ({ title, date, tags = [], id, children }: ArticleLayoutProps) => {
   const breadcrumbLinks = [
     { name: "Blog", path: "/blog" },
     { name: title },
@@ -38,14 +40,14 @@ export const ArticleLayout = ({ title, date, tags = [], children }: ArticleLayou
                 className="flex flex-wrap justify-center items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 {date && (
                   <div className="flex items-center gap-1">
-                    <FaCalendarAlt className="text-blue-500"/>
+                    <FaCalendarAlt className="text-blue-500" />
                     <span>
-                  {new Date(date).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </span>
+                      {new Date(date).toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
                   </div>
                 )}
                 {tags.length > 0 && (
@@ -55,8 +57,8 @@ export const ArticleLayout = ({ title, date, tags = [], children }: ArticleLayou
                         key={tag}
                         className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full"
                       >
-                    <FaTag className="text-[10px]"/> {tag}
-                  </span>
+                        <FaTag className="text-[10px]" /> {tag}
+                      </span>
                     ))}
                   </div>
                 )}
@@ -87,7 +89,9 @@ export const ArticleLayout = ({ title, date, tags = [], children }: ArticleLayou
           </div>
 
           {/* Sidebar (TOC) */}
-          <TableOfContents />
+          <TableOfContents id={id || ''}>
+            <RecentPosts limit={4} exclude={id} variant="mixed" />
+          </TableOfContents>
         </div>
       </div>
     </>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface Heading {
   id: string;
@@ -9,7 +9,7 @@ interface Heading {
   level: number;
 }
 
-export const TableOfContents = () => {
+export const TableOfContents = ({ id, children }: { id: string; children?: ReactNode }) => {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -55,28 +55,34 @@ export const TableOfContents = () => {
 
 
   return (
-    <aside className="hidden xl:block sticky top-24 max-h-[80vh] overflow-auto border-l border-gray-200 dark:border-gray-800 pl-6 ml-8 text-sm">
-      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-3">
-        Neste artigo
+    <aside className="xl:block sticky top-0 xl:top-24 max-h-none xl:max-h-[80vh] overflow-visible xl:overflow-auto border-t xl:border-t-0 border-l-0 xl:border-l border-gray-200 dark:border-gray-800 pt-8 xl:pt-0 pl-0 xl:pl-6 ml-0 xl:ml-8 text-sm w-full xl:w-72 mt-8 xl:mt-0">
+      <div className="hidden xl:block">
+        <p className="font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          Neste artigo
+        </p>
+        <ul className="space-y-2 mb-8">
+          {headings.map((h) => (
+            <li key={h.id}>
+              <button
+                onClick={() => scrollToElement(h.el)}
+                className={`block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer text-left ${h.level === 3 ? "ml-3 text-gray-500 dark:text-gray-400" : ""
+                  } ${activeId === h.id
+                    ? "text-blue-600 dark:text-blue-400 font-medium"
+                    : "text-gray-600 dark:text-gray-300"
+                  }`}
+              >
+                {h.text}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="font-semibold text-gray-700 dark:text-gray-300 mb-4 xl:mt-0 border-t-0 xl:border-t xl:border-gray-200 xl:dark:border-gray-800 xl:pt-4">
+        Outros artigos
       </p>
-      <ul className="space-y-2">
-        {headings.map((h) => (
-          <li key={h.id}>
-            <button
-              onClick={() => scrollToElement(h.el)}
-              className={`block hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer ${
-                h.level === 3 ? "ml-3 text-gray-500 dark:text-gray-400" : ""
-              } ${
-                activeId === h.id
-                  ? "text-blue-600 dark:text-blue-400 font-medium"
-                  : "text-gray-600 dark:text-gray-300"
-              }`}
-            >
-              {h.text}
-            </button>
-          </li>
-        ))}
-      </ul>
+
+      {children}
     </aside>
   );
 };

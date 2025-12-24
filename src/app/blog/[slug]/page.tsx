@@ -80,7 +80,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags}>
+    <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags} id={post.id}>
 
       <script
         type="application/ld+json"

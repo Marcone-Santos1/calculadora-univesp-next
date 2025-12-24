@@ -39,7 +39,7 @@ export default function HomePage() {
 
       <GradeCalculator />
       <Content />
-      <RecentPosts />
+      <RecentPosts limit={9} />
     </>
   );
 }
