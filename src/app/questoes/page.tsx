@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { FaPlus, FaFilter } from 'react-icons/fa';
 import { MobileFilterModal } from '@/components/question/MobileFilterModal';
 import { SITE_CONFIG } from "@/utils/Constants";
+import { Pagination } from '@/components/ui/Pagination';
+
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }): Promise<Metadata> {
     const params = await searchParams;
@@ -76,7 +78,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 }
 
 // Server Component
-const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) => {
+const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string; page?: string }> }) => {
     const params = await searchParams;
     const query = params.q;
     const subject = params.subject;
@@ -84,11 +86,15 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const verificationRequested = params.verificationRequested;
     const activity = params.activity;
     const sort = params.sort;
+    const page = Number(params.page) || 1;
 
-    const [questions, subjects] = await Promise.all([
-        getQuestions(query, subject, verified, verificationRequested, activity, sort),
+    // Fetch data
+    const [data, subjects] = await Promise.all([
+        getQuestions(query, subject, verified, verificationRequested, activity, sort, page),
         getSubjectsWithCounts()
     ]);
+
+    const { questions, meta } = data;
 
     const activeSubject = subjects.find(s => s.name === subject);
 
@@ -141,7 +147,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                                 }
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
-                                {questions.length} {questions.length === 1 ? 'questão encontrada' : 'questões encontradas'}
+                                {meta.total} {meta.total === 1 ? 'questão encontrada' : 'questões encontradas'}
                             </p>
                         </div>
 
@@ -171,6 +177,14 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                                 </div>
                             )}
                         </div>
+
+                        {/* Pagination */}
+                        <Pagination
+                            currentPage={meta.page}
+                            totalPages={meta.totalPages}
+                            baseUrl="/questoes"
+                            searchParams={params}
+                        />
                     </main>
                 </div>
             </div>

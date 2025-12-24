@@ -11,8 +11,8 @@ import {
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { RecentQuestions } from './RecentQuestions';
 import { FavoritesList } from './FavoritesList';
-import {FilterSection} from "@/components/question/FilterSection";
-import {FilterOption} from "@/components/question/FilterOption";
+import { FilterSection } from "@/components/question/FilterSection";
+import { FilterOption } from "@/components/question/FilterOption";
 
 // --- Interfaces ---
 interface Subject {
@@ -52,6 +52,7 @@ export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarPro
   const currentSort = searchParams.get('sort');
   const currentActivity = searchParams.get('activity');
   const currentVerified = searchParams.get('verified');
+  const currentPage = searchParams.get('page');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [subjectFilter, setSubjectFilter] = useState('');
   const { preferences, setExpandedCategories, setDefaultSort, setDefaultSubject } = useUserPreferences();
@@ -60,6 +61,7 @@ export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarPro
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams(searchParams.toString());
+    params.delete('page'); // Reset pagination on search
     if (searchTerm) params.set('q', searchTerm);
     else params.delete('q');
     router.push(`/questoes?${params.toString()}`);
@@ -68,6 +70,7 @@ export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarPro
   // Helper para preservar filtros
   const buildFilterUrl = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete('page'); // Reset pagination on filter change
     Object.entries(updates).forEach(([key, value]) => {
       value === null ? params.delete(key) : params.set(key, value);
     });
@@ -93,7 +96,7 @@ export function QuestionSidebar({ subjects, questions = [] }: QuestionSidebarPro
       : [...current, category]);
   };
 
-  const hasActiveFilters = currentSubject || currentSort || currentActivity || currentVerified || searchTerm;
+  const hasActiveFilters = currentSubject || currentSort || currentActivity || currentVerified || searchTerm || currentPage;
 
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 space-y-6">
