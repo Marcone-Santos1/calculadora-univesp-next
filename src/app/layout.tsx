@@ -15,6 +15,8 @@ import {ReactNode} from "react";
 import Script from "next/script";
 import {Footer} from "@/components/Footer";
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
+import { AdsenseScript } from '@/components/AdsenseScript';
+import AdsRefresher from '@/components/AdsRefresher';
 
 const inter = Inter({subsets: ['latin'], display: 'swap'});
 
@@ -73,6 +75,8 @@ export default function RootLayout({
       <html lang="pt-BR" suppressHydrationWarning>
       <Script async={true} type={'application/ld+json'} id={'organizationJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <GoogleAnalytics gaId="G-3141WNQQZQ"/>
+      <AdsenseScript />
+      <AdsRefresher />
       <body className={inter.className}>
       <ToastProvider>
         <SessionProvider>
