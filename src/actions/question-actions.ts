@@ -174,7 +174,7 @@ export async function getRelatedQuestions(
                 }
             }
         },
-        take: 3,
+        take: 5,
         orderBy: { createdAt: 'desc' }
     });
 

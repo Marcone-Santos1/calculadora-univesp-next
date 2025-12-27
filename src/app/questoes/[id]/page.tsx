@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 const QuestionDetailContent = async ({ id }: { id: string }) => {
     const [question, ads] = await Promise.all([
         getQuestion(id),
-        getAdsForFeed(3) // Fetch more ads to ensure variety
+        getAdsForFeed(5) // Fetch more ads to ensure variety
     ]);
 
     const relatedQuestions = await getRelatedQuestions(question?.subject?.id || '', id);
