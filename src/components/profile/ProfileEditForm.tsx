@@ -116,7 +116,7 @@ export function ProfileEditForm({ user }: ProfileEditFormProps) {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             <div className="flex items-center gap-2">
                                 <FaMapMarkerAlt className="text-gray-400" />
-                                Localização
+                                Polo
                             </div>
                         </label>
                         <input
