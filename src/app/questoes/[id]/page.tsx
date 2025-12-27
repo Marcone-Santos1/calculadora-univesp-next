@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             title: 'Questão não encontrada | Calculadora Univesp',
             description: 'A questão que você procura não foi encontrada.',
         };
-    }   
+    }
 
     const description = question.text.substring(0, 155) + (question.text.length > 155 ? '...' : '');
 
@@ -88,7 +88,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
         }
     }
 
-// JSON-LD Structured Data for Q&A Page
+    // JSON-LD Structured Data for Q&A Page
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'QAPage',
@@ -106,12 +106,12 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
             },
             // CORREÇÃO 2: Filtrar comentários vazios para evitar erro crítico de "text missing"
             suggestedAnswer: question.comments
-                .filter((comment: any) => comment.text && comment.text.trim() !== "") 
+                .filter((comment: any) => comment.text && comment.text.trim() !== "")
                 .map((comment: any) => ({
                     '@type': 'Answer',
                     text: comment.text,
                     dateCreated: comment.createdAt.toISOString(),
-                    upvoteCount: 0, 
+                    upvoteCount: 0,
                     url: `${SITE_CONFIG.BASE_URL}/questoes/${question.id}#comment-${comment.id}`,
                     author: {
                         '@type': 'Person',
@@ -182,7 +182,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                             <div className="flex items-center gap-1">
                                 <FaUser />
                                 {question.userId ? (
-                                    <Link 
+                                    <Link
                                         href={`/perfil/${question.userId}`}
                                         className="hover:text-blue-600 hover:underline transition-colors font-medium"
                                     >

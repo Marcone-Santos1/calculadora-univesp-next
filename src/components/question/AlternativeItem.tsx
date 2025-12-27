@@ -103,7 +103,7 @@ export const AlternativeItem: React.FC<AlternativeItemProps> = ({
                     className={`absolute inset-0 rounded-lg opacity-10 transition-all duration-1000 ease-out
                             ${alternative.isCorrect ? 'bg-green-500' : isUserVote ? 'bg-blue-500' : 'bg-purple-500'}
                         `}
-                    style={{ width: `${percentage}%` }}
+                    style={{ width: `${alternative.isCorrect ? 100 : percentage}%` }}
                 />
 
                 <div className="relative flex items-center justify-between z-10">
@@ -132,7 +132,7 @@ export const AlternativeItem: React.FC<AlternativeItemProps> = ({
 
                     <div className="flex items-center gap-2">
                         <span className="font-bold text-gray-700 dark:text-gray-300">
-                            {percentage}%
+                            { isVerified ? '' : `${percentage}%`}
                         </span>
                         {alternative.isCorrect && isVerified && (
                             <FaCheckCircle className="text-green-500 text-xl" />
