@@ -18,6 +18,7 @@ type Campaign = {
     rejectionReason: string | null;
     advertiser: {
         companyName: string | null;
+        cellphone: string | null;
         user: {
             email: string | null;
         }

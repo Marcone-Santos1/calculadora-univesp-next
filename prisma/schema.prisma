@@ -349,8 +349,8 @@ model AdvertiserProfile {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   balance     Int      @default(0) // In cents
-  cnpj        String?
-  whatsapp    String?
+  taxId       String?  // CPF/CNPJ
+  cellphone   String?  // WhatsApp/Phone
   companyName String?
   
   campaigns   AdCampaign[]

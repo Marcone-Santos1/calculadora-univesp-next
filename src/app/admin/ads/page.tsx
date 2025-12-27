@@ -8,7 +8,7 @@ async function getAllCampaigns() {
             advertiser: {
                 select: {
                     companyName: true,
-                    whatsapp: true,
+                    cellphone: true,
                     user: {
                         select: { email: true }
                     }

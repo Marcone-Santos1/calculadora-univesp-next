@@ -42,6 +42,8 @@ type AdvertiserProfile = {
     id: string;
     userId: string;
     balance: number;
+    taxId: string | null;
+    cellphone: string | null;
     createdAt: Date;
     updatedAt: Date;
     transactions: Transaction[];
@@ -74,41 +76,66 @@ export default async function FinancePage() {
                     </div>
                 </div>
 
-                {/* Deposit Form */}
+                {/* Deposit Form or Profile Completion Check */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                     <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Adicionar Créditos</h2>
-                    <form
-                        action={async (formData) => {
-                            "use server";
-                            const amount = Number(formData.get("amount")) * 100; // Convert to cents
-                            if (amount < 500) return; // Min R$ 5,00
-                            const result = await createDeposit(amount);
-                            if (result?.url) {
-                                redirect(result.url);
-                            }
-                        }}
-                        className="space-y-4"
-                    >
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor do Depósito (R$)</label>
-                            <input
-                                type="number"
-                                name="amount"
-                                min="5"
-                                step="1"
-                                defaultValue="50"
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white"
-                                required
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Mínimo: R$ 5,00</p>
+
+                    {(!profile?.taxId || !profile.cellphone) ? (
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="text-yellow-600 dark:text-yellow-500 mt-0.5">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Perfil Incompleto</h3>
+                                    <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1 mb-3">
+                                        Para realizar depósitos, é obrigatório informar seu CPF/CNPJ e Telefone.
+                                    </p>
+                                    <a
+                                        href="/advertiser/dashboard/settings"
+                                        className="inline-flex items-center text-sm font-medium text-yellow-800 dark:text-yellow-300 hover:underline"
+                                    >
+                                        Completar Perfil &rarr;
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors"
+                    ) : (
+                        <form
+                            action={async (formData) => {
+                                "use server";
+                                const amount = Number(formData.get("amount")) * 100; // Convert to cents
+                                if (amount < 500) return; // Min R$ 5,00
+                                const result = await createDeposit(amount);
+                                if (result?.url) {
+                                    redirect(result.url);
+                                }
+                            }}
+                            className="space-y-4"
                         >
-                            Pagar com PIX
-                        </button>
-                    </form>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor do Depósito (R$)</label>
+                                <input
+                                    type="number"
+                                    name="amount"
+                                    min="5"
+                                    step="1"
+                                    defaultValue="50"
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white"
+                                    required
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Mínimo: R$ 5,00</p>
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors"
+                            >
+                                Pagar com PIX
+                            </button>
+                        </form>
+                    )}
                 </div>
             </div>
 

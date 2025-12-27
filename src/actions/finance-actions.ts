@@ -42,6 +42,17 @@ export async function createDeposit(amountInCents: number) {
 
     // 2. Call AbacatePay API
     try {
+        const customerData = {
+            name: user.name || "Cliente sem nome",
+            email: user.email || "email@nao.informado",
+            cellphone: user.advertiserProfile?.cellphone || "",
+            taxId: user.advertiserProfile?.taxId || ""
+        };
+
+        if (!customerData.cellphone || !customerData.taxId) {
+            throw new Error("Dados incompletos: Telefone e CPF/CNPJ são obrigatórios.");
+        }
+
         const response = await fetch(`${ABACATEPAY_URL}/billing/create`, {
             method: "POST",
             headers: {
@@ -61,12 +72,7 @@ export async function createDeposit(amountInCents: number) {
                 ],
                 returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/advertiser/dashboard/finance`,
                 completionUrl: `${process.env.NEXT_PUBLIC_APP_URL}/advertiser/dashboard/finance?success=true`,
-                customer: {
-                    name: user.name,
-                    email: user.email,
-                    cellphone: "(11) 4002-8922",
-                    taxId: "328.881.790-08",
-                },
+                customer: customerData,
                 metadata: {
                     transactionId: transaction.id,
                     userId: user.id,
