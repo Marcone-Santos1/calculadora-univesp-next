@@ -17,6 +17,7 @@ import { ResultProp } from "@/Contracts/ResultProp";
 import { HistoryEntryProp } from "@/Contracts/HistoryEntryProp";
 import { History } from "@/components/History";
 import { ScenarioMatrix } from "./ScenarioMatrix";
+import Link from "next/link";
 
 export const GradeCalculator = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -188,6 +189,19 @@ export const GradeCalculator = () => {
               <FaCalculator />
               <span>Calcular</span>
             </button>
+          </div>
+
+          <div className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-4 mb-6 text-white flex justify-between items-center shadow-lg">
+            <div>
+              <h3 className="font-bold text-lg">Venha conhecer nosso banco de questões UNIVESP</h3>
+              <p className="text-blue-100 text-sm">Acesse agora e encontre questões para sua prova.</p>
+            </div>
+            <Link 
+                href="/questoes" 
+                  className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition"
+              >
+                  Acesse
+              </Link>
           </div>
 
 
