@@ -50,6 +50,7 @@ export const NavBar = () => {
     { label: 'Sobre', href: '/sobre' },
     { label: 'Calculadora CR', href: '/calculadora-cr' },
     { label: 'AAC', href: '/aac' },
+    { label: 'Anuncie Conosco', href: '/anuncie' },
   ];
 
   return (
@@ -62,7 +63,7 @@ export const NavBar = () => {
           </Link>
 
           {/* Center: Navigation */}
-          <nav className="hidden md:flex items-center justify-center space-x-2">
+          <nav className="hidden lg:flex items-center justify-center space-x-2">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -112,7 +113,7 @@ export const NavBar = () => {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="lg:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
             </button>
@@ -121,7 +122,7 @@ export const NavBar = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4 space-y-3 animate-fadeIn bg-[#F0F7FF] dark:bg-gray-900 rounded-b-xl shadow-lg absolute left-0 right-0 px-4 top-20 border-b">
+          <div className="lg:hidden border-t border-gray-200 dark:border-gray-700 py-4 space-y-3 animate-fadeIn bg-[#F0F7FF] dark:bg-gray-900 rounded-b-xl shadow-lg absolute left-0 right-0 px-4 top-20 border-b">
             {/* Mobile Search */}
             <form onSubmit={handleSearch} className="mb-4">
               <div className="relative">

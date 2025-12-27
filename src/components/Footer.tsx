@@ -23,6 +23,9 @@ export const Footer = () => {
             <Link href="/questoes" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Questões
             </Link>
+            <Link href="/anuncie" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Anuncie Conosco
+            </Link>
             <Link href="/politica-de-privacidade" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Política de Privacidade
             </Link>

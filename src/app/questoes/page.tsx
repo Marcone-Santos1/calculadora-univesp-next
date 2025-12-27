@@ -12,6 +12,7 @@ import { SITE_CONFIG } from "@/utils/Constants";
 import { Pagination } from '@/components/ui/Pagination';
 import { Metadata } from "next";
 import { Loading } from '@/components/Loading';
+import { injectAdsWithRandomInterval } from '@/utils/functions';
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }): Promise<Metadata> {
     const params = await searchParams;
@@ -74,31 +75,6 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
         },
     };
 }
-
-// Helper to inject ads at random intervals
-const injectAdsWithRandomInterval = (questions: any[], ads: any[]) => {
-    if (!ads || ads.length === 0) return questions.map(q => ({ type: 'question', data: q }));
-
-    const items: { type: 'question' | 'ad', data: any }[] = [];
-    let questionsSinceLastAd = 0;
-    let nextAdGap = Math.floor(Math.random() * 5) + 1; // Random gap between 1 and 5
-    let adIndex = 0;
-
-    questions.forEach((question) => {
-        items.push({ type: 'question', data: question });
-        questionsSinceLastAd++;
-
-        // Inject ad only if we have waited enough AND we still have unique ads to show
-        if (questionsSinceLastAd >= nextAdGap && adIndex < ads.length) {
-            items.push({ type: 'ad', data: ads[adIndex] });
-            adIndex++;
-            questionsSinceLastAd = 0;
-            nextAdGap = Math.floor(Math.random() * 5) + 1; // Reset gap
-        }
-    });
-
-    return items;
-};
 
 // Server Component
 const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string; page?: string }> }) => {
@@ -180,6 +156,18 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
 
                         {/* Questions Grid */}
                         <div className="space-y-4">
+                            <div className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl p-4 mb-6 text-white flex justify-between items-center shadow-lg">
+                                <div>
+                                    <h3 className="font-bold text-lg">Quer divulgar sua marca aqui?</h3>
+                                    <p className="text-blue-100 text-sm">Alcance milhares de estudantes da Univesp.</p>
+                                </div>
+                                <Link 
+                                    href="/anuncie" 
+                                    className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition"
+                                >
+                                    Saiba mais
+                                </Link>
+                            </div>
                             {feedItems.map((item: any, index: number) => (
                                 <React.Fragment key={index}>
                                     {item.type === 'question' ? (

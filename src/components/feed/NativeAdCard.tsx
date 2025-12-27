@@ -1,8 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
 import Image from "next/image";
-import { trackAdClick } from "@/actions/ad-engine";
 import { ExternalLink } from "lucide-react";
 
 interface NativeAdCardProps {
@@ -18,23 +16,13 @@ interface NativeAdCardProps {
 }
 
 export default function NativeAdCard({ ad }: NativeAdCardProps) {
-    const [isPending, startTransition] = useTransition();
-
-    const handleClick = (e: React.MouseEvent) => {
-        // Non-blocking track
-        startTransition(async () => {
-            await trackAdClick(ad.id, ad.campaignId);
-        });
-        // Allow default navigation or open in new tab
-    };
+    const trackingUrl = `/api/ad-click?adId=${ad.id}&campaignId=${ad.campaignId}&dest=${encodeURIComponent(ad.destinationUrl)}`;
 
     return (
         <a
-            href={ad.destinationUrl}
+            href={trackingUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={handleClick}
-            onMouseDown={handleClick}
             className="block group mb-4"
         >
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden hover:border-blue-500/50 transition-colors relative">
