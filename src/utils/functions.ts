@@ -36,3 +36,28 @@ export const loadHistoryFromStorage = (): HistoryEntryProp[] => {
 export function capitalize(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+// Helper to inject ads at random intervals
+export const injectAdsWithRandomInterval = (questions: any[], ads: any[]) => {
+    if (!ads || ads.length === 0) return questions.map(q => ({ type: 'question', data: q }));
+
+    const items: { type: 'question' | 'ad', data: any }[] = [];
+    let questionsSinceLastAd = 0;
+    let nextAdGap = Math.floor(Math.random() * 5) + 1; // Random gap between 1 and 5
+    let adIndex = 0;
+
+    questions.forEach((question) => {
+        items.push({ type: 'question', data: question });
+        questionsSinceLastAd++;
+
+        // Inject ad only if we have waited enough AND we still have unique ads to show
+        if (questionsSinceLastAd >= nextAdGap && adIndex < ads.length) {
+            items.push({ type: 'ad', data: ads[adIndex] });
+            adIndex++;
+            questionsSinceLastAd = 0;
+            nextAdGap = Math.floor(Math.random() * 5) + 1; // Reset gap
+        }
+    });
+
+    return items;
+};

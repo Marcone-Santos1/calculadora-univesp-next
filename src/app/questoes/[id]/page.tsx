@@ -18,6 +18,10 @@ import { Loading } from '@/components/Loading';
 import { SITE_CONFIG } from "@/utils/Constants";
 import { QuestionCard } from '@/components/question/QuestionCard';
 import { FaShield } from 'react-icons/fa6';
+import { JsonValue } from '@prisma/client/runtime/library';
+import { getAdsForFeed } from '@/actions/ad-engine';
+import NativeAdCard from '@/components/feed/NativeAdCard';
+import { injectAdsWithRandomInterval } from '@/utils/functions';
 
 // Generate Dynamic Metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -62,8 +66,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 // Server Component
 const QuestionDetailContent = async ({ id }: { id: string }) => {
-    const question = await getQuestion(id);
+    const [question, ads] = await Promise.all([
+        getQuestion(id),
+        getAdsForFeed(3) // Fetch more ads to ensure variety
+    ]);
+
     const relatedQuestions = await getRelatedQuestions(question?.subject?.id || '', id);
+
+    // Process feed items
+    const feedItems = injectAdsWithRandomInterval(relatedQuestions, ads);
 
     const session = await auth();
 
@@ -290,9 +301,15 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                     </h2>
 
                     <div className="space-y-4">
-                        {relatedQuestions.map((question: any) => (
-                            <QuestionCard key={question.id} question={question} />
-                        ))}
+                        {feedItems.map((item: any, index: number) => (
+                            <React.Fragment key={index}>
+                                {item.type === 'question' ? (
+                                    <QuestionCard key={item.data.id} question={item.data} />
+                                ) : (
+                                    <NativeAdCard ad={item.data} />
+                                )}
+                            </React.Fragment>
+                        ))} 
                     </div>
 
                     {relatedQuestions.length === 0 && (

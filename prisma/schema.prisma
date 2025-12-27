@@ -76,6 +76,8 @@ model User {
 
   scrapeHistory ScrapeHistory[]
 
+  advertiserProfile AdvertiserProfile?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
@@ -306,4 +308,155 @@ model ScrapeHistory {
 
   @@unique([userId, examId]) // Evita duplicar o mesmo registro
   @@index([userId])
+}
+
+// --- ADS PLATFORM ---
+
+enum AdCampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  REJECTED
+  OUT_OF_BUDGET
+}
+
+enum AdTransactionType {
+  DEPOSIT
+  SPEND
+  REFUND
+}
+
+enum AdTransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AdBillingType {
+  CPC
+  CPM
+}
+
+enum AdEventType {
+  VIEW
+  CLICK
+}
+
+model AdvertiserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  balance     Int      @default(0) // In cents
+  cnpj        String?
+  whatsapp    String?
+  companyName String?
+  
+  campaigns   AdCampaign[]
+  transactions AdTransaction[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdCampaign {
+  id            String           @id @default(cuid())
+  advertiserId  String
+  advertiser    AdvertiserProfile @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  
+  title         String
+  status        AdCampaignStatus @default(DRAFT)
+  
+  billingType   AdBillingType    @default(CPC)
+  priority      Int              @default(1) // 1=Normal, 10=High
+  
+  dailyBudget   Int              // In cents
+  costValue     Int              // In cents (CPC or CPM cost)
+  
+  startDate     DateTime?
+  endDate       DateTime?
+
+  creatives     AdCreative[]
+  dailyMetrics  AdDailyMetrics[]
+  eventLogs     AdEventLog[]
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  rejectionReason String?
+}
+
+model AdCreative {
+  id             String     @id @default(cuid())
+  campaignId     String
+  campaign       AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  headline       String
+  description    String     @db.Text
+  imageUrl       String
+  destinationUrl String
+  
+  views          Int        @default(0)
+  clicks         Int        @default(0)
+  
+  eventLogs      AdEventLog[]
+  
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model AdDailyMetrics {
+  id          String     @id @default(cuid())
+  campaignId  String
+  campaign    AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  date        DateTime   // Only YYYY-MM-DD part matters
+  views       Int        @default(0)
+  clicks      Int        @default(0)
+  spend       Int        @default(0) // In cents
+  ctr         Float      @default(0)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([campaignId, date])
+  @@index([campaignId])
+}
+
+model AdEventLog {
+  id          String      @id @default(cuid())
+  campaignId  String
+  campaign    AdCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  creativeId  String?
+  creative    AdCreative? @relation(fields: [creativeId], references: [id])
+  
+  type        AdEventType
+  userId      String?     // Optional, for logged-in users
+  ipAddress   String?     // Anonymized
+  userAgent   String?
+  geoRegion   String?
+  
+  cost        Int         @default(0) // Cost of this specific event
+  
+  createdAt   DateTime    @default(now())
+
+  @@index([campaignId])
+  @@index([createdAt])
+}
+
+model AdTransaction {
+  id           String              @id @default(cuid())
+  advertiserId String
+  advertiser   AdvertiserProfile   @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  
+  type         AdTransactionType
+  amount       Int                 // In cents.
+  status       AdTransactionStatus @default(PENDING)
+  
+  gatewayId    String?             // For AbacatePay ID
+  metadata     Json?
+  
+  createdAt    DateTime            @default(now())
 }

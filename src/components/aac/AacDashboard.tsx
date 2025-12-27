@@ -78,14 +78,14 @@ export function AacDashboard({ stats, targetHours = 200 }: Props) {
                                     dataKey="value"
                                     label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
                                         // Simple Label
-                                        return `${(percent || 0 * 100).toFixed(0)}%`;
+                                        return `${((percent || 0) * 100).toFixed(0)}%`;
                                     }}
                                 >
                                     {data.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => `${value}h`} />
+                                <Tooltip formatter={(value: any) => `${value}h`} />
                                 <Legend layout="vertical" align="right" verticalAlign="middle" />
                             </PieChart>
                         </ResponsiveContainer>
