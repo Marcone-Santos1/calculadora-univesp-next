@@ -17,6 +17,7 @@ import { Metadata } from 'next';
 import { Loading } from '@/components/Loading';
 import { SITE_CONFIG } from "@/utils/Constants";
 import { QuestionCard } from '@/components/question/QuestionCard';
+import { FaShield } from 'react-icons/fa6';
 
 // Generate Dynamic Metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -255,6 +256,15 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                                 questionTitle={question.title}
                             />
                         </div>
+
+                        {question.isVerified && (
+                            <div className="mt-8 flex items-center gap-2 bg-gray-50 dark:bg-gray-900 p-4 rounded">
+                                <FaShield className="text-blue-500" />
+                                <p className="text-gray-800 dark:text-gray-200">
+                                    Esta questão foi verificada por um de nossos administradores.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
