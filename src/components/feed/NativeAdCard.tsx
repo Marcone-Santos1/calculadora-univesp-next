@@ -22,7 +22,7 @@ export default function NativeAdCard({ ad }: NativeAdCardProps) {
         <a
             href={trackingUrl}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer nofollow sponsored"
             className="block group mb-4"
         >
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden hover:border-blue-500/50 transition-colors relative">
