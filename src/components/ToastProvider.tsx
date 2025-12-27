@@ -9,10 +9,22 @@ interface Toast {
     id: string;
     message: string;
     type: ToastType;
+    duration: number;
+    delay: number;
+}
+
+interface ToastOptions {
+    message: string;
+    type?: ToastType;
+    duration?: number;
+    delay?: number;
 }
 
 interface ToastContextType {
-    showToast: (message: string, type: ToastType) => void;
+    showToast: {
+        (message: string, type?: ToastType, duration?: number, delay?: number): void;
+        (options: ToastOptions): void;
+    };
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -20,13 +32,41 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
-    const showToast = (message: string, type: ToastType = 'info') => {
-        const id = Math.random().toString(36).substr(2, 9);
-        setToasts((prev) => [...prev, { id, message, type }]);
+    const showToast = (messageOrOptions: string | ToastOptions, type: ToastType = 'info', duration: number = 4000, delay: number = 0) => {
+        let msg: string;
+        let toastType: ToastType;
+        let toastDuration: number;
+        let toastDelay: number;
 
-        setTimeout(() => {
-            setToasts((prev) => prev.filter((toast) => toast.id !== id));
-        }, 4000);
+        if (typeof messageOrOptions === 'object') {
+            msg = messageOrOptions.message;
+            toastType = messageOrOptions.type || 'info';
+            toastDuration = messageOrOptions.duration ?? 4000;
+            toastDelay = messageOrOptions.delay ?? 0;
+        } else {
+            msg = messageOrOptions;
+            toastType = type;
+            toastDuration = duration;
+            toastDelay = delay;
+        }
+
+        const id = Math.random().toString(36).substr(2, 9);
+
+        const addToast = () => {
+            setToasts((prev) => [...prev, { id, message: msg, type: toastType, duration: toastDuration, delay: toastDelay }]);
+
+            if (toastDuration !== Infinity) {
+                setTimeout(() => {
+                    removeToast(id);
+                }, toastDuration);
+            }
+        };
+
+        if (toastDelay > 0) {
+            setTimeout(addToast, toastDelay);
+        } else {
+            addToast();
+        }
     };
 
     const removeToast = (id: string) => {

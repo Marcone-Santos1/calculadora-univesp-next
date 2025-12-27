@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { updateProfile } from '@/actions/user-actions';
 import { FaSave, FaMapMarkerAlt, FaGlobe, FaTwitter, FaGithub, FaLinkedin, FaInstagram } from 'react-icons/fa';
 import { AvatarUpload } from './AvatarUpload';
+import { useToast } from '@/components/ToastProvider';
 
 interface SocialLinks {
     twitter?: string;
@@ -40,6 +41,8 @@ export function ProfileEditForm({ user }: ProfileEditFormProps) {
         }
     });
 
+    const { showToast } = useToast();
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -67,11 +70,17 @@ export function ProfileEditForm({ user }: ProfileEditFormProps) {
                 website: formData.website,
                 socialLinks: formData.socialLinks
             });
+            showToast('Perfil atualizado com sucesso!', 'success');
             router.push(`/perfil/${user.id}`);
             router.refresh();
+            showToast({ 
+                message: 'Redirecionando para o perfil...', 
+                type: 'info',
+                delay: 1500 
+            });
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Erro ao atualizar perfil. Tente novamente.');
+            showToast('Erro ao atualizar perfil. Tente novamente.', 'error');
         } finally {
             setIsSaving(false);
         }
