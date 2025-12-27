@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { 
-  FaHome, FaUsers, FaBook, FaQuestionCircle, 
-  FaChartBar, FaFlag, FaCommentDots, FaChevronLeft, 
-  FaChevronRight, FaGraduationCap, FaBars, 
-  FaDownload
+import {
+  FaHome, FaUsers, FaBook, FaQuestionCircle,
+  FaChartBar, FaFlag, FaCommentDots, FaChevronLeft,
+  FaChevronRight, FaGraduationCap, FaBars,
+  FaDownload, FaBullhorn
 } from 'react-icons/fa';
 
 // Definição dos links para fácil manutenção
@@ -16,6 +16,7 @@ const MENU_ITEMS = [
   { href: '/admin/users', label: 'Usuários', icon: <FaUsers /> },
   { href: '/admin/subjects', label: 'Matérias', icon: <FaGraduationCap /> },
   { href: '/admin/questions', label: 'Questões', icon: <FaQuestionCircle /> },
+  { href: '/admin/ads', label: 'Anúncios', icon: <FaBullhorn /> },
   { href: '/admin/blog', label: 'Blog', icon: <FaBook /> },
   { href: '/admin/reports', label: 'Denúncias', icon: <FaFlag /> },
   { href: '/admin/feedbacks', label: 'Feedbacks', icon: <FaCommentDots /> },
@@ -52,7 +53,7 @@ export const AdminSidebar = () => {
   return (
     <>
       {/* Sidebar Container */}
-      <aside 
+      <aside
         className={`
           bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 
           flex flex-col h-screen sticky top-0 transition-all duration-300 ease-in-out z-40
@@ -60,7 +61,7 @@ export const AdminSidebar = () => {
           ${isMobile && !isCollapsed ? 'fixed inset-y-0 left-0 shadow-2xl w-64' : ''}
         `}
       >
-        
+
         {/* Header / Toggle */}
         <div className="flex items-center justify-between p-4 h-16 border-b border-gray-100 dark:border-gray-700">
           {!isCollapsed && (
@@ -68,8 +69,8 @@ export const AdminSidebar = () => {
               Admin Panel
             </span>
           )}
-          
-          <button 
+
+          <button
             onClick={toggleSidebar}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors mx-auto"
           >
@@ -81,16 +82,16 @@ export const AdminSidebar = () => {
         <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3">
           {MENU_ITEMS.map((item) => {
             const isActive = pathname === item.href;
-            
+
             return (
-              <Link 
+              <Link
                 key={item.href}
                 href={item.href}
                 title={isCollapsed ? item.label : ''} // Tooltip nativo quando fechado
                 className={`
                   flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group
-                  ${isActive 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                  ${isActive
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400'}
                   ${isCollapsed ? 'justify-center' : ''}
                 `}
@@ -98,7 +99,7 @@ export const AdminSidebar = () => {
                 <span className={`text-xl ${isCollapsed ? '' : 'min-w-[24px]'}`}>
                   {item.icon}
                 </span>
-                
+
                 {/* Texto (escondido quando colapsado) */}
                 <span className={`
                   font-medium whitespace-nowrap overflow-hidden transition-all duration-300
@@ -130,7 +131,7 @@ export const AdminSidebar = () => {
 
       {/* Overlay Escuro (Apenas Mobile quando aberto) */}
       {isMobile && !isCollapsed && (
-        <div 
+        <div
           onClick={() => setIsCollapsed(true)}
           className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm"
         />

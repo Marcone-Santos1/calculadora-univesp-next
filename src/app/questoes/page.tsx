@@ -3,30 +3,29 @@ import React, { Suspense } from 'react';
 import { QuestionCard } from '@/components/question/QuestionCard';
 import { QuestionSidebar } from '@/components/question/QuestionSidebar';
 import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions';
+import { getAdsForFeed } from '@/actions/ad-engine';
+import NativeAdCard from '@/components/feed/NativeAdCard';
 import Link from 'next/link';
 import { FaPlus, FaFilter } from 'react-icons/fa';
 import { MobileFilterModal } from '@/components/question/MobileFilterModal';
 import { SITE_CONFIG } from "@/utils/Constants";
 import { Pagination } from '@/components/ui/Pagination';
-
+import { Metadata } from "next";
+import { Loading } from '@/components/Loading';
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }): Promise<Metadata> {
     const params = await searchParams;
     const { q: query, subject: subjectName } = params;
 
-    // URL base para Canonical (Evita duplicação de conteúdo)
     const baseUrl = SITE_CONFIG.BASE_URL;
     let canonical = baseUrl;
 
-    // 1. Copywriting Padrão (Forte e Focado em Resultado)
     let title = "Questões Univesp Resolvidas: Estude para as Provas (Comunidade)";
     let description = "Prepare-se para o bimestre com questões reais e exercícios compartilhados por alunos. Filtre por disciplina, veja gabaritos comentados e passe sem sufoco.";
 
-    // 2. Lógica Dinâmica para Matérias (O Pulo do Gato para o Google)
     if (subjectName) {
-        // Buscamos o nome da matéria para colocar no Título do Google
         const subjects = await getSubjectsWithCounts();
-        const activeSubject = subjects.find(s => s.name === subjectName); // Ajuste se seu objeto usar 'id' ou 'name'
+        const activeSubject = subjects.find(s => s.name === subjectName);
 
         if (activeSubject) {
             title = `Questões de ${activeSubject.name} Univesp | Gabaritos e Revisão`;
@@ -34,11 +33,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
             canonical = `${baseUrl}?subject=${subjectName}`;
         }
     }
-    // 3. Lógica para Busca Interna
     else if (query) {
         title = `Busca por "${query}" | Questões e Dúvidas Univesp`;
         description = `Resultados encontrados para "${query}" na nossa base colaborativa de questões e estudos.`;
-        canonical = baseUrl; // Mantém a autoridade na raiz em buscas aleatórias
+        canonical = baseUrl;
     }
 
     return {
@@ -77,6 +75,31 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     };
 }
 
+// Helper to inject ads at random intervals
+const injectAdsWithRandomInterval = (questions: any[], ads: any[]) => {
+    if (!ads || ads.length === 0) return questions.map(q => ({ type: 'question', data: q }));
+
+    const items: { type: 'question' | 'ad', data: any }[] = [];
+    let questionsSinceLastAd = 0;
+    let nextAdGap = Math.floor(Math.random() * 5) + 1; // Random gap between 1 and 5
+    let adIndex = 0;
+
+    questions.forEach((question) => {
+        items.push({ type: 'question', data: question });
+        questionsSinceLastAd++;
+
+        // Inject ad only if we have waited enough AND we still have unique ads to show
+        if (questionsSinceLastAd >= nextAdGap && adIndex < ads.length) {
+            items.push({ type: 'ad', data: ads[adIndex] });
+            adIndex++;
+            questionsSinceLastAd = 0;
+            nextAdGap = Math.floor(Math.random() * 5) + 1; // Reset gap
+        }
+    });
+
+    return items;
+};
+
 // Server Component
 const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string; page?: string }> }) => {
     const params = await searchParams;
@@ -88,15 +111,19 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const sort = params.sort;
     const page = Number(params.page) || 1;
 
-    // Fetch data
-    const [data, subjects] = await Promise.all([
+    // Fetch data including ads
+    const [data, subjects, ads] = await Promise.all([
         getQuestions(query, subject, verified, verificationRequested, activity, sort, page),
-        getSubjectsWithCounts()
+        getSubjectsWithCounts(),
+        getAdsForFeed(10) // Fetch more ads to ensure variety
     ]);
 
     const { questions, meta } = data;
 
     const activeSubject = subjects.find(s => s.name === subject);
+
+    // Process feed items
+    const feedItems = injectAdsWithRandomInterval(questions, ads);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -113,7 +140,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                             </Link>
                             <QuestionSidebar
                                 subjects={subjects}
-                                questions={questions.map(q => ({ id: q.id, title: q.title, subjectName: q.subjectName }))}
+                                questions={questions.map((q: any) => ({ id: q.id, title: q.title, subjectName: q.subjectName }))}
                             />
                         </div>
                     </aside>
@@ -131,7 +158,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                                 </Link>
                                 <MobileFilterModal
                                     subjects={subjects}
-                                    questions={questions.map(q => ({ id: q.id, title: q.title, subjectName: q.subjectName }))}
+                                    questions={questions.map((q: any) => ({ id: q.id, title: q.title, subjectName: q.subjectName }))}
                                 />
                             </div>
                         </div>
@@ -153,8 +180,14 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
 
                         {/* Questions Grid */}
                         <div className="space-y-4">
-                            {questions.map((question: any) => (
-                                <QuestionCard key={question.id} question={question} />
+                            {feedItems.map((item: any, index: number) => (
+                                <React.Fragment key={index}>
+                                    {item.type === 'question' ? (
+                                        <QuestionCard question={item.data} />
+                                    ) : (
+                                        <NativeAdCard ad={item.data} />
+                                    )}
+                                </React.Fragment>
                             ))}
 
                             {questions.length === 0 && (
@@ -192,9 +225,6 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     );
 };
 
-import { Loading } from '@/components/Loading';
-import { Metadata } from "next";
-
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) {
     return (
         <Suspense fallback={<Loading />}>
@@ -202,4 +232,3 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
         </Suspense>
     );
 }
-
