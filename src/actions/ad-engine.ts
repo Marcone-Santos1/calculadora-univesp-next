@@ -168,6 +168,12 @@ export async function getAdsForFeed(count: number = 1) {
                 update: { views: { increment: 1 } }
             });
 
+            await db.adCreativeDailyMetrics.upsert({
+                where: { creativeId_date: { creativeId: creative.id, date: new Date(new Date().toDateString()) } },
+                create: { creativeId: creative.id, date: new Date(new Date().toDateString()), views: 1 },
+                update: { views: { increment: 1 } }
+            });
+
             // CPM Billing Logic:
             // If CPM, we should theoretically charge here.
             // Simplification: If 1 view, cost is costValue / 1000.
@@ -223,6 +229,12 @@ async function processAdCharge(campaignId: string, creativeId: string, advertise
                 update: { spend: { increment: amount } }
             });
 
+            await tx.adCreativeDailyMetrics.upsert({
+                where: { creativeId_date: { creativeId: creativeId, date: new Date(new Date().toDateString()) } },
+                create: { creativeId, date: new Date(new Date().toDateString()), spend: amount, views: 0, clicks: 0 },
+                update: { spend: { increment: amount } }
+            });
+
             // Log Granular Event (This acts as the 'audit trail' for the charge)
             await tx.adEventLog.create({
                 data: {
@@ -264,6 +276,11 @@ export async function trackAdClick(adId: string, campaignId: string) {
             db.adDailyMetrics.upsert({
                 where: { campaignId_date: { campaignId: campaign.id, date: new Date(new Date().toDateString()) } },
                 create: { campaignId: campaign.id, date: new Date(new Date().toDateString()), views: 0, clicks: 1, spend: 0 },
+                update: { clicks: { increment: 1 } }
+            }),
+            db.adCreativeDailyMetrics.upsert({
+                where: { creativeId_date: { creativeId: adId, date: new Date(new Date().toDateString()) } },
+                create: { creativeId: adId, date: new Date(new Date().toDateString()), views: 0, clicks: 1, spend: 0 },
                 update: { clicks: { increment: 1 } }
             })
         ]);

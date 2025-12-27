@@ -401,6 +401,7 @@ model AdCreative {
   clicks         Int        @default(0)
   
   eventLogs      AdEventLog[]
+  dailyMetrics   AdCreativeDailyMetrics[]
   
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -422,6 +423,23 @@ model AdDailyMetrics {
 
   @@unique([campaignId, date])
   @@index([campaignId])
+}
+
+model AdCreativeDailyMetrics {
+  id          String     @id @default(cuid())
+  creativeId  String
+  creative    AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  
+  date        DateTime   // Only YYYY-MM-DD part matters
+  views       Int        @default(0)
+  clicks      Int        @default(0)
+  spend       Int        @default(0) // In cents (proportional)
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([creativeId, date])
+  @@index([creativeId])
 }
 
 model AdEventLog {

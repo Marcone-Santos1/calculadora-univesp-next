@@ -11,7 +11,14 @@ async function getCampaignWithMetrics(campaignId: string, userId: string) {
     const campaign = await db.adCampaign.findUnique({
         where: { id: campaignId },
         include: {
-            creatives: true,
+            creatives: {
+                include: {
+                    dailyMetrics: {
+                        orderBy: { date: 'asc' },
+                        take: 30
+                    }
+                }
+            },
             advertiser: true,
             dailyMetrics: {
                 orderBy: { date: 'asc' },
@@ -202,8 +209,11 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                                             {creative.description}
                                         </p>
                                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-auto pt-2 border-t border-gray-200 dark:border-zinc-800">
-                                            <span className="flex items-center gap-1"><FaEye className="text-purple-500" /> {creative.views}</span>
-                                            <span className="flex items-center gap-1"><FaMousePointer className="text-green-500" /> {creative.clicks}</span>
+                                            <span className="flex items-center gap-1" title="Visualizações"><FaEye className="text-purple-500" /> {creative.views.toLocaleString()}</span>
+                                            <span className="flex items-center gap-1" title="Cliques"><FaMousePointer className="text-green-500" /> {creative.clicks.toLocaleString()}</span>
+                                            <span className="flex items-center gap-1 font-semibold text-orange-600 dark:text-orange-400" title="CTR (Taxa de Cliques)">
+                                                <FaChartLine /> {(creative.views > 0 ? (creative.clicks / creative.views * 100) : 0).toFixed(2)}%
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

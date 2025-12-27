@@ -113,25 +113,30 @@ export default function AdminAdsClient({ campaigns }: { campaigns: Campaign[] })
                             <div className="flex flex-col lg:flex-row">
                                 <div className="lg:w-80 bg-gray-50 dark:bg-black/20 p-6 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-zinc-800 flex flex-col justify-center">
                                     <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Preview do Anúncio</div>
-                                    {campaign.creatives[0] && (
-                                        <div className="bg-white dark:bg-zinc-950 rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-800 shadow-sm">
-                                            <div className="relative h-44 w-full bg-gray-100 dark:bg-zinc-800">
-                                                <Image
-                                                    src={campaign.creatives[0].imageUrl}
-                                                    alt="Ad Preview"
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                            <div className="p-4">
-                                                <h4 className="font-bold text-gray-900 dark:text-white leading-tight mb-2 line-clamp-2">{campaign.creatives[0].headline}</h4>
-                                                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed">{campaign.creatives[0].description}</p>
-                                                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
-                                                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400 block truncate">{campaign.creatives[0].destinationUrl}</span>
+                                    <div className="flex flex-col gap-4">
+                                        {campaign.creatives.map((creative, index) => (
+                                            <div key={creative.id} className="bg-white dark:bg-zinc-950 rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-800 shadow-sm relative group">
+                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm z-10">
+                                                    #{index + 1}
+                                                </div>
+                                                <div className="relative h-44 w-full bg-gray-100 dark:bg-zinc-800">
+                                                    <Image
+                                                        src={creative.imageUrl}
+                                                        alt={`Creative ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div className="p-4">
+                                                    <h4 className="font-bold text-gray-900 dark:text-white leading-tight mb-2 line-clamp-2">{creative.headline}</h4>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 leading-relaxed">{creative.description}</p>
+                                                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                                                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400 block truncate">{creative.destinationUrl}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="flex-1 p-6 flex flex-col justify-between">
