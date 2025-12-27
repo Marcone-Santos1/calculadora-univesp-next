@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
-import { FaUser, FaUserShield, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser, FaUserShield, FaSignOutAlt, FaAd } from 'react-icons/fa';
 
 interface UserDropdownProps {
     user: {
@@ -70,6 +70,15 @@ export function UserDropdown({ user, isAdmin }: UserDropdownProps) {
                         >
                             <FaUser className="text-gray-400" />
                             Meu Perfil
+                        </Link>
+
+                        <Link
+                            href="/advertiser/dashboard"
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                            <FaAd className="text-gray-400" />
+                            Anúncios
                         </Link>
 
                         {isAdmin && (

@@ -185,3 +185,44 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
     revalidatePath(`/advertiser/campaigns/${campaignId}`);
     redirect("/advertiser/campaigns");
 }
+
+export async function addCreativeToCampaign(campaignId: string, formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        include: { advertiserProfile: true }
+    });
+
+    if (!user?.advertiserProfile) {
+        throw new Error("Advertiser profile not found");
+    }
+
+    // Verify ownership
+    const campaign = await db.adCampaign.findUnique({
+        where: { id: campaignId }
+    });
+
+    if (!campaign || campaign.advertiserId !== user.advertiserProfile.id) {
+        throw new Error("Unauthorized");
+    }
+
+    const headline = formData.get("headline") as string;
+    const description = formData.get("description") as string;
+    const destinationUrl = formData.get("destinationUrl") as string;
+    const imageUrl = formData.get("imageUrl") as string;
+
+    await db.adCreative.create({
+        data: {
+            campaignId,
+            headline,
+            description,
+            destinationUrl,
+            imageUrl
+        }
+    });
+
+    revalidatePath(`/advertiser/campaigns/${campaignId}`);
+    redirect(`/advertiser/campaigns/${campaignId}`);
+}

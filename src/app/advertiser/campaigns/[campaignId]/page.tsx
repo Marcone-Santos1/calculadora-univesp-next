@@ -176,8 +176,13 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
 
                 {/* Creatives Panel */}
                 <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 shadow-sm">
-                    <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30">
+                    <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 flex justify-between items-center">
                         <h3 className="font-semibold text-gray-900 dark:text-white">Criativos (Anúncios)</h3>
+                        <Link href={`/advertiser/campaigns/${campaign.id}/creatives/new`}>
+                            <button className="text-xs flex items-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 px-3 py-1.5 rounded-md font-medium transition-colors">
+                                + Adicionar Criativo
+                            </button>
+                        </Link>
                     </div>
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -141,7 +141,9 @@ export async function getAdsForFeed(count: number = 1) {
         }
 
         const { campaign } = picked;
-        const creative = campaign.creatives[0];
+
+        // Creative Rotation: Randomly select one of the available creatives
+        const creative = campaign.creatives[Math.floor(Math.random() * campaign.creatives.length)];
 
         ads.push({
             ...creative,
