@@ -202,6 +202,11 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                                             fill
                                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
+                                        <Link href={`/advertiser/campaigns/${campaign.id}/creatives/${creative.id}/edit`}>
+                                            <button className="absolute top-2 right-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-gray-700 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-all z-10 opacity-0 group-hover:opacity-100" title="Editar Criativo">
+                                                <FaEdit />
+                                            </button>
+                                        </Link>
                                     </div>
                                     <div className="p-4 flex-1 flex flex-col">
                                         <h4 className="font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{creative.headline}</h4>

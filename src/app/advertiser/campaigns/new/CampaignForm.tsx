@@ -159,83 +159,85 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
                 </div>
             </div>
 
-            {/* Creative Settings */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">Anúncio Criativo</h2>
-                <div className="grid grid-cols-1 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Título (Headline)</label>
-                        <input
-                            type="text"
-                            name="headline"
-                            maxLength={50}
-                            defaultValue={creative?.headline}
-                            required
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                            placeholder="Chame a atenção em poucas palavras"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Máximo 50 caracteres.</p>
-                    </div>
+            {/* Creative Settings - Only for New Campaigns */}
+            {!isEdit && (
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">Anúncio Criativo</h2>
+                    <div className="grid grid-cols-1 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Título (Headline)</label>
+                            <input
+                                type="text"
+                                name="headline"
+                                maxLength={50}
+                                defaultValue={creative?.headline}
+                                required={!isEdit}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
+                                placeholder="Chame a atenção em poucas palavras"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Máximo 50 caracteres.</p>
+                        </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Descrição</label>
-                        <textarea
-                            name="description"
-                            maxLength={150}
-                            required
-                            defaultValue={creative?.description}
-                            rows={3}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                            placeholder="Detalhes da sua oferta..."
-                        ></textarea>
-                        <p className="text-xs text-gray-500 mt-1">Máximo 150 caracteres.</p>
-                    </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Descrição</label>
+                            <textarea
+                                name="description"
+                                maxLength={150}
+                                required={!isEdit}
+                                defaultValue={creative?.description}
+                                rows={3}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
+                                placeholder="Detalhes da sua oferta..."
+                            ></textarea>
+                            <p className="text-xs text-gray-500 mt-1">Máximo 150 caracteres.</p>
+                        </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Imagem do Anúncio</label>
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Imagem do Anúncio</label>
 
-                        <input type="hidden" name="imageUrl" value={previewUrl || ""} required />
+                            <input type="hidden" name="imageUrl" value={previewUrl || ""} required={!isEdit} />
 
-                        <div className="flex items-center gap-4">
-                            <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden border border-gray-300 dark:border-gray-600">
-                                {uploading ? (
-                                    <FaSpinner className="animate-spin text-blue-500 text-2xl" />
-                                ) : previewUrl ? (
-                                    <Image src={previewUrl} alt="Preview" fill className="object-cover" />
-                                ) : (
-                                    <FaImage className="text-gray-400 text-3xl" />
-                                )}
-                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden border border-gray-300 dark:border-gray-600">
+                                    {uploading ? (
+                                        <FaSpinner className="animate-spin text-blue-500 text-2xl" />
+                                    ) : previewUrl ? (
+                                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                                    ) : (
+                                        <FaImage className="text-gray-400 text-3xl" />
+                                    )}
+                                </div>
 
-                            <div className="flex-1">
-                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
-                                    <FaCloudUploadAlt className="text-lg" />
-                                    <span>{isEdit ? "Alterar Imagem" : "Escolher Imagem"}</span>
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/jpeg,image/png,image/webp"
-                                        onChange={handleFileChange}
-                                    />
-                                </label>
-                                <p className="text-xs text-gray-500 mt-2">Formatos: JPG, PNG, WEBP. Máx: 5MB.</p>
+                                <div className="flex-1">
+                                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
+                                        <FaCloudUploadAlt className="text-lg" />
+                                        <span>{isEdit ? "Alterar Imagem" : "Escolher Imagem"}</span>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onChange={handleFileChange}
+                                        />
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-2">Formatos: JPG, PNG, WEBP. Máx: 5MB.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">URL de Destino</label>
-                        <input
-                            type="url"
-                            name="destinationUrl"
-                            defaultValue={creative?.destinationUrl}
-                            required
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                            placeholder="https://seu-site.com.br/oferta"
-                        />
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">URL de Destino</label>
+                            <input
+                                type="url"
+                                name="destinationUrl"
+                                defaultValue={creative?.destinationUrl}
+                                required={!isEdit}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
+                                placeholder="https://seu-site.com.br/oferta"
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             <div className="flex justify-end gap-4">
                 <Link href="/advertiser/campaigns" className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-white">
@@ -244,7 +246,7 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
 
                 <button
                     type="submit"
-                    disabled={uploading || !previewUrl}
+                    disabled={uploading || (!isEdit && !previewUrl)}
                     className="px-8 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {uploading ? "Enviando..." : (isEdit ? "Salvar Alterações" : "Lançar Campanha")}

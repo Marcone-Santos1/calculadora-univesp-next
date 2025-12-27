@@ -151,11 +151,6 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
     const billingType = (formData.get("billingType") as "CPC" | "CPM") || "CPC";
     const costValue = Number(formData.get("costValue")) * 100;
 
-    const headline = formData.get("headline") as string;
-    const description = formData.get("description") as string;
-    const destinationUrl = formData.get("destinationUrl") as string;
-    const imageUrl = formData.get("imageUrl") as string;
-
     await db.adCampaign.update({
         where: { id: campaignId },
         data: {
@@ -166,18 +161,7 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
             billingType,
             costValue,
             status: "PENDING_REVIEW", // Re-review on edit
-            rejectionReason: null,
-            creatives: {
-                update: {
-                    where: { id: campaign.creatives[0].id },
-                    data: {
-                        headline,
-                        description,
-                        destinationUrl,
-                        imageUrl
-                    }
-                }
-            }
+            rejectionReason: null
         }
     });
 
@@ -208,6 +192,14 @@ export async function addCreativeToCampaign(campaignId: string, formData: FormDa
         throw new Error("Unauthorized");
     }
 
+    await db.adCampaign.update({
+        where: { id: campaignId },
+        data: {
+            status: "PENDING_REVIEW",
+            rejectionReason: null
+        }
+    });
+
     const headline = formData.get("headline") as string;
     const description = formData.get("description") as string;
     const destinationUrl = formData.get("destinationUrl") as string;
@@ -222,6 +214,63 @@ export async function addCreativeToCampaign(campaignId: string, formData: FormDa
             imageUrl
         }
     });
+
+    revalidatePath(`/advertiser/campaigns/${campaignId}`);
+    redirect(`/advertiser/campaigns/${campaignId}`);
+}
+
+export async function updateCreative(campaignId: string, creativeId: string, formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        include: { advertiserProfile: true }
+    });
+
+    if (!user?.advertiserProfile) {
+        throw new Error("Advertiser profile not found");
+    }
+
+    // Verify ownership
+    const campaign = await db.adCampaign.findUnique({
+        where: { id: campaignId }
+    });
+
+    if (!campaign || campaign.advertiserId !== user.advertiserProfile.id) {
+        throw new Error("Unauthorized");
+    }
+
+    const headline = formData.get("headline") as string;
+    const description = formData.get("description") as string;
+    const destinationUrl = formData.get("destinationUrl") as string;
+    const imageUrl = formData.get("imageUrl") as string;
+
+    await db.adCampaign.update({
+        where: { id: campaignId },
+        data: {
+            status: "PENDING_REVIEW",
+            rejectionReason: null
+        }
+    });
+
+    await db.adCreative.update({
+        where: { id: creativeId },
+        data: {
+            headline,
+            description,
+            destinationUrl,
+            imageUrl
+        }
+    });
+
+    // If campaign was rejected, maybe we should set it back to PENDING_REVIEW?
+    if (campaign.status === 'REJECTED') {
+        await db.adCampaign.update({
+            where: { id: campaignId },
+            data: { status: 'PENDING_REVIEW', rejectionReason: null }
+        });
+    }
 
     revalidatePath(`/advertiser/campaigns/${campaignId}`);
     redirect(`/advertiser/campaigns/${campaignId}`);
