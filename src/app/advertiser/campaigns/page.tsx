@@ -40,7 +40,7 @@ export default async function CampaignsPage() {
                 </Link>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-hidden">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 dark:bg-zinc-800/50 text-gray-500 dark:text-gray-400">
                         <tr>
