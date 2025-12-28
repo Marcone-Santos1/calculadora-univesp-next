@@ -16,6 +16,11 @@ export async function fetchNextAd() {
             advertiser: {
                 balance: { gt: 0 },
             },
+            startDate: { lte: new Date() },
+            OR: [
+                { endDate: null },
+                { endDate: { gte: new Date() } }
+            ],
             creatives: { some: {} } // Must have at least one creative
         },
         include: {
@@ -101,6 +106,11 @@ export async function getAdsForFeed(count: number = 1) {
     const campaigns = await db.adCampaign.findMany({
         where: {
             status: AdCampaignStatus.ACTIVE,
+            startDate: { lte: new Date() },
+            OR: [
+                { endDate: null },
+                { endDate: { gte: new Date() } }
+            ],
             advertiser: { balance: { gt: 0 } },
             creatives: { some: {} }
         },

@@ -6,6 +6,7 @@ import { createCampaign, updateCampaign } from "@/actions/campaign-actions";
 import { FaCloudUploadAlt, FaSpinner, FaImage } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
+import { useToast } from "@/components/ToastProvider";
 
 type CampaignData = {
     id?: string;
@@ -28,6 +29,8 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.creatives[0]?.imageUrl || null);
 
+    const { showToast } = useToast();
+
     // Derived values
     const today = new Date().toISOString().split('T')[0];
     const defaultStartDate = initialData?.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : today;
@@ -40,12 +43,12 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
 
         // Validations
         if (!file.type.startsWith("image/")) {
-            alert("Por favor, selecione apenas arquivos de imagem.");
+            showToast("Por favor, selecione apenas arquivos de imagem.", "error");
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            alert("A imagem deve ter no máximo 5MB.");
+            showToast("A imagem deve ter no máximo 5MB.", "error");
             return;
         }
 
@@ -67,7 +70,7 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
 
         } catch (error) {
             console.error(error);
-            alert("Erro ao fazer upload da imagem. Tente novamente.");
+            showToast("Erro ao fazer upload da imagem. Tente novamente.", "error");
         } finally {
             setUploading(false);
         }
@@ -76,6 +79,7 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
     const action = isEdit && initialData?.id
         ? updateCampaign.bind(null, initialData.id)
         : createCampaign;
+        
 
     return (
         <form action={action} className="space-y-8">
