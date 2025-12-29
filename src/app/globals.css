@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+body {
+    padding-bottom: 0 !important;
+}
+
 /* Scroll moderno */
 ul::-webkit-scrollbar {
     width: 6px;
