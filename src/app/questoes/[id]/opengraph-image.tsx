@@ -35,7 +35,7 @@ export default async function Image(props: { params: Promise<{ id: string }> }) 
                         {subject}
                     </div>
                     <div style={{ fontWeight: 800, lineHeight: 1.2 }}>
-                        {title.substring(0, 80)}{title.length > 80 ? '...' : ''}
+                        {`${title.substring(0, 80)}${title.length > 80 ? '...' : ''}`}
                     </div>
                     <div style={{ marginTop: 40, background: 'white', color: '#1e3a8a', padding: '10px 30px', borderRadius: 50, fontSize: 24, fontWeight: 'bold' }}>
                         Ver Resposta e Gabarito
