@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaRegMoon, FaRegSun, FaUser, FaUserShield, FaBars, FaTimes, FaSearch } from "react-icons/fa";
+import { FaRegMoon, FaRegSun, FaUser, FaUserShield, FaBars, FaTimes, FaSearch, FaAd } from "react-icons/fa";
 import { useAppContext } from './AppStateProvider';
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
@@ -178,6 +178,15 @@ export const NavBar = () => {
                       <span className="font-medium">Painel Admin</span>
                     </Link>
                   )}
+
+                  <Link
+                    href="/advertiser/dashboard"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <FaAd />
+                    <span className="font-medium">Anúncios</span>
+                  </Link>
 
                   <button
                     onClick={() => { signOut(); closeMobileMenu(); }}
