@@ -7,8 +7,9 @@ export const alt = 'Questão Univesp';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export default async function Image({ params }: { params: { id: string } }) {
+export default async function Image(props: { params: Promise<{ id: string }> }) {
     try {
+        const params = await props.params;
         const question = await getQuestion(params.id);
         const title = question?.title || 'Questão Univesp';
         const subject = question?.subjectName || 'Geral';
