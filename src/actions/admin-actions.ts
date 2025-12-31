@@ -17,7 +17,8 @@ export async function getAdminQuestions(search?: string, verified?: boolean, ver
   if (search) {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
-      { text: { contains: search, mode: 'insensitive' } }
+      { text: { contains: search, mode: 'insensitive' } },
+      { id: { contains: search, mode: 'insensitive' } }
     ];
   }
 

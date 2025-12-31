@@ -102,20 +102,33 @@ async function main() {
             };
         });
 
-
-        await prisma.question.create({
-            data: {
-                title: q.title,
-                text: finalMarkdown, // Conteúdo com a imagem Markdown
-                subjectId: 'cmjnb2f840000dqghfmxnutev',
-                userId: 'cmjafwpuq0003ah7yuokrrfsp', // Associa ao Admin
-                isVerified: true, // Já entra validada
-                week: "Prova Vestibular 2025",
-                alternatives: {
-                    create: alternativesData
-                }
+        const existingQuestion = await prisma.question.findFirst({
+            where: {
+                title: q.title
             }
         });
+
+        if (!existingQuestion) {
+            console.log(`   ❌ Questão ${q.title} não existe no banco.`);
+            continue;
+        }
+
+        console.log(`   🔄 Atualizando Questão ${q.number} (ID: ${existingQuestion.id})...`);
+            
+            const updatedQuestion = await prisma.question.update({
+                where: { id: existingQuestion.id },
+                data: {
+                    text: finalMarkdown, // Atualiza o texto com a URL da NOVA imagem,
+                    alternatives: {
+                        deleteMany: {
+                            questionId: existingQuestion.id
+                        },
+                        create: alternativesData
+                    }
+                }
+            });
+
+            console.log(`   ✅ Questão ${q.number} (ID: ${updatedQuestion.id}) atualizada com sucesso.`);
     }
 
     console.log('✅ Todas as questões foram importadas e imagens estão no R2!');

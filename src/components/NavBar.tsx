@@ -168,6 +168,15 @@ export const NavBar = () => {
                     <span className="font-medium">Meu Perfil</span>
                   </Link>
 
+                  <Link
+                    href="/advertiser/dashboard"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <FaAd />
+                    <span className="font-medium">Anúncios</span>
+                  </Link>
+
                   {isAdmin && (
                     <Link
                       href="/admin"
@@ -178,15 +187,6 @@ export const NavBar = () => {
                       <span className="font-medium">Painel Admin</span>
                     </Link>
                   )}
-
-                  <Link
-                    href="/advertiser/dashboard"
-                    onClick={closeMobileMenu}
-                    className="flex items-center gap-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <FaAd />
-                    <span className="font-medium">Anúncios</span>
-                  </Link>
 
                   <button
                     onClick={() => { signOut(); closeMobileMenu(); }}

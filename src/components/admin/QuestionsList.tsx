@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { FaTrash, FaCheckCircle, FaTimesCircle, FaExternalLinkAlt, FaExclamationCircle } from 'react-icons/fa';
+import { useState, useTransition, useEffect } from 'react';
+import { FaTrash, FaCheckCircle, FaTimesCircle, FaExternalLinkAlt, FaExclamationCircle, FaEdit, FaSearch } from 'react-icons/fa';
 import { deleteQuestion, deleteQuestions, toggleQuestionVerification } from '@/actions/admin-actions';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { VerifyQuestionDialog } from '@/components/admin/VerifyQuestionDialog';
@@ -32,19 +32,39 @@ interface Question {
 interface QuestionsListProps {
     questions: Question[];
     verificationRequests?: Question[];
+    initialSearch?: string;
 }
 
-export function QuestionsList({ questions, verificationRequests = [] }: QuestionsListProps) {
+export function QuestionsList({ questions, verificationRequests = [], initialSearch = '' }: QuestionsListProps) {
     const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [isBulkDeleting, setIsBulkDeleting] = useState(false); // UI state for bulk delete confirmation
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
     const [verifyQuestion, setVerifyQuestion] = useState<Question | null>(null);
     const [isPending, startTransition] = useTransition();
     const { showToast } = useToast();
     const router = useRouter();
 
     const displayQuestions = activeTab === 'all' ? questions : verificationRequests;
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm !== initialSearch) {
+                if (searchTerm) {
+                    router.push(`/admin/questions?search=${encodeURIComponent(searchTerm)}`);
+                } else {
+                    router.push('/admin/questions');
+                }
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm, router, initialSearch]);
 
     const handleSelectAll = () => {
         if (selectedIds.size === displayQuestions.length) {
@@ -93,10 +113,8 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
 
     const handleToggleVerification = (question: Question) => {
         if (!question.isVerified) {
-            // Open dialog to select correct answer
             setVerifyQuestion(question);
         } else {
-            // Just unverify
             startTransition(async () => {
                 try {
                     await toggleQuestionVerification(question.id);
@@ -126,30 +144,43 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
 
     return (
         <>
-            <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700 mb-6">
-                <button
-                    onClick={() => setActiveTab('all')}
-                    className={`pb-2 px-1 font-medium transition-colors relative ${activeTab === 'all'
-                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                        }`}
-                >
-                    All Questions
-                </button>
-                <button
-                    onClick={() => setActiveTab('requests')}
-                    className={`pb-2 px-1 font-medium transition-colors relative flex items-center gap-2 ${activeTab === 'requests'
-                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                        }`}
-                >
-                    Verification Requests
-                    {verificationRequests.length > 0 && (
-                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                            {verificationRequests.length}
-                        </span>
-                    )}
-                </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 mb-6 pb-4">
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setActiveTab('all')}
+                        className={`pb-2 px-1 font-medium transition-colors relative ${activeTab === 'all'
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                    >
+                        All Questions
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('requests')}
+                        className={`pb-2 px-1 font-medium transition-colors relative flex items-center gap-2 ${activeTab === 'requests'
+                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                    >
+                        Verification Requests
+                        {verificationRequests.length > 0 && (
+                            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                                {verificationRequests.length}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                    <input
+                        type="text"
+                        placeholder="Search questions..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    />
+                    <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
+                </div>
             </div>
 
             <div className="space-y-4">
@@ -249,6 +280,13 @@ export function QuestionsList({ questions, verificationRequests = [] }: Question
                                 >
                                     {question.isVerified ? <FaTimesCircle /> : <FaCheckCircle />}
                                 </button>
+                                <Link
+                                    href={`/admin/questions/${question.id}`}
+                                    className="p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors"
+                                    title="Edit"
+                                >
+                                    <FaEdit />
+                                </Link>
                                 <button
                                     onClick={() => setDeleteId(question.id)}
                                     disabled={isPending}

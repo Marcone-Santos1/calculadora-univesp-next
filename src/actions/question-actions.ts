@@ -333,6 +333,87 @@ export async function createQuestion(formData: FormData) {
     return { questionId: question.id };
 }
 
+export async function updateQuestion(questionId: string, formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized');
+    }
+
+    const title = formData.get('title') as string;
+    const text = formData.get('text') as string;
+    const subjectId = formData.get('subjectId') as string;
+    const week = formData.get('week') as string;
+    const alternativesRaw = formData.get('alternatives');
+
+    // For updates, we might need to check permissions (admin or author)
+    // Assuming admin access for now based on the route /admin/questions
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (!user?.isAdmin) {
+        // Also allow author to edit? Current requirement is /admin/questions so let's stick to admin or author check if we want to reuse this for authors later.
+        // For now, let's just check if the user is the author or admin
+        const question = await prisma.question.findUnique({ where: { id: questionId }, select: { userId: true } });
+        if (!question || (question.userId !== session.user.id)) {
+            // If not author, check if admin (assuming isAdmin field exists or logic)
+            // The User model has isAdmin field based on schema
+            if (!user?.isAdmin) {
+                throw new Error('Forbidden');
+            }
+        }
+    }
+
+    if (!alternativesRaw) {
+        throw new Error('Alternativas são obrigatórias');
+    }
+
+    const alternatives = JSON.parse(alternativesRaw as string);
+
+    // Transaction to update question and alternatives
+    await prisma.$transaction(async (tx) => {
+        // 1. Update Question Details
+        await tx.question.update({
+            where: { id: questionId },
+            data: {
+                title,
+                text,
+                subjectId,
+                week
+            }
+        });
+
+        // 2. Update Alternatives
+        // We match by 'letter' (id in the JSON from form) to preserve the entity
+        for (const alt of alternatives) {
+            const letter = alt.id || alt.letter;
+            // Find existing alternative by letter for this question
+            const existingAlt = await tx.alternative.findFirst({
+                where: {
+                    questionId,
+                    letter: letter
+                }
+            });
+
+            if (existingAlt) {
+                await tx.alternative.update({
+                    where: { id: existingAlt.id },
+                    data: {
+                        text: alt.text || alt.content
+                    }
+                });
+            } else {
+                // Should technically not happen if structure is fixed, but handle creation if needed?
+                // For now assume structure A-E is fixed.
+            }
+        }
+    });
+
+    revalidatePath('/questoes');
+    revalidatePath(`/questoes/${questionId}`);
+    revalidatePath('/admin/questions');
+    revalidatePath(`/admin/questions/${questionId}`);
+
+    return { success: true };
+}
+
 export async function voteOnAlternative(alternativeId: string) {
     const session = await auth();
     if (!session?.user?.id) {

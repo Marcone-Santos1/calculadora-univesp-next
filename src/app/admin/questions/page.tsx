@@ -1,9 +1,18 @@
 import { getAdminQuestions } from '@/actions/admin-actions';
 import { QuestionsList } from '@/components/admin/QuestionsList';
 
-export default async function AdminQuestionsPage() {
-    const questions = await getAdminQuestions();
-    const verificationRequests = await getAdminQuestions(undefined, undefined, true);
+interface AdminQuestionsPageProps {
+    searchParams: Promise<{
+        search?: string;
+    }>;
+}
+
+export default async function AdminQuestionsPage(props: AdminQuestionsPageProps) {
+    const params = await props.searchParams;
+    const search = params.search;
+
+    const questions = await getAdminQuestions(search);
+    const verificationRequests = await getAdminQuestions(search, undefined, true);
 
     return (
         <div className="space-y-6">
@@ -15,6 +24,7 @@ export default async function AdminQuestionsPage() {
             <QuestionsList
                 questions={questions}
                 verificationRequests={verificationRequests}
+                initialSearch={search}
             />
         </div>
     );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createQuestion } from '@/actions/question-actions';
+import { createQuestion, updateQuestion } from '@/actions/question-actions';
 import { FaSearch, FaTimes, FaChevronDown, FaExclamationTriangle } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
@@ -22,16 +22,29 @@ interface Subject {
     icon: string | null;
 }
 
-export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) => {
+interface QuestionFormProps {
+    subjects: Subject[];
+    initialData?: {
+        title: string;
+        text: string;
+        week?: string;
+        subjectId: string;
+        alternatives: { id: string; text: string; }[];
+    };
+    questionId?: string;
+}
+
+export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialData, questionId }) => {
     const router = useRouter();
     const { showToast } = useToast();
     const { saveQuestionDraft, clearQuestionDraft, preferences } = useUserPreferences();
+    const isEditing = !!questionId;
 
     // Form State
-    const [title, setTitle] = useState('');
-    const [text, setText] = useState('');
-    const [week, setWeek] = useState('');
-    const [alternatives, setAlternatives] = useState([
+    const [title, setTitle] = useState(initialData?.title || '');
+    const [text, setText] = useState(initialData?.text || '');
+    const [week, setWeek] = useState(initialData?.week || '');
+    const [alternatives, setAlternatives] = useState(initialData?.alternatives || [
         { id: 'A', text: '' },
         { id: 'B', text: '' },
         { id: 'C', text: '' },
@@ -41,7 +54,9 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
 
     // Subject search state
     const [subjectSearch, setSubjectSearch] = useState('');
-    const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+    const [selectedSubject, setSelectedSubject] = useState<Subject | null>(
+        initialData ? subjects.find(s => s.id === initialData.subjectId) || null : null
+    );
     const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
 
     // Confirmation dialog
@@ -54,9 +69,9 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         s.name.toLowerCase().includes(subjectSearch.toLowerCase())
     );
 
-    // Load draft on mount
+    // Load draft on mount (only if NOT editing)
     useEffect(() => {
-        if (!isDraftLoaded && preferences.questionDraft) {
+        if (!isEditing && !isDraftLoaded && preferences.questionDraft) {
             const draft = preferences.questionDraft;
             setTitle(draft.title || '');
             setText(draft.text || '');
@@ -76,10 +91,12 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
             setIsDraftLoaded(true);
             showToast('Rascunho restaurado', 'info');
         }
-    }, [preferences.questionDraft, subjects, isDraftLoaded, showToast, alternatives]);
+    }, [preferences.questionDraft, subjects, isDraftLoaded, showToast, alternatives, isEditing]);
 
-    // Auto-save draft
+    // Auto-save draft (only if NOT editing)
     useEffect(() => {
+        if (isEditing) return;
+
         const timeoutId = setTimeout(() => {
             // Only save if there's some content
             if (title || text || week || selectedSubject || alternatives.some(a => a.text)) {
@@ -94,7 +111,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         }, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [title, text, week, selectedSubject, alternatives, saveQuestionDraft]);
+    }, [title, text, week, selectedSubject, alternatives, saveQuestionDraft, isEditing]);
 
     const handleAlternativeChange = (index: number, value: string) => {
         const newAlternatives = [...alternatives];
@@ -132,19 +149,29 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
             if (!formRef.current) return;
             const formData = new FormData(formRef.current);
 
-            const result = await createQuestion(formData);
-
-            showToast('Questão criada com sucesso!', 'success');
-            clearQuestionDraft();
-
-            // Redirect to the created question
-            if (result?.questionId) {
-                router.push(`/questoes/${result.questionId}`);
+            if (isEditing && questionId) {
+                await updateQuestion(questionId, formData);
+                showToast('Questão atualizada com sucesso!', 'success');
+                // Stay on page or redirect? Maybe redirect to the question page or back to admin list?
+                // Let's redirect to the list for now, or the question itself.
+                // Requirement says "same format", usually editing redirects back to where you came from or the item.
+                router.push('/admin/questions');
+                router.refresh();
             } else {
-                router.push('/questoes');
+                const result = await createQuestion(formData);
+                showToast('Questão criada com sucesso!', 'success');
+                clearQuestionDraft();
+
+                // Redirect to the created question
+                if (result?.questionId) {
+                    router.push(`/questoes/${result.questionId}`);
+                } else {
+                    router.push('/questoes');
+                }
             }
+
         } catch (error: any) {
-            showToast(error.message || 'Erro ao criar questão', 'error');
+            showToast(error.message || 'Erro ao salvar questão', 'error');
             setIsSubmitting(false);
             setShowConfirmation(false);
         }
@@ -317,7 +344,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                     disabled={isSubmitting}
                     className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors text-lg"
                 >
-                    {isSubmitting ? 'Publicando...' : 'Publicar Pergunta'}
+                    {isSubmitting ? (isEditing ? 'Atualizando...' : 'Publicando...') : (isEditing ? 'Atualizar Pergunta' : 'Publicar Pergunta')}
                 </button>
 
                 <style jsx>{`
@@ -364,18 +391,20 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                                        Confirmar Publicação
+                                        {isEditing ? 'Confirmar Edição' : 'Confirmar Publicação'}
                                     </h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                                        Revise todos os dados antes de publicar.
+                                        Revise todos os dados antes de {isEditing ? 'salvar' : 'publicar'}.
                                     </p>
-                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
-                                        <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
-                                            ⚠️ Após a criação, a questão não poderá ser editada.
-                                        </p>
-                                    </div>
+                                    {!isEditing && (
+                                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
+                                            <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">
+                                                ⚠️ Após a criação, a questão não poderá ser editada.
+                                            </p>
+                                        </div>
+                                    )}
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Tem certeza que deseja publicar esta questão?
+                                        Tem certeza que deseja {isEditing ? 'atualizar' : 'publicar'} esta questão?
                                     </p>
                                 </div>
                             </div>
@@ -393,7 +422,7 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
                                     disabled={isSubmitting}
                                     className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors"
                                 >
-                                    {isSubmitting ? 'Publicando...' : 'Confirmar'}
+                                    {isSubmitting ? (isEditing ? 'Salvando...' : 'Publicando...') : 'Confirmar'}
                                 </button>
                             </div>
                         </div>
@@ -403,3 +432,4 @@ export const QuestionForm: React.FC<{ subjects: Subject[] }> = ({ subjects }) =>
         </>
     );
 };
+
