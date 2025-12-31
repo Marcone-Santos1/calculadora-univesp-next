@@ -5,7 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { createNotification } from './notification-actions';
-import { awardReputation } from './reputation-actions';
+import { awardReputation, checkAchievements } from './reputation-actions';
+import { REPUTATION_EVENTS } from '@/utils/reputation-events';
 
 export async function getQuestions(
     query?: string,
@@ -206,7 +207,8 @@ export async function getQuestion(id: string) {
                             image: true,
                             reputation: true
                         }
-                    }
+                    },
+                    votes: true
                 },
                 orderBy: { createdAt: 'asc' }
             }
@@ -328,7 +330,9 @@ export async function createQuestion(formData: FormData) {
     revalidatePath('/questoes');
 
     // Award reputation for creating a question
-    await awardReputation(session.user.id, 5, 'QUESTION_CREATED');
+    // Award reputation for creating a question
+    await awardReputation(session.user.id, REPUTATION_EVENTS.QUESTION_CREATED.points, 'QUESTION_CREATED');
+    await checkAchievements(session.user.id);
 
     return { questionId: question.id };
 }
@@ -463,11 +467,15 @@ export async function voteOnAlternative(alternativeId: string) {
         });
 
         // Award reputation to question author for receiving a vote
-        await awardReputation(alternative.question.userId, 2, 'VOTE_RECEIVED');
+        // Award reputation to question author for receiving a vote
+        await awardReputation(alternative.question.userId, REPUTATION_EVENTS.VOTE_RECEIVED.points, 'VOTE_RECEIVED');
+        await checkAchievements(alternative.question.userId);
     }
 
     // Award reputation to voter for participating
-    await awardReputation(session.user.id, 1, 'VOTE_CAST');
+    // Award reputation to voter for participating
+    await awardReputation(session.user.id, REPUTATION_EVENTS.VOTE_CAST.points, 'VOTE_CAST');
+    await checkAchievements(session.user.id);
 
     revalidatePath(`/questoes`);
 }
@@ -517,12 +525,16 @@ export async function createComment(questionId: string, text: string, parentId?:
             });
 
             // Award reputation to question author for engagement
-            await awardReputation(comment.question.userId, 2, 'COMMENT_RECEIVED');
+            // Award reputation to question author for engagement
+            await awardReputation(comment.question.userId, REPUTATION_EVENTS.COMMENT_RECEIVED.points, 'COMMENT_RECEIVED');
+            await checkAchievements(comment.question.userId);
         }
     }
 
     // Award reputation to commenter
-    await awardReputation(session.user.id, 3, 'COMMENT_CREATED');
+    // Award reputation to commenter
+    await awardReputation(session.user.id, REPUTATION_EVENTS.COMMENT_CREATED.points, 'COMMENT_CREATED');
+    await checkAchievements(session.user.id);
 
     revalidatePath(`/questoes/${questionId}`);
 }

@@ -2,11 +2,14 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { REPUTATION_EVENTS, ReputationEvent } from '@/utils/reputation-events';
+import { ACHIEVEMENTS, getAchievement } from '@/utils/achievements';
+import { getLevel } from '@/utils/reputation';
 
 export async function awardReputation(userId: string, amount: number, reason: string) {
     try {
         // Update user reputation
-        await prisma.user.update({
+        const user = await prisma.user.update({
             where: { id: userId },
             data: {
                 reputation: {
@@ -21,18 +24,19 @@ export async function awardReputation(userId: string, amount: number, reason: st
             }
         });
 
+        // Check for level up or other achievements
+        await checkAchievements(userId);
+
         // Revalidate paths where reputation might be shown
         revalidatePath('/perfil');
         revalidatePath('/questoes');
     } catch (error) {
         console.error('Error awarding reputation:', error);
-        // Don't throw, just log. Reputation failure shouldn't block main actions.
     }
 }
 
 export async function deductReputation(userId: string, amount: number, reason: string) {
     try {
-        // Update user reputation
         await prisma.user.update({
             where: { id: userId },
             data: {
@@ -48,7 +52,6 @@ export async function deductReputation(userId: string, amount: number, reason: s
             }
         });
 
-        // Revalidate paths where reputation might be shown
         revalidatePath('/perfil');
         revalidatePath('/questoes');
     } catch (error) {
@@ -62,6 +65,158 @@ export async function getUserReputation(userId: string) {
         select: { reputation: true }
     });
     return user?.reputation || 0;
+}
+
+// --- GAMIFICATION & ACHIEVEMENTS ---
+
+export async function handleDailyLogin(userId: string) {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { lastLoginAt: true, loginStreak: true }
+        });
+
+        if (!user) return;
+
+        const now = new Date();
+        const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+
+        let newStreak = user.loginStreak;
+        let shouldAward = false;
+
+        if (lastLogin) {
+            const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Same day? Do nothing (or just update time)
+            if (now.getDate() === lastLogin.getDate() && now.getMonth() === lastLogin.getMonth() && now.getFullYear() === lastLogin.getFullYear()) {
+                // Already logged in today
+                return;
+            }
+
+            // Consecutive day? (diffDays is roughly 1, logic needs to be robust but Date diff is easiest)
+            // Check if last login was "yesterday"
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
+
+            const isYesterday = lastLogin.getDate() === yesterday.getDate() &&
+                lastLogin.getMonth() === yesterday.getMonth() &&
+                lastLogin.getFullYear() === yesterday.getFullYear();
+
+            if (isYesterday) {
+                newStreak += 1;
+                shouldAward = true;
+            } else {
+                // Formatting broke streak
+                newStreak = 1;
+                shouldAward = true;
+            }
+        } else {
+            // First login ever
+            newStreak = 1;
+            shouldAward = true;
+        }
+
+        if (shouldAward) {
+            // Update User
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    lastLoginAt: now,
+                    loginStreak: newStreak
+                }
+            });
+
+            // Award Daily Points
+            const isWeeklyStreak = newStreak % 7 === 0;
+            const points = REPUTATION_EVENTS.DAILY_LOGIN.points + (isWeeklyStreak ? 10 : 0);
+
+            await awardReputation(userId, points, isWeeklyStreak ? 'DAILY_LOGIN_STREAK_BONUS' : 'DAILY_LOGIN');
+        }
+
+    } catch (error) {
+        console.error('Error handling daily login:', error);
+    }
+}
+
+export async function checkAchievements(userId: string) {
+    try {
+        // 1. Gather Stats
+        const [
+            user,
+            questionCount,
+            commentCount,
+            voteCount,
+            commentVoteCount,
+            receivedQuestionVotes,
+            receivedCommentVotes,
+            unlockedAchievements
+        ] = await Promise.all([
+            prisma.user.findUnique({ where: { id: userId } }),
+            prisma.question.count({ where: { userId } }),
+            prisma.comment.count({ where: { userId } }),
+            prisma.vote.count({ where: { userId } }),
+            prisma.commentVote.count({ where: { userId } }),
+            // Count votes on MY questions
+            prisma.vote.count({ where: { alternative: { question: { userId } } } }),
+            // Count votes on MY comments
+            prisma.commentVote.count({ where: { comment: { userId } } }),
+            prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } })
+        ]);
+
+        if (!user) return;
+
+        const unlockedIds = new Set(unlockedAchievements.map(ua => ua.achievementId));
+        const { level } = getLevel(user.reputation || 0);
+
+        const stats = {
+            questions: questionCount,
+            comments: commentCount,
+            votes: voteCount,
+            commentVotes: commentVoteCount,
+            receivedVotes: receivedQuestionVotes,
+            receivedCommentVotes: receivedCommentVotes,
+            streak: user.loginStreak || 0,
+            level: level,
+            isProfileComplete: !!(user.name && user.bio && user.image)
+        };
+
+        // 2. Check Conditions
+        const newUnlocks = [];
+
+        for (const achievement of ACHIEVEMENTS) {
+            if (unlockedIds.has(achievement.id)) continue;
+
+            if (achievement.condition(stats)) {
+                newUnlocks.push(achievement);
+            }
+        }
+
+        // 3. Award and Notify
+        for (const achievement of newUnlocks) {
+            await prisma.userAchievement.create({
+                data: {
+                    userId,
+                    achievementId: achievement.id
+                }
+            });
+
+            // Award Achievement Points
+            await awardReputation(userId, achievement.points, `ACHIEVEMENT_${achievement.id}`);
+
+            // Here we could create a notification
+            await prisma.notification.create({
+                data: {
+                    userId,
+                    type: 'ACHIEVEMENT',
+                    message: `Você desbloqueou a conquista: ${achievement.icon} ${achievement.title}!`
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Error checking achievements:', error);
+    }
 }
 
 

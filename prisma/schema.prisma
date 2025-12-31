@@ -80,6 +80,22 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  // Gamification & Tracking
+  lastLoginAt   DateTime?
+  loginStreak   Int              @default(0)
+  achievements  UserAchievement[]
+  commentVotes  CommentVote[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String   
+  unlockedAt    DateTime @default(now())
+
+  @@unique([userId, achievementId])
 }
 
 model Notification {
@@ -161,6 +177,19 @@ model Vote {
   @@unique([userId, alternativeId]) // User can only vote once per alternative (logic should enforce once per question)
 }
 
+model CommentVote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+}
+
 model Comment {
   id         String   @id @default(cuid())
   text       String   @db.Text
@@ -177,6 +206,8 @@ model Comment {
   parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies    Comment[] @relation("CommentReplies")
   
+  votes      CommentVote[]
+
   reports    Report[]
 
   // Moderation

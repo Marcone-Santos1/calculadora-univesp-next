@@ -36,7 +36,14 @@ export async function getUserProfile(userId: string) {
             bio: true,
             location: true,
             website: true,
-            socialLinks: true
+            socialLinks: true,
+            loginStreak: true,
+            achievements: {
+                select: {
+                    achievementId: true,
+                    unlockedAt: true
+                }
+            }
         }
     });
 }
@@ -98,6 +105,8 @@ import { revalidatePath } from 'next/cache';
 import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
+import { awardReputation, checkAchievements } from './reputation-actions';
+import { REPUTATION_EVENTS } from '@/utils/reputation-events';
 
 interface SocialLinks {
     twitter?: string;
@@ -134,6 +143,37 @@ export async function updateProfile(data: {
             socialLinks: data.socialLinks as any
         }
     });
+
+    // Check for profile completion
+    // We fetch the updated user to check all fields (some might be already set)
+    const updatedUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+            name: true,
+            image: true,
+            bio: true,
+            location: true,
+            reputationLogs: {
+                where: { reason: 'PROFILE_COMPLETION' }
+            }
+        }
+    });
+
+    if (updatedUser) {
+        // Define completion criteria
+        const isComplete =
+            !!updatedUser.name &&
+            !!updatedUser.image &&
+            !!updatedUser.bio &&
+            !!updatedUser.location;
+
+        const alreadyAwarded = updatedUser.reputationLogs.length > 0;
+
+        if (isComplete && !alreadyAwarded) {
+            await awardReputation(user.id, REPUTATION_EVENTS.PROFILE_COMPLETION.points, 'PROFILE_COMPLETION');
+            await checkAchievements(user.id);
+        }
+    }
 
     revalidatePath(`/perfil/${user.id}`);
     revalidatePath('/perfil/editar');

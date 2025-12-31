@@ -21,13 +21,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             // Add isAdmin to JWT token on sign in
-            if (user) {
+            if (user && user.id) {
                 const dbUser = await prisma.user.findUnique({
                     where: { id: user.id },
                     select: { isAdmin: true }
                 });
                 token.isAdmin = dbUser?.isAdmin || false;
                 token.id = user.id;
+
+                // Handle Daily Login (Fire and forget or await)
+                // We use dynamic import to avoid potential circular dependencies, 
+                // though reputation-actions seems clean.
+                try {
+                    const { handleDailyLogin } = await import('@/actions/reputation-actions');
+                    await handleDailyLogin(user.id);
+                } catch (error) {
+                    console.error('Failed to handle daily login:', error);
+                }
             }
             return token;
         },

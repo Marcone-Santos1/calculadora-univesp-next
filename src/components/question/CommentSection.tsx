@@ -18,9 +18,10 @@ interface CommentSectionProps {
     questionId: string;
     comments: Comment[];
     isLoggedIn: boolean;
+    currentUserId?: string;
 }
 
-export function CommentSection({ questionId, comments, isLoggedIn }: CommentSectionProps) {
+export function CommentSection({ questionId, comments, isLoggedIn, currentUserId }: CommentSectionProps) {
     const [newComment, setNewComment] = useState('');
     const [isPending, startTransition] = useTransition();
     const { showToast } = useToast();
@@ -108,6 +109,7 @@ export function CommentSection({ questionId, comments, isLoggedIn }: CommentSect
                         isLoggedIn={isLoggedIn}
                         onReply={handleReply}
                         isPending={isPending}
+                        currentUserId={currentUserId}
                     />
                 ))}
                 {comments.length === 0 && (

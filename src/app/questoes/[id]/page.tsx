@@ -75,7 +75,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
 
     // Process feed items
     const feedItems = injectAdsWithRandomInterval(relatedQuestions, ads);
-console.log(ads);
+
     const session = await auth();
 
     if (!question) {
@@ -290,6 +290,7 @@ console.log(ads);
                         questionId={question.id}
                         comments={question.comments}
                         isLoggedIn={!!session}
+                        currentUserId={session?.user?.id}
                     />
                 </div>
 
@@ -309,7 +310,7 @@ console.log(ads);
                                     <NativeAdCard ad={item.data} />
                                 )}
                             </React.Fragment>
-                        ))} 
+                        ))}
                     </div>
 
                     {relatedQuestions.length === 0 && (

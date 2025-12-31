@@ -1,0 +1,84 @@
+
+> calculadora-univesp-next@0.1.0 build
+> prisma generate && next build --turbopack
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 447ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 15.8s
+   Running TypeScript ...
+   Collecting page data using 3 workers ...
+   Generating static pages using 3 workers (0/39) ...
+   Generating static pages using 3 workers (9/39) 
+   Generating static pages using 3 workers (19/39) 
+   Generating static pages using 3 workers (29/39) 
+ ✓ Generating static pages using 3 workers (39/39) in 1364.9ms
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /aac
+├ ƒ /admin
+├ ƒ /admin/ads
+├ ƒ /admin/blog
+├ ƒ /admin/blog/[id]
+├ ƒ /admin/blog/new
+├ ƒ /admin/comments
+├ ƒ /admin/feedbacks
+├ ƒ /admin/importar
+├ ƒ /admin/questions
+├ ƒ /admin/questions/[id]
+├ ƒ /admin/reports
+├ ƒ /admin/subjects
+├ ƒ /admin/users
+├ ƒ /advertiser/campaigns
+├ ƒ /advertiser/campaigns/[campaignId]
+├ ƒ /advertiser/campaigns/[campaignId]/creatives/[creativeId]/edit
+├ ƒ /advertiser/campaigns/[campaignId]/creatives/new
+├ ƒ /advertiser/campaigns/[campaignId]/edit
+├ ƒ /advertiser/campaigns/new
+├ ƒ /advertiser/dashboard
+├ ƒ /advertiser/dashboard/finance
+├ ƒ /advertiser/dashboard/settings
+├ ○ /anuncie
+├ ƒ /api/ad-click
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/check-admin
+├ ƒ /api/upload
+├ ƒ /api/webhooks/abacatepay
+├ ○ /blog
+├ ● /blog/[slug]
+├ ○ /calculadora-cr
+├ ƒ /login
+├ ƒ /perfil
+├ ƒ /perfil/[id]
+├ ƒ /perfil/editar
+├ ƒ /perfil/importar
+├ ○ /placar
+├ ○ /politica-de-privacidade
+├ ƒ /questoes
+├ ƒ /questoes/[id]
+├ ƒ /questoes/[id]/opengraph-image
+├ ○ /questoes/nova
+├ ○ /robots.txt
+├ ○ /sitemap.xml
+└ ○ /sobre
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

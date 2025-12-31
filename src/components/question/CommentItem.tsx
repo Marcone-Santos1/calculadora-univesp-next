@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { FaUser, FaReply } from 'react-icons/fa';
+import { useState, useTransition } from 'react';
+import { FaUser, FaReply, FaHeart, FaRegHeart } from 'react-icons/fa';
 import { ReportButton } from '../report/ReportButton';
 import ReactMarkdown from 'react-markdown';
 import { UserBadge } from '@/components/gamification/UserBadge';
 import Link from 'next/link';
 import Image from 'next/image';
+import { toggleCommentVote } from '@/actions/comment-actions';
+import { useToast } from '@/components/ToastProvider';
 
 interface Comment {
     id: string;
@@ -21,6 +23,7 @@ interface Comment {
         image: string | null;
         reputation: number;
     };
+    votes?: { userId: string }[];
 }
 
 interface CommentItemProps {
@@ -29,11 +32,51 @@ interface CommentItemProps {
     onReply: (parentId: string, text: string) => Promise<void>;
     isPending: boolean;
     depth?: number;
+    currentUserId?: string;
 }
 
-export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0 }: CommentItemProps) {
+export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0, currentUserId }: CommentItemProps) {
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const { showToast } = useToast();
+
+    // Optimistic UI for voting
+    const initialVoteCount = comment.votes?.length || 0;
+    const initialHasVoted = currentUserId ? comment.votes?.some(v => v.userId === currentUserId) : false;
+
+    const [voteCount, setVoteCount] = useState(initialVoteCount);
+    const [hasVoted, setHasVoted] = useState(initialHasVoted);
+    const [isVotePending, startVoteTransition] = useTransition();
+
+    const handleVote = async () => {
+        if (!isLoggedIn) {
+            showToast('Você precisa estar logado para curtir.', 'warning');
+            return;
+        }
+
+        const newHasVoted = !hasVoted;
+        const newVoteCount = newHasVoted ? voteCount + 1 : voteCount - 1;
+
+        // Optimistic update
+        setHasVoted(newHasVoted);
+        setVoteCount(newVoteCount);
+
+        startVoteTransition(async () => {
+            try {
+                const result = await toggleCommentVote(comment.id);
+                if (!result.success) {
+                    // Revert if failed
+                    setHasVoted(!newHasVoted);
+                    setVoteCount(voteCount);
+                    showToast('Erro ao curtir comentário.', 'error');
+                }
+            } catch {
+                setHasVoted(!newHasVoted);
+                setVoteCount(voteCount);
+                showToast('Erro ao curtir comentário.', 'error');
+            }
+        });
+    };
 
     const handleSubmitReply = async () => {
         if (!replyText.trim()) return;
@@ -102,12 +145,27 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
                                 <ReactMarkdown>{comment.text}</ReactMarkdown>
                             </div>
 
-                            <button
-                                onClick={() => setIsReplying(!isReplying)}
-                                className="mt-2 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 font-medium"
-                            >
-                                <FaReply /> Responder
-                            </button>
+                            <div className="flex items-center gap-4 mt-2">
+                                <button
+                                    onClick={handleVote}
+                                    disabled={isVotePending}
+                                    className={`flex items-center gap-1 text-xs font-medium transition-colors ${hasVoted
+                                            ? 'text-red-500 dark:text-red-400'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400'
+                                        }`}
+                                    title={hasVoted ? 'Descurtir' : 'Curtir'}
+                                >
+                                    {hasVoted ? <FaHeart /> : <FaRegHeart />}
+                                    <span>{voteCount > 0 ? voteCount : 'Curtir'}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setIsReplying(!isReplying)}
+                                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 font-medium"
+                                >
+                                    <FaReply /> Responder
+                                </button>
+                            </div>
                         </>
                     )}
 
@@ -158,6 +216,7 @@ export function CommentItem({ comment, isLoggedIn, onReply, isPending, depth = 0
                             onReply={onReply}
                             isPending={isPending}
                             depth={depth + 1}
+                            currentUserId={currentUserId}
                         />
                     ))}
                 </div>
