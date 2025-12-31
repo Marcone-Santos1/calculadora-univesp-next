@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getLevel } from '@/utils/reputation';
+import { LevelInfoModal } from './LevelInfoModal';
 import { FaUser, FaQuestionCircle, FaComment, FaVoteYea, FaStar, FaTrophy, FaMapMarkerAlt, FaGlobe, FaGithub, FaTwitter, FaLinkedin, FaInstagram, FaEdit } from 'react-icons/fa';
 
 interface ProfileHeaderProps {
@@ -73,7 +74,12 @@ export function ProfileHeader({ user, stats, isOwner }: ProfileHeaderProps) {
                         <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full font-medium border border-blue-200 dark:border-blue-800">
                             {title}
                         </span>
-                        
+
+                        <LevelInfoModal
+                            currentReputation={stats.reputation}
+                            currentLevel={level}
+                        />
+
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs rounded-full font-bold border border-orange-200 dark:border-orange-800" title="Sequência de dias logado">
                             🔥 {user.loginStreak}
                         </span>
