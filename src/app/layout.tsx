@@ -76,6 +76,7 @@ export default function RootLayout({
       <Script async={true} type={'application/ld+json'} id={'organizationJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <GoogleAnalytics gaId="G-3141WNQQZQ"/>
       <AdsenseScript />
+      <AdsRefresher />
       <body className={inter.className}>
       <ToastProvider>
         <SessionProvider>
