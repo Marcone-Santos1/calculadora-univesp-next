@@ -15,6 +15,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         }),
     ],
+    events: {
+        async createUser({ user }) {
+            const { EmailService } = await import('@/lib/email-service');
+            const { PredefinedTemplates, BaseEmailTemplate } = await import('@/lib/email-templates');
+
+            if (user.email) {
+                const template = PredefinedTemplates.WELCOME;
+                const html = BaseEmailTemplate(template.body(user.name?.split(' ')[0] || 'Estudante'), template.subject);
+
+                await EmailService.sendEmail(
+                    { email: user.email, name: user.name || 'User' },
+                    template.subject,
+                    html
+                );
+            }
+        }
+    },
     pages: {
         signIn: '/',
     },

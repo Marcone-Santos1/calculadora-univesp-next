@@ -14,10 +14,16 @@ export default async function LeaderboardPage() {
     const restUsers = users.slice(3);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden transition-colors duration-500">
+            {/* Premium Ambient Background */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl mix-blend-multiply animate-blob filter opacity-70"></div>
+                <div className="absolute top-0 right-1/4 w-96 h-96 bg-yellow-400/20 dark:bg-yellow-600/10 rounded-full blur-3xl mix-blend-multiply animate-blob animation-delay-2000 filter opacity-70"></div>
+                <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-400/20 dark:bg-pink-600/10 rounded-full blur-3xl mix-blend-multiply animate-blob animation-delay-4000 filter opacity-70"></div>
+            </div>
 
             <div className="container mx-auto px-4 py-8 max-w-5xl">
-                <div className="text-center mb-12">
+                <div className="text-center mb-24 md:mb-32 relative z-10">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 mb-4">
                         <FaTrophy className="text-3xl" />
                     </div>

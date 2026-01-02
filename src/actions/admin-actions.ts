@@ -6,6 +6,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { revalidatePath } from 'next/cache';
 import { createNotification } from './notification-actions';
 import { awardReputation, deductReputation } from './reputation-actions';
+import { EmailService } from '@/lib/email-service';
 
 // ============ Question Management ============
 
@@ -57,7 +58,7 @@ export async function deleteQuestion(id: string) {
 
   const question = await prisma.question.findUnique({
     where: { id },
-    select: { userId: true, title: true }
+    select: { userId: true, title: true, user: { select: { email: true, name: true } } }
   });
 
   if (question) {
@@ -67,6 +68,17 @@ export async function deleteQuestion(id: string) {
 
     // Deduct reputation
     await deductReputation(question.userId, 10, 'QUESTION_DELETED_BY_ADMIN');
+
+    // Email Notification
+    if (question.user.email) {
+      const template = (await import('@/lib/email-templates')).PredefinedTemplates.WARNING;
+      const html = (await import('@/lib/email-templates')).BaseEmailTemplate(
+        template.body(`Sua questão "${question.title}" foi removida pois violava nossas diretrizes de comunidade.`),
+        template.subject
+      );
+
+      await EmailService.sendEmail({ email: question.user.email, name: question.user.name || 'User' }, template.subject, html);
+    }
 
     // Notify user
     await createNotification({
@@ -135,7 +147,7 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
 
   const question = await prisma.question.findUnique({
     where: { id },
-    select: { isVerified: true, userId: true }
+    select: { isVerified: true, userId: true, title: true, user: { select: { email: true, name: true } } }
   });
 
   if (!question) {
@@ -172,6 +184,19 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
       message: `Sua questão foi verificada e aceita! Você ganhou 10 pontos.`,
       link: `/questoes/${id}`
     });
+
+    // Email Notification
+    if (question.user.email) {
+      const { PredefinedTemplates, BaseEmailTemplate } = await import('@/lib/email-templates');
+      const template = PredefinedTemplates.VERIFICATION_APPROVED;
+      const html = BaseEmailTemplate(template.body(question.title), template.subject);
+
+      await EmailService.sendEmail(
+        { email: question.user.email, name: question.user.name || 'User' },
+        template.subject,
+        html
+      );
+    }
   } else {
     // Unverifying or toggling without specific answer (fallback)
     await prisma.question.update({
@@ -225,6 +250,7 @@ export async function deleteComment(id: string) {
       userId: true,
       text: true,
       question: { select: { title: true } },
+      user: { select: { email: true, name: true } },
       _count: {
         select: { replies: true }
       }
@@ -258,10 +284,26 @@ export async function deleteComment(id: string) {
   // Notify the user
   await createNotification({
     userId: comment.userId,
-    type: 'VERIFICATION', // Using VERIFICATION type as a generic system/admin notification for now, or add a new type
+    type: 'VERIFICATION',
     message: `Seu comentário na questão "${comment.question.title.substring(0, 30)}..." foi removido pela moderação.`,
     link: `/questoes/${comment.questionId}`
   });
+
+  // Email Notification
+  if (comment.user.email) {
+    const { PredefinedTemplates, BaseEmailTemplate } = await import('@/lib/email-templates');
+    const template = PredefinedTemplates.WARNING;
+    const html = BaseEmailTemplate(
+      template.body(`Seu comentário na questão "${comment.question.title}" foi removido pela moderação.`),
+      template.subject
+    );
+
+    await EmailService.sendEmail(
+      { email: comment.user.email, name: comment.user.name || 'User' },
+      template.subject,
+      html
+    );
+  }
 
   revalidatePath('/admin/comments');
   revalidatePath(`/questoes/${comment.questionId}`);
@@ -477,6 +519,8 @@ export async function getAdminStats() {
   }))
     .sort((a, b) => b.value - a.value);
 
+
+
   return {
     totalUsers,
     totalQuestions,
@@ -488,4 +532,62 @@ export async function getAdminStats() {
     feedbackCount,
     recentFeedback
   };
+}
+
+// ============ Announcements ============
+
+export async function createSystemAnnouncement(data: {
+  title: string;
+  message: string;
+  htmlMessage?: string; // Optional rich HTML content
+  type: 'INFO' | 'WARNING' | 'IMPORTANT';
+  channels: string[];
+}) {
+  await requireAdmin();
+
+  // 1. In-App Notifications
+  if (data.channels.includes('IN_APP')) {
+    const users = await prisma.user.findMany({ select: { id: true } });
+
+    if (users.length > 0) {
+      const notificationsData = users.map(user => ({
+        userId: user.id,
+        type: 'ANNOUNCEMENT',
+        message: `${data.title}: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}`,
+        link: '/admin/avisos',
+        read: false,
+      }));
+
+      await prisma.notification.createMany({
+        data: notificationsData
+      });
+    }
+  }
+
+  // 2. Email Broadcast
+  let emailResult = null;
+  if (data.channels.includes('EMAIL')) {
+    const users = await prisma.user.findMany({
+      where: { email: { not: null } },
+      select: { email: true, name: true }
+    });
+
+    // Convert to format expected by EmailService
+    const recipients = users.map(u => ({ email: u.email!, name: u.name || 'User' }));
+
+    // Use htmlMessage if provided, otherwise fallback to simple message structure
+    const content = data.htmlMessage || `
+            <h1>${data.title}</h1>
+            <p>${data.message}</p>
+        `;
+
+    emailResult = await EmailService.sendBroadcastEmail(
+      `[Aviso Univesp] ${data.title}`,
+      content,
+      recipients
+    );
+  }
+
+  revalidatePath('/admin');
+  return { success: true, emailResult };
 }

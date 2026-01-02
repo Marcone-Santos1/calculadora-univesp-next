@@ -7,7 +7,8 @@ import {
   FaHome, FaUsers, FaBook, FaQuestionCircle,
   FaChartBar, FaFlag, FaCommentDots, FaChevronLeft,
   FaChevronRight, FaGraduationCap, FaBars,
-  FaDownload, FaBullhorn
+  FaDownload, FaBullhorn,
+  FaAd
 } from 'react-icons/fa';
 
 // Definição dos links para fácil manutenção
@@ -16,7 +17,8 @@ const MENU_ITEMS = [
   { href: '/admin/users', label: 'Usuários', icon: <FaUsers /> },
   { href: '/admin/subjects', label: 'Matérias', icon: <FaGraduationCap /> },
   { href: '/admin/questions', label: 'Questões', icon: <FaQuestionCircle /> },
-  { href: '/admin/ads', label: 'Anúncios', icon: <FaBullhorn /> },
+  { href: '/admin/avisos', label: 'Avisos', icon: <FaBullhorn /> },
+  { href: '/admin/ads', label: 'Anúncios', icon: <FaAd /> },
   { href: '/admin/blog', label: 'Blog', icon: <FaBook /> },
   { href: '/admin/reports', label: 'Denúncias', icon: <FaFlag /> },
   { href: '/admin/feedbacks', label: 'Feedbacks', icon: <FaCommentDots /> },
