@@ -552,7 +552,7 @@ export async function createSystemAnnouncement(data: {
     if (users.length > 0) {
       const notificationsData = users.map(user => ({
         userId: user.id,
-        type: 'ANNOUNCEMENT',
+        type: `ANNOUNCEMENT|${data.type}`,
         message: `${data.title}: ${data.message.substring(0, 100)}${data.message.length > 100 ? '...' : ''}`,
         link: '/admin/avisos',
         read: false,

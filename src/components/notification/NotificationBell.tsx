@@ -76,6 +76,20 @@ export function NotificationBell() {
     };
 
     const getIconForType = (type: string) => {
+        // Handle Announcement Subtypes
+        if (type.startsWith('ANNOUNCEMENT')) {
+            const subtype = type.split('|')[1]?.trim();
+            switch (subtype) {
+                case 'IMPORTANT':
+                    return <div className="p-2 bg-red-600 text-white rounded-full shadow-md"><FaBullhorn /></div>;
+                case 'WARNING':
+                    return <div className="p-2 bg-amber-500 text-white rounded-full shadow-md"><FaBullhorn /></div>;
+                case 'INFO':
+                default:
+                    return <div className="p-2 bg-blue-600 text-white rounded-full shadow-md"><FaBullhorn /></div>;
+            }
+        }
+
         switch (type) {
             case 'ACHIEVEMENT': return <div className="p-2 bg-yellow-100 text-yellow-600 rounded-full"><FaTrophy /></div>;
             case 'REPUTATION': return <div className="p-2 bg-purple-100 text-purple-600 rounded-full"><FaStar /></div>;
@@ -85,7 +99,6 @@ export function NotificationBell() {
             case 'VERIFICATION': return <div className="p-2 bg-green-100 text-green-600 rounded-full"><FaCheckCircle /></div>;
             case 'WARNING': return <div className="p-2 bg-orange-100 text-orange-600 rounded-full"><FaExclamationTriangle /></div>;
             case 'DELETED': return <div className="p-2 bg-red-100 text-red-600 rounded-full"><FaTrash /></div>;
-            case 'ANNOUNCEMENT': return <div className="p-2 bg-blue-600 text-white rounded-full shadow-md"><FaBullhorn /></div>;
             default: return <div className="p-2 bg-gray-100 text-gray-600 rounded-full"><FaBell /></div>;
         }
     };

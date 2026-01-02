@@ -74,7 +74,7 @@ export default function AdminAnnouncementsPage() {
             }
 
             const emailHtml = renderEmailBlocks(blocks);
-
+console.log(type);
             const res = await createSystemAnnouncement({
                 title,
                 message: inAppMessage || 'Verifique seu email para mais detalhes.',
