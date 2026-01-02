@@ -3,6 +3,8 @@ import { BaseEmailTemplate } from "./email-templates";
 
 const API_KEY = process.env.MAILEROO_API_KEY;
 const FROM_EMAIL = process.env.MAILEROO_FROM_EMAIL || "noreply@calculadoraunivesp.com";
+const ENV = process.env.APP_ENV;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 let mailerooClient: any = null;
 
@@ -42,6 +44,17 @@ export const EmailService = {
 
         for (const recipient of recipients) {
             console.log(`📧 Sending email to ${recipient.email}...`);
+
+            if (ENV === "development") {
+                console.log(`📧 Skipping email to ${recipient.email}...`);
+
+                if (recipient.email !== ADMIN_EMAIL) {
+                    console.log(`📧 Skipping email to ${recipient.email}...`);
+                    continue;
+                }
+
+                console.log(`📧 Sending email to ${recipient.email}...`);
+            }
 
             try {
                 await mailerooClient.sendBasicEmail({
