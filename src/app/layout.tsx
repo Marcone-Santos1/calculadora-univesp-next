@@ -86,12 +86,12 @@ export default function RootLayout({
               <main className="mt-20">{children}</main>
               <Footer />
 
-              {/*<FeedbackWidget />*/}
+              <FeedbackWidget />
             </UserPreferencesProvider>
           </AppStateProvider>
         </SessionProvider>
       </ToastProvider>
-      {/*<CookieConsent/>*/}
+      <CookieConsent/>
       </body>
       </html>
   );

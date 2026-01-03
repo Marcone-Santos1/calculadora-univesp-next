@@ -148,7 +148,7 @@ export const GradeCalculator = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-67px)] flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 px-4 py-12 relative">
+    <div className="min-h-[calc(100vh-67px)] flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 px-4 py-12 relative google-auto-ads-ignore">
       <div
         className="max-w-screen-lg w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-80 transition-all duration-300">
         <div className="flex items-center justify-center space-x-2 mb-6">

@@ -78,3 +78,19 @@ html {
 .animate-slide-up {
     animation: slide-up 0.3s ease-out;
 }
+
+/* 🛡️ ÁREA ANTI-ANÚNCIOS (Proteção para Navbar e Footer) */
+.google-auto-ads-ignore {
+    display: flow-root; /* Cria um contexto isolado */
+    width: 100%;
+}
+
+/* Força bruta: Se o Google injetar algo aqui dentro, torne invisível */
+.google-auto-ads-ignore .google-auto-placed,
+.google-auto-ads-ignore ins.adsbygoogle {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
