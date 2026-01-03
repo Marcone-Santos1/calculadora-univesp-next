@@ -55,7 +55,7 @@ export const TableOfContents = ({ id, children }: { id: string; children?: React
 
 
   return (
-    <aside className="xl:block sticky top-0 xl:top-24 max-h-none xl:max-h-[80vh] overflow-visible xl:overflow-auto border-t xl:border-t-0 border-l-0 xl:border-l border-gray-200 dark:border-gray-800 pt-8 xl:pt-0 pl-0 xl:pl-6 ml-0 xl:ml-8 text-sm w-full xl:w-72 mt-8 xl:mt-0">
+    <aside className="xl:block sticky top-0 xl:top-24 max-h-none xl:max-h-[80vh] overflow-visible xl:overflow-auto custom-scrollbar border-t xl:border-t-0 border-l-0 xl:border-l border-gray-200 dark:border-gray-800 pt-8 xl:pt-0 pl-0 xl:pl-6 ml-0 xl:ml-8 text-sm w-full xl:w-72 mt-8 xl:mt-0">
       <div className="hidden xl:block">
         <p className="font-semibold text-gray-700 dark:text-gray-300 mb-3">
           Neste artigo
