@@ -122,7 +122,7 @@ export const NavBar = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all hover:rotate-12 active:scale-95"
+              className="p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all hover:rotate-12 active:scale-95 hidden sm:block"
               aria-label="Toggle theme"
             >
               {isDarkMode ? <FaRegSun className="text-lg" /> : <FaRegMoon className="text-lg" />}
@@ -132,10 +132,10 @@ export const NavBar = () => {
 
             {session ? (
               <>
-                <div className="hidden md:block">
+                <div className="block">
                   <NotificationBell />
                 </div>
-                <div className="hidden md:block pl-1">
+                <div className="hidden lg:block pl-1 w-8 h-8 md:w-9 md:h-9">
                   <UserDropdown user={session.user!} isAdmin={isAdmin} />
                 </div>
               </>

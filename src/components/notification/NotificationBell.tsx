@@ -136,7 +136,7 @@ export function NotificationBell() {
                         animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 mt-3 w-96 max-w-[90vw] bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-800 ring-1 ring-black/5 z-50 overflow-hidden"
+                        className="absolute -right-20 md:right-0 mt-3 w-96 max-w-[90vw] bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-800 ring-1 ring-black/5 z-50 overflow-hidden"
                     >
                         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50">
                             <h3 className="font-bold text-gray-900 dark:text-white">Notificações</h3>
