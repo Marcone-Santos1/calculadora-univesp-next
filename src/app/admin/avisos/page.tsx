@@ -36,6 +36,7 @@ export default function AdminAnnouncementsPage() {
     const handleTemplateChange = (key: string) => {
         setSelectedTemplate(key);
         if (key === 'CUSTOM') {
+            setBlocks([]);
             return;
         }
 
@@ -43,7 +44,35 @@ export default function AdminAnnouncementsPage() {
         if (template) {
             setTitle(template.subject);
             setInAppMessage(template.subject);
-            // Future: populate blocks here
+
+            // Populate blocks based on template type
+            const newBlocks: EmailBlock[] = [];
+            const generateId = () => crypto.randomUUID();
+
+            if (key === 'ANNOUNCEMENT') {
+                newBlocks.push(
+                    { id: generateId(), type: 'HEADING', content: 'Olá, estudante!', align: 'left', color: '#1e3a8a' },
+                    { id: generateId(), type: 'TEXT', content: 'Escreva aqui o conteúdo do seu aviso para todos os usuários.', align: 'left', color: '#374151' },
+                    { id: generateId(), type: 'BUTTON', label: 'Acessar Plataforma', url: 'https://calculadoraunivesp.com.br', bgColor: '#2563eb', txtColor: '#ffffff', align: 'left' }
+                );
+            } else if (key === 'WELCOME') {
+                newBlocks.push(
+                    { id: generateId(), type: 'HEADING', content: 'Olá, estudante!', align: 'left', color: '#1e3a8a' },
+                    { id: generateId(), type: 'TEXT', content: 'Estamos muito felizes em ter você aqui. A Calculadora Univesp foi criada para ajudar você a organizar sua jornada acadêmica.', align: 'left', color: '#374151' },
+                    { id: generateId(), type: 'TEXT', content: '💡 Dica: Comece adicionando suas notas para ver sua média calculada automaticamente.', align: 'left', color: '#1e40af' }, // Simulating HighlightBox with blue text
+                    { id: generateId(), type: 'BUTTON', label: 'Começar Agora', url: 'https://calculadoraunivesp.com.br', bgColor: '#2563eb', txtColor: '#ffffff', align: 'left' }
+                );
+            } else if (key === 'WARNING') {
+                newBlocks.push(
+                    { id: generateId(), type: 'HEADING', content: 'Atenção', align: 'left', color: '#1e3a8a' },
+                    { id: generateId(), type: 'TEXT', content: 'Detectamos uma atividade que viola nossos termos de uso:', align: 'left', color: '#374151' },
+                    { id: generateId(), type: 'TEXT', content: '⚠️ [Motivo da moderação aqui]', align: 'left', color: '#b91c1c' },
+                    { id: generateId(), type: 'TEXT', content: 'Por favor, revise nossas diretrizes para evitar restrições em sua conta.', align: 'left', color: '#374151' },
+                    { id: generateId(), type: 'BUTTON', label: 'Ler Diretrizes', url: 'https://calculadoraunivesp.com.br/termos', bgColor: '#dc2626', txtColor: '#ffffff', align: 'left' }
+                );
+            }
+
+            setBlocks(newBlocks);
         }
     };
 
@@ -74,7 +103,7 @@ export default function AdminAnnouncementsPage() {
             }
 
             const emailHtml = renderEmailBlocks(blocks);
-console.log(type);
+            console.log(type);
             const res = await createSystemAnnouncement({
                 title,
                 message: inAppMessage || 'Verifique seu email para mais detalhes.',

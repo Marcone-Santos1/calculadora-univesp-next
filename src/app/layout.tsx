@@ -91,7 +91,7 @@ export default function RootLayout({
           </AppStateProvider>
         </SessionProvider>
       </ToastProvider>
-      <CookieConsent/>
+      {/*<CookieConsent/>*/}
       </body>
       </html>
   );
