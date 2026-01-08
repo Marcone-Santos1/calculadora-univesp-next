@@ -149,6 +149,24 @@ export const GradeCalculator = () => {
 
   return (
     <div className="min-h-[calc(100vh-67px)] flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 px-4 py-12 relative">
+
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white py-5 px-6 text-center relative overflow-hidden mb-6">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-2">
+          <span className="font-bold bg-white/20 px-2 py-0.5 rounded text-sm">NOVIDADE</span>
+          <p className="text-sm md:text-base font-medium">
+            🎉 <strong>Histórico!</strong> Batemos a meta de 1.000 questões cadastradas. 
+            <Link 
+                href="/questoes" 
+                  className="bg-white text-blue-600 px-4 ml-2 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition"
+              >
+                  Acesse
+              </Link>
+          </p>
+        </div>
+        
+        {/* Efeito de confete CSS ou imagem de fundo opcional */}
+      </div>
+
       <div
         className="google-auto-ads-ignore max-w-screen-lg w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-80 transition-all duration-300">
         <div className="flex items-center justify-center space-x-2 mb-6">
