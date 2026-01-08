@@ -72,12 +72,8 @@ export async function deleteQuestion(id: string) {
     // Email Notification
     if (question.user.email) {
       const template = (await import('@/lib/email-templates')).PredefinedTemplates.WARNING;
-      const html = (await import('@/lib/email-templates')).BaseEmailTemplate(
-        template.body(`Sua questão "${question.title}" foi removida pois violava nossas diretrizes de comunidade.`),
-        template.subject
-      );
 
-      await EmailService.sendEmail({ email: question.user.email, name: question.user.name || 'User' }, template.subject, html);
+      await EmailService.sendEmail({ email: question.user.email, name: question.user.name || 'User' }, template.subject, template.body(`Sua questão "${question.title}" foi removida pois violava nossas diretrizes de comunidade.`));
     }
 
     // Notify user
@@ -187,14 +183,13 @@ export async function toggleQuestionVerification(id: string, correctAlternativeI
 
     // Email Notification
     if (question.user.email) {
-      const { PredefinedTemplates, BaseEmailTemplate } = await import('@/lib/email-templates');
+      const { PredefinedTemplates } = await import('@/lib/email-templates');
       const template = PredefinedTemplates.VERIFICATION_APPROVED;
-      const html = BaseEmailTemplate(template.body(question.title), template.subject);
 
       await EmailService.sendEmail(
         { email: question.user.email, name: question.user.name || 'User' },
         template.subject,
-        html
+        template.body(question.title)
       );
     }
   } else {
@@ -291,17 +286,13 @@ export async function deleteComment(id: string) {
 
   // Email Notification
   if (comment.user.email) {
-    const { PredefinedTemplates, BaseEmailTemplate } = await import('@/lib/email-templates');
+    const { PredefinedTemplates } = await import('@/lib/email-templates');
     const template = PredefinedTemplates.WARNING;
-    const html = BaseEmailTemplate(
-      template.body(`Seu comentário na questão "${comment.question.title}" foi removido pela moderação.`),
-      template.subject
-    );
 
     await EmailService.sendEmail(
       { email: comment.user.email, name: comment.user.name || 'User' },
       template.subject,
-      html
+      template.body(`Seu comentário "${comment.text}" na questão "${comment.question.title}" foi removido pela moderação.`)
     );
   }
 
