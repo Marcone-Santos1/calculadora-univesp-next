@@ -186,7 +186,7 @@ async function main() {
                         },
                         comments: {
                             create: {
-                                text: q.feedback,
+                                text: q.feedback || '',
                                 userId: ADMIN_USER_ID
                             }
                         }
