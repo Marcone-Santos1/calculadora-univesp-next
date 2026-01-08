@@ -4,21 +4,27 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-export async function getNotifications(userId: string) {
-    return await prisma.notification.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 20, // Limit to last 20 notifications
-    });
-}
+// Combined data fetch for efficiency and to reduce connection pool usage
+// Combined data fetch for efficiency and to reduce connection pool usage
+export async function getNotificationData(userId: string) {
+    const [notifications, unreadCount] = await prisma.$transaction(async (tx) => {
+        const data = await tx.notification.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+        });
 
-export async function getUnreadCount(userId: string) {
-    return await prisma.notification.count({
-        where: {
-            userId,
-            read: false
-        }
+        const count = await tx.notification.count({
+            where: {
+                userId,
+                read: false
+            }
+        });
+
+        return [data, count];
     });
+
+    return { notifications, unreadCount };
 }
 
 export async function markAsRead(notificationId: string) {

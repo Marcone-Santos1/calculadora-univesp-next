@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { FaBell, FaTrophy, FaStar, FaComment, FaReply, FaHeart, FaCheckCircle, FaExclamationTriangle, FaTrash, FaBullhorn } from 'react-icons/fa';
 import Link from 'next/link';
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from '@/actions/notification-actions';
+import { getNotificationData, markAsRead, markAllAsRead } from '@/actions/notification-actions';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,10 +28,7 @@ export function NotificationBell() {
         if (session?.user?.id) {
             setIsLoading(true);
             try {
-                const [data, count] = await Promise.all([
-                    getNotifications(session.user.id),
-                    getUnreadCount(session.user.id)
-                ]);
+                const { notifications: data, unreadCount: count } = await getNotificationData(session.user.id);
                 setNotifications(data);
                 setUnreadCount(count);
             } finally {
@@ -42,8 +39,8 @@ export function NotificationBell() {
 
     useEffect(() => {
         fetchNotifications();
-        // Poll every minute
-        const interval = setInterval(fetchNotifications, 60000);
+        // Poll every 2 minutes to conserve database connections
+        const interval = setInterval(fetchNotifications, 120000);
         return () => clearInterval(interval);
     }, [fetchNotifications]);
 

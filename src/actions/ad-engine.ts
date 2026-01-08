@@ -170,39 +170,43 @@ export async function getAdsForFeed(count: number = 1) {
         // Track View (Increment views counter + Create Event Log)
         // We do this asynchronously to not slow down response
         (async () => {
-            // Basic view increment
-            await db.adCreative.update({ where: { id: creative.id }, data: { views: { increment: 1 } } });
-            await db.adDailyMetrics.upsert({
-                where: { campaignId_date: { campaignId: campaign.id, date: new Date(new Date().toDateString()) } },
-                create: { campaignId: campaign.id, date: new Date(new Date().toDateString()), views: 1 },
-                update: { views: { increment: 1 } }
-            });
+            try {
+                // Basic view increment
+                await db.adCreative.update({ where: { id: creative.id }, data: { views: { increment: 1 } } });
+                await db.adDailyMetrics.upsert({
+                    where: { campaignId_date: { campaignId: campaign.id, date: new Date(new Date().toDateString()) } },
+                    create: { campaignId: campaign.id, date: new Date(new Date().toDateString()), views: 1 },
+                    update: { views: { increment: 1 } }
+                });
 
-            await db.adCreativeDailyMetrics.upsert({
-                where: { creativeId_date: { creativeId: creative.id, date: new Date(new Date().toDateString()) } },
-                create: { creativeId: creative.id, date: new Date(new Date().toDateString()), views: 1 },
-                update: { views: { increment: 1 } }
-            });
+                await db.adCreativeDailyMetrics.upsert({
+                    where: { creativeId_date: { creativeId: creative.id, date: new Date(new Date().toDateString()) } },
+                    create: { creativeId: creative.id, date: new Date(new Date().toDateString()), views: 1 },
+                    update: { views: { increment: 1 } }
+                });
 
-            // CPM Billing Logic:
-            // If CPM, we should theoretically charge here.
-            // Simplification: If 1 view, cost is costValue / 1000.
-            // If costValue >= 1000 (R$ 10.00 CPM), charge 1 cent.
-            // If costValue < 1000, use probability.
-            if (campaign.billingType === 'CPM') {
-                const chance = campaign.costValue / 1000;
-                // If costValue is 200 (R$ 2.00), chance is 0.2. 20% chance to pay 1 cent.
-                // If costValue is 1500 (R$ 15.00), chance is 1.5. Always pay 1 cent, 50% chance to pay 2 cents?
-                // Easier: Charge floor(chance) + probabilistic remainder.
+                // CPM Billing Logic:
+                // If CPM, we should theoretically charge here.
+                // Simplification: If 1 view, cost is costValue / 1000.
+                // If costValue >= 1000 (R$ 10.00 CPM), charge 1 cent.
+                // If costValue < 1000, use probability.
+                if (campaign.billingType === 'CPM') {
+                    const chance = campaign.costValue / 1000;
+                    // If costValue is 200 (R$ 2.00), chance is 0.2. 20% chance to pay 1 cent.
+                    // If costValue is 1500 (R$ 15.00), chance is 1.5. Always pay 1 cent, 50% chance to pay 2 cents?
+                    // Easier: Charge floor(chance) + probabilistic remainder.
 
-                const baseCharge = Math.floor(chance);
-                const remainder = chance - baseCharge;
-                let chargeAmount = baseCharge;
-                if (Math.random() < remainder) chargeAmount += 1;
+                    const baseCharge = Math.floor(chance);
+                    const remainder = chance - baseCharge;
+                    let chargeAmount = baseCharge;
+                    if (Math.random() < remainder) chargeAmount += 1;
 
-                if (chargeAmount > 0) {
-                    await processAdCharge(campaign.id, creative.id, campaign.advertiserId, chargeAmount, 'VIEW');
+                    if (chargeAmount > 0) {
+                        await processAdCharge(campaign.id, creative.id, campaign.advertiserId, chargeAmount, 'VIEW');
+                    }
                 }
+            } catch (error) {
+                console.error('Background ad tracking failed:', error);
             }
         })();
     }
