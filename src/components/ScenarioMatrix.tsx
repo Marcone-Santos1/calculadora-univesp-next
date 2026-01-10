@@ -30,7 +30,7 @@ export const ScenarioMatrix = ({ showResult }: { showResult: boolean }) => {
                     </div>
 
                     {/* Grid Responsivo: 2 colunas no celular, até 6 no PC */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
                         {avaScores.map((ava) => {
                             const needed = simularRegular({ g1: ava, g2: 0 });
                             const neededExam = simularExame({ g1: ava, g2: 0 });
@@ -85,7 +85,7 @@ export const ScenarioMatrix = ({ showResult }: { showResult: boolean }) => {
                                         <span className="text-[10px] uppercase font-bold text-gray-400">Média final</span>
                                         <span className="font-bold text-gray-700 dark:text-gray-300">{ava}</span>
                                     </div>
-                                    
+
                                     {/* Corpo: Seta e Resultado */}
                                     <div className="flex items-center justify-between">
                                         <FaArrowRight className="text-gray-300 text-xs" />
