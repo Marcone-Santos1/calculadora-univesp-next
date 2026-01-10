@@ -86,6 +86,7 @@ model User {
   loginStreak   Int              @default(0)
   achievements  UserAchievement[]
   commentVotes  CommentVote[]
+  mockExams     MockExam[]
 }
 
 model UserAchievement {
@@ -150,6 +151,7 @@ model Question {
   alternatives Alternative[]
   comments     Comment[]
   reports      Report[]
+  mockAppearances MockExamQuestion[]
 }
 
 model Alternative {
@@ -508,4 +510,43 @@ model AdTransaction {
   metadata     Json?
   
   createdAt    DateTime            @default(now())
+}
+
+// --- MOCK EXAMS (Simulados) ---
+
+enum MockExamStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model MockExam {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status      MockExamStatus @default(IN_PROGRESS)
+  score       Int            @default(0) // Correct answers count
+  totalQuestions Int         @default(0)
+  
+  xpEarned    Int            @default(0)
+  timeSpent   Int            @default(0) // In seconds
+  
+  createdAt   DateTime       @default(now())
+  finishedAt  DateTime?
+
+  questions   MockExamQuestion[]
+}
+
+model MockExamQuestion {
+  id          String      @id @default(cuid())
+  mockExamId  String
+  mockExam    MockExam    @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
+  
+  questionId  String
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  selectedAlternativeId String? // Null if not answered
+  isCorrect   Boolean     @default(false)
+  
+  createdAt   DateTime    @default(now()) 
 }

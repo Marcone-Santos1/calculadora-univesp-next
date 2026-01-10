@@ -44,6 +44,11 @@ export function ProfileLayout({ children, currentUserId }: ProfileLayoutProps) {
             href: '/perfil/importar',
             label: 'Importar Provas',
             icon: Upload
+        },
+        {
+            href: '/perfil/aac',
+            label: 'AAC',
+            icon: Award
         }
     ];
 

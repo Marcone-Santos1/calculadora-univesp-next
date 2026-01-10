@@ -264,7 +264,7 @@ export const PredefinedTemplates = {
     subject: '🔥 Sua ofensiva está em perigo!',
     body: (days: number) => `
       ${EmailComponents.Heading('Não deixe a chama apagar! 🔥', { align: 'center', color: '#dc2626' })}
-      ${EmailComponents.Text(`Você está há **${days} dias** estudando consecutivamente. Impressionante!`, { align: 'center', fontSize: '18px' })}
+      ${EmailComponents.Text(`Você está há ${days} dias estudando consecutivamente. Impressionante!`, { align: 'center', fontSize: '18px' })}
       ${EmailComponents.Text('Mas notamos que você ainda não apareceu por aqui hoje. Sua ofensiva vai zerar se você não fizer login até a meia-noite.', { align: 'center' })}
       ${EmailComponents.Button('Salvar Minha Ofensiva', `${process.env.NEXT_PUBLIC_APP_URL}/login`, { align: 'center', bgColor: '#dc2626' })}
     `

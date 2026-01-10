@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
+
+    const session = await auth();
+
 
     // Protect /admin routes
     if (pathname.startsWith('/admin')) {
-        const session = await auth();
 
         if (!session) {
             // Not authenticated, redirect to home
@@ -21,9 +23,14 @@ export async function proxy(request: NextRequest) {
         }
     }
 
+    if (!session) {
+        // Not authenticated, redirect to home
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     return NextResponse.next();
 }
 
 export const config = {
-    matcher: ['/admin/:path*']
+    matcher: ['/admin/:path*', '/perfil/:path*', '/simulados/:path*']
 };

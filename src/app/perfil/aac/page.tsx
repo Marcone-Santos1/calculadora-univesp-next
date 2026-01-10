@@ -10,6 +10,7 @@ import { ReportGenerator } from "@/components/aac/ReportGenerator";
 import { ActivityDetailsModal } from "@/components/aac/ActivityDetailsModal";
 import { FaSync, FaPlus } from "react-icons/fa";
 import { ActivityData } from "@/actions/aac-actions";
+import { redirect } from "next/navigation";
 
 export default function AacPage() {
     const { data: session } = useSession();
@@ -40,8 +41,8 @@ export default function AacPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 pt-24 px-4">
-            <div className="container mx-auto max-w-5xl">
+        <div className="pb-8 pt-8 px-4">
+            <div className="max-w-5xl mx-auto">
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -127,6 +128,6 @@ export default function AacPage() {
                     </>
                 )}
             </div>
-        </main>
+        </div>
     )
 }

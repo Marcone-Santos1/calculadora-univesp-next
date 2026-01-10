@@ -215,12 +215,18 @@ export async function checkAchievements(userId: string) {
 
         // 3. Award and Notify
         for (const achievement of newUnlocks) {
-            await prisma.userAchievement.create({
-                data: {
-                    userId,
-                    achievementId: achievement.id
-                }
-            });
+            try {
+                await prisma.userAchievement.create({
+                    data: {
+                        userId,
+                        achievementId: achievement.id
+                    }
+                });
+            } catch (error: any) {
+                // If it already exists (P2002), just skip creation and notification
+                if (error.code === 'P2002') continue;
+                throw error;
+            }
 
             // Award Achievement Points
             await awardReputation(userId, achievement.points, `ACHIEVEMENT_${achievement.id}`);

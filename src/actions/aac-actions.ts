@@ -81,7 +81,7 @@ export async function saveActivity(data: ActivityData) {
             }
         });
     }
-    revalidatePath("/aac");
+    revalidatePath("/perfil/aac");
 }
 
 export async function deleteActivity(id: string) {
@@ -97,7 +97,7 @@ export async function deleteActivity(id: string) {
     }
 
     await prisma.aacActivity.delete({ where: { id } });
-    revalidatePath("/aac");
+    revalidatePath("/perfil/aac");
 }
 
 // Sync local data to server
@@ -145,7 +145,7 @@ export async function syncActivities(localActivities: ActivityData[]) {
         addedCount++;
     }
 
-    revalidatePath("/aac");
+    revalidatePath("/perfil/aac");
     return { added: addedCount, total: existing.length + addedCount };
 }
 

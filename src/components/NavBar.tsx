@@ -50,13 +50,11 @@ export const NavBar = () => {
   };
 
   const navItems = [
-    { label: 'Início', href: '/' },
     { label: 'Questões', href: '/questoes' },
-    { label: 'Placar', href: '/placar' },
     { label: 'Blog', href: '/blog' },
     { label: 'Sobre', href: '/sobre' },
-    { label: 'Calculadora CR', href: '/calculadora-cr' },
-    { label: 'AAC', href: '/aac' },
+    { label: 'Simulados', href: '/simulados' },
+    { label: 'AAC', href: '/perfil/aac' },
     { label: 'Anuncie', href: '/anuncie' },
   ];
 
@@ -67,7 +65,7 @@ export const NavBar = () => {
 
       <div className="container mx-auto px-4 h-20 relative">
         <div className="flex h-full items-center justify-between gap-6">
-        {/* Left: Brand */}
+          {/* Left: Brand */}
           <Link href="/" className="relative z-10 flex items-center gap-2 group">
             <Image src="/favicon.ico" alt="Logo" width={50} height={50} />
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 tracking-tight">

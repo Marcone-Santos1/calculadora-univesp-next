@@ -78,7 +78,7 @@ export default function RootLayout({
       <GoogleAnalytics gaId="G-3141WNQQZQ" />
       <AdsenseScript />
       <AdsRefresher />
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-50 transition-colors duration-300`}>
         <ToastProvider>
           <SessionProvider>
             <AppStateProvider>
