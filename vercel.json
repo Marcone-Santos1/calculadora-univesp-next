@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/streak-guard",
+      "schedule": "0 19 * * *"
+    }
+  ]
+}
