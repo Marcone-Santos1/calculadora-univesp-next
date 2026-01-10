@@ -44,11 +44,9 @@ export function AchievementsList({ unlockedIds }: AchievementsListProps) {
                             </p>
                         </div>
 
-                        {isUnlocked && (
-                            <div className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded-full">
-                                +{achievement.points}
-                            </div>
-                        )}
+                        <div className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] font-bold text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded-full">
+                            +{achievement.points}
+                        </div>
                     </div>
                 );
             })}

@@ -29,13 +29,31 @@ interface Comment {
     };
 }
 
+import { Pagination } from '@/components/ui/Pagination';
+import { useSearchParams } from 'next/navigation';
+
 interface UserActivityListProps {
-    questions: Question[];
-    comments: Comment[];
+    questions: {
+        data: Question[];
+        meta: {
+            page: number;
+            totalPages: number;
+            total: number;
+        };
+    };
+    comments: {
+        data: Comment[];
+        meta: {
+            page: number;
+            totalPages: number;
+            total: number;
+        };
+    };
 }
 
 export function UserActivityList({ questions, comments }: UserActivityListProps) {
     const [activeTab, setActiveTab] = useState<'questions' | 'comments'>('questions');
+    const searchParams = useSearchParams();
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -50,7 +68,7 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                 >
                     <div className="flex items-center justify-center gap-2">
                         <FaQuestionCircle />
-                        Minhas Questões ({questions.length})
+                        Minhas Questões ({questions.meta.total})
                     </div>
                     {activeTab === 'questions' && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
@@ -65,7 +83,7 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                 >
                     <div className="flex items-center justify-center gap-2">
                         <FaComment />
-                        Meus Comentários ({comments.length})
+                        Meus Comentários ({comments.meta.total})
                     </div>
                     {activeTab === 'comments' && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />
@@ -77,35 +95,44 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
             <div className="p-6">
                 {activeTab === 'questions' ? (
                     <div className="space-y-4">
-                        {questions.length > 0 ? (
-                            questions.map((question) => (
-                                <Link
-                                    key={question.id}
-                                    href={`/questoes/${question.id}`}
-                                    className="block p-4 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all group"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <span className="inline-block px-2 py-1 mb-2 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
-                                                {question.subject.name}
-                                            </span>
-                                            <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                                {question.title}
-                                            </h3>
-                                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                                <span className="flex items-center gap-1">
-                                                    <FaClock className="text-xs" />
-                                                    {new Date(question.createdAt).toLocaleDateString('pt-BR')}
+                        {questions.data.length > 0 ? (
+                            <>
+                                {questions.data.map((question) => (
+                                    <Link
+                                        key={question.id}
+                                        href={`/questoes/${question.id}`}
+                                        className="block p-4 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all group"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <span className="inline-block px-2 py-1 mb-2 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                                                    {question.subject.name}
                                                 </span>
-                                                <span className="flex items-center gap-1">
-                                                    <FaComment className="text-xs" />
-                                                    {question._count.comments} comentários
-                                                </span>
+                                                <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                    {question.title}
+                                                </h3>
+                                                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                                    <span className="flex items-center gap-1">
+                                                        <FaClock className="text-xs" />
+                                                        {new Date(question.createdAt).toLocaleDateString('pt-BR')}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <FaComment className="text-xs" />
+                                                        {question._count.comments} comentários
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
-                            ))
+                                    </Link>
+                                ))}
+                                <Pagination
+                                    currentPage={questions.meta.page}
+                                    totalPages={questions.meta.totalPages}
+                                    baseUrl=""
+                                    searchParams={Object.fromEntries(searchParams.entries())}
+                                    pageParamName="qPage"
+                                />
+                            </>
                         ) : (
                             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                                 Você ainda não fez nenhuma pergunta.
@@ -114,27 +141,36 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {comments.length > 0 ? (
-                            comments.map((comment) => (
-                                <Link
-                                    key={comment.id}
-                                    href={`/questoes/${comment.question.id}`}
-                                    className="block p-4 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all group"
-                                >
-                                    <div className="mb-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                                            Em: <span className="font-medium text-gray-900 dark:text-white">{comment.question.title}</span>
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-700 dark:text-gray-300 line-clamp-2">
-                                        "{comment.text}"
-                                    </p>
-                                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                        <FaClock />
-                                        {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
-                                    </div>
-                                </Link>
-                            ))
+                        {comments.data.length > 0 ? (
+                            <>
+                                {comments.data.map((comment) => (
+                                    <Link
+                                        key={comment.id}
+                                        href={`/questoes/${comment.question.id}`}
+                                        className="block p-4 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all group"
+                                    >
+                                        <div className="mb-2">
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                Em: <span className="font-medium text-gray-900 dark:text-white">{comment.question.title}</span>
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-700 dark:text-gray-300 line-clamp-2">
+                                            "{comment.text}"
+                                        </p>
+                                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <FaClock />
+                                            {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
+                                        </div>
+                                    </Link>
+                                ))}
+                                <Pagination
+                                    currentPage={comments.meta.page}
+                                    totalPages={comments.meta.totalPages}
+                                    baseUrl=""
+                                    searchParams={Object.fromEntries(searchParams.entries())}
+                                    pageParamName="cPage"
+                                />
+                            </>
                         ) : (
                             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                                 Você ainda não fez nenhum comentário.

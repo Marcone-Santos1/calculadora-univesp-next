@@ -480,12 +480,10 @@ export async function voteOnAlternative(alternativeId: string) {
         });
 
         // Award reputation to question author for receiving a vote
-        // Award reputation to question author for receiving a vote
         await awardReputation(alternative.question.userId, REPUTATION_EVENTS.VOTE_RECEIVED.points, 'VOTE_RECEIVED');
         await checkAchievements(alternative.question.userId);
     }
 
-    // Award reputation to voter for participating
     // Award reputation to voter for participating
     await awardReputation(session.user.id, REPUTATION_EVENTS.VOTE_CAST.points, 'VOTE_CAST');
     await checkAchievements(session.user.id);
@@ -538,7 +536,6 @@ export async function createComment(questionId: string, text: string, parentId?:
             });
 
             // Award reputation to question author for engagement
-            // Award reputation to question author for engagement
             await awardReputation(comment.question.userId, REPUTATION_EVENTS.COMMENT_RECEIVED.points, 'COMMENT_RECEIVED');
             await checkAchievements(comment.question.userId);
         }
@@ -552,11 +549,21 @@ export async function createComment(questionId: string, text: string, parentId?:
     revalidatePath(`/questoes/${questionId}`);
 }
 
+import { EmailService } from '@/lib/email-service';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
 export async function requestVerification(questionId: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error('Unauthorized');
     }
+
+    const question = await prisma.question.findUnique({
+        where: { id: questionId },
+        include: { user: true }
+    });
+
+    if (!question) throw new Error('Question not found');
 
     await prisma.question.update({
         where: { id: questionId },
@@ -565,6 +572,55 @@ export async function requestVerification(questionId: string) {
             verificationRequestDate: new Date()
         }
     });
+
+    if (!session.user.email) {
+        throw new Error('User email not found');
+    }
+
+    // Send Emails
+    const requesterEmail = session.user.email;
+    const requesterName = session.user.name || 'Usuário';
+    const authorEmail = question.user.email;
+    const questionLink = `${process.env.NEXT_PUBLIC_APP_URL + '/questoes'}/${questionId}`;
+
+    // Dynamic import to avoid circular defaults if any (though templates is lib)
+    const { PredefinedTemplates } = await import('@/lib/email-templates');
+
+    // 1. Send to Admin
+    if (ADMIN_EMAIL) {
+        const template = PredefinedTemplates.VERIFICATION_REQUEST_ADMIN;
+        const html = template.body(question.title, requesterName, requesterEmail, questionLink);
+
+        await EmailService.sendEmail(
+            ADMIN_EMAIL,
+            `${template.subject}: ${question.title}`,
+            html
+        );
+    }
+
+    // 2. Send to Requester (Confirmation)
+    if (requesterEmail) {
+        const template = PredefinedTemplates.VERIFICATION_REQUEST_CONFIRMATION;
+        const html = template.body(requesterName, question.title, questionLink);
+
+        await EmailService.sendEmail(
+            requesterEmail,
+            `${template.subject}: ${question.title}`,
+            html
+        );
+    }
+
+    // 3. Send to Author (if different from requester)
+    if (authorEmail && authorEmail !== requesterEmail) {
+        const template = PredefinedTemplates.VERIFICATION_REQUEST_AUTHOR;
+        const html = template.body(question.title, questionLink);
+
+        await EmailService.sendEmail(
+            authorEmail,
+            `${template.subject}: ${question.title}`,
+            html
+        );
+    }
 
     revalidatePath(`/questoes/${questionId}`);
     revalidatePath('/admin/questions');

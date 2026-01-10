@@ -31,13 +31,9 @@ interface Question {
 
 interface QuestionsListProps {
     questions: Question[];
-    verificationRequests?: Question[];
-    initialSearch?: string;
 }
 
-export function QuestionsList({ questions, verificationRequests = [], initialSearch = '' }: QuestionsListProps) {
-    const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
-    const [searchTerm, setSearchTerm] = useState(initialSearch);
+export function QuestionsList({ questions }: QuestionsListProps) {
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
@@ -46,31 +42,11 @@ export function QuestionsList({ questions, verificationRequests = [], initialSea
     const { showToast } = useToast();
     const router = useRouter();
 
-    const displayQuestions = activeTab === 'all' ? questions : verificationRequests;
-
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-    };
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchTerm !== initialSearch) {
-                if (searchTerm) {
-                    router.push(`/admin/questions?search=${encodeURIComponent(searchTerm)}`);
-                } else {
-                    router.push('/admin/questions');
-                }
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [searchTerm, router, initialSearch]);
-
     const handleSelectAll = () => {
-        if (selectedIds.size === displayQuestions.length) {
+        if (selectedIds.size === questions.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(displayQuestions.map(q => q.id)));
+            setSelectedIds(new Set(questions.map(q => q.id)));
         }
     };
 
@@ -144,45 +120,6 @@ export function QuestionsList({ questions, verificationRequests = [], initialSea
 
     return (
         <>
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 mb-6 pb-4">
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`pb-2 px-1 font-medium transition-colors relative ${activeTab === 'all'
-                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                            }`}
-                    >
-                        All Questions
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('requests')}
-                        className={`pb-2 px-1 font-medium transition-colors relative flex items-center gap-2 ${activeTab === 'requests'
-                            ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                            }`}
-                    >
-                        Verification Requests
-                        {verificationRequests.length > 0 && (
-                            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                                {verificationRequests.length}
-                            </span>
-                        )}
-                    </button>
-                </div>
-
-                <div className="relative w-full sm:w-64">
-                    <input
-                        type="text"
-                        placeholder="Search questions..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    />
-                    <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
-                </div>
-            </div>
-
             <div className="space-y-4">
                 {selectedIds.size > 0 && (
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex items-center justify-between animate-fadeIn mb-4">
@@ -209,14 +146,14 @@ export function QuestionsList({ questions, verificationRequests = [], initialSea
                 <div className="flex items-center gap-3 mb-2 px-2">
                     <input
                         type="checkbox"
-                        checked={displayQuestions.length > 0 && selectedIds.size === displayQuestions.length}
+                        checked={questions.length > 0 && selectedIds.size === questions.length}
                         onChange={handleSelectAll}
                         className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                     <span className="text-sm text-gray-500">Select All</span>
                 </div>
 
-                {displayQuestions.map((question) => (
+                {questions.map((question) => (
                     <div
                         key={question.id}
                         className={`bg-white dark:bg-gray-800 rounded-lg overflow-x-auto shadow-sm border p-6 transition-colors ${selectedIds.has(question.id)
@@ -299,7 +236,7 @@ export function QuestionsList({ questions, verificationRequests = [], initialSea
                         </div>
                     </div>
                 ))}
-                {displayQuestions.length === 0 && (
+                {questions.length === 0 && (
                     <p className="text-center text-gray-500 py-8">No questions found</p>
                 )}
             </div>

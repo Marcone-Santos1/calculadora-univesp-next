@@ -18,11 +18,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     events: {
         async createUser({ user }) {
             const { EmailService } = await import('@/lib/email-service');
-            const { PredefinedTemplates, BaseEmailTemplate } = await import('@/lib/email-templates');
+            const { PredefinedTemplates } = await import('@/lib/email-templates');
 
             if (user.email) {
                 const template = PredefinedTemplates.WELCOME;
-                const html = BaseEmailTemplate(template.body(user.name?.split(' ')[0] || 'Estudante'), template.subject);
+                const html = template.body(user.name?.split(' ')[0] || 'Estudante');
 
                 await EmailService.sendEmail(
                     { email: user.email, name: user.name || 'User' },

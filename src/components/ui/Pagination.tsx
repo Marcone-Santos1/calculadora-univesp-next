@@ -6,16 +6,17 @@ interface PaginationProps {
     totalPages: number;
     baseUrl: string;
     searchParams: any;
+    pageParamName?: string;
 }
 
-export const Pagination = ({ currentPage, totalPages, baseUrl, searchParams }: PaginationProps) => {
+export const Pagination = ({ currentPage, totalPages, baseUrl, searchParams, pageParamName = 'page' }: PaginationProps) => {
     // Helper to generate URL for a page
     const getPageUrl = (page: number) => {
         const params = new URLSearchParams(searchParams);
         if (page === 1) {
-            params.delete('page'); // Cleaner URL for first page
+            params.delete(pageParamName); // Cleaner URL for first page
         } else {
-            params.set('page', page.toString());
+            params.set(pageParamName, page.toString());
         }
         const queryString = params.toString();
         return `${baseUrl}${queryString ? `?${queryString}` : ''}`;

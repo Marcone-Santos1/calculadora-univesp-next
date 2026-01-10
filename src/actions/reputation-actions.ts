@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { REPUTATION_EVENTS, ReputationEvent } from '@/utils/reputation-events';
 import { ACHIEVEMENTS, getAchievement } from '@/utils/achievements';
 import { getLevel } from '@/utils/reputation';
+import { EmailService } from '@/lib/email-service';
+import { PredefinedTemplates } from '@/lib/email-templates';
 
 export async function awardReputation(userId: string, amount: number, reason: string) {
     try {
@@ -178,11 +180,12 @@ export async function checkAchievements(userId: string) {
             prisma.vote.count({ where: { alternative: { question: { userId } } } }),
             // Count votes on MY comments
             prisma.commentVote.count({ where: { comment: { userId } } }),
-            prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } })
+            prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } }),
         ]);
 
         if (!user) return;
 
+        const totalUnlocked = unlockedAchievements.length;
         const unlockedIds = new Set(unlockedAchievements.map(ua => ua.achievementId));
         const { level } = getLevel(user.reputation || 0);
 
@@ -195,7 +198,8 @@ export async function checkAchievements(userId: string) {
             receivedCommentVotes: receivedCommentVotes,
             streak: user.loginStreak || 0,
             level: level,
-            isProfileComplete: !!(user.name && user.bio && user.image)
+            isProfileComplete: !!(user.name && user.bio && user.image),
+            unlockedAchievementsCount: totalUnlocked
         };
 
         // 2. Check Conditions
@@ -229,6 +233,20 @@ export async function checkAchievements(userId: string) {
                     message: `Você desbloqueou a conquista: ${achievement.icon} ${achievement.title}!`
                 }
             });
+
+            if (!user.email) continue;
+
+            const template = PredefinedTemplates.ACHIEVEMENT;
+            const profileLink = `${process.env.NEXT_PUBLIC_APP_URL + '/perfil'}`;
+
+            const html = template.body(user.name || 'Estudante', achievement, profileLink);
+
+            // send email
+            await EmailService.sendEmail(
+                user.email,
+                `Parabéns! Você desbloqueou a conquista: ${achievement.icon} ${achievement.title}`,
+                html,
+            );
         }
 
     } catch (error) {

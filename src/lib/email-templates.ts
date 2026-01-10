@@ -1,3 +1,5 @@
+import { Achievement } from "@/utils/achievements";
+
 export const BaseEmailTemplate = (content: string, title?: string) => `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -58,25 +60,25 @@ export const BaseEmailTemplate = (content: string, title?: string) => `
 // --- Block Types ---
 
 export type EmailBlock =
-    | { id: string; type: 'HEADING'; content: string; align: 'left' | 'center' | 'right'; color: string }
-    | { id: string; type: 'TEXT'; content: string; align: 'left' | 'center' | 'right'; color: string }
-    | { id: string; type: 'BUTTON'; label: string; url: string; bgColor: string; txtColor: string; align: 'left' | 'center' | 'right' }
-    | { id: string; type: 'IMAGE'; url: string; alt: string; width: string; align: 'left' | 'center' | 'right' }
-    | { id: string; type: 'SPACER'; height: number }
-    | { id: string; type: 'DIVIDER'; color: string };
+  | { id: string; type: 'HEADING'; content: string; align: 'left' | 'center' | 'right'; color: string }
+  | { id: string; type: 'TEXT'; content: string; align: 'left' | 'center' | 'right'; color: string }
+  | { id: string; type: 'BUTTON'; label: string; url: string; bgColor: string; txtColor: string; align: 'left' | 'center' | 'right' }
+  | { id: string; type: 'IMAGE'; url: string; alt: string; width: string; align: 'left' | 'center' | 'right' }
+  | { id: string; type: 'SPACER'; height: number }
+  | { id: string; type: 'DIVIDER'; color: string };
 
 // --- Components ---
 
 export const EmailComponents = {
-    Heading: (text: string, options: { align?: string; color?: string } = {}) => `
+  Heading: (text: string, options: { align?: string; color?: string } = {}) => `
     <h1 style="color:${options.color || '#1e3a8a'}; font-size:24px; font-weight:700; margin:0 0 16px; text-align:${options.align || 'left'};">${text}</h1>
   `,
 
-    Text: (text: string, options: { align?: string; color?: string; fontSize?: string } = {}) => `
+  Text: (text: string, options: { align?: string; color?: string; fontSize?: string } = {}) => `
     <p style="margin:0 0 16px; font-size:${options.fontSize || '16px'}; line-height:1.6; color:${options.color || '#374151'}; text-align:${options.align || 'left'}; white-space: pre-wrap;">${text}</p>
   `,
 
-    Button: (label: string, url: string, options: { bgColor?: string; txtColor?: string; align?: string } = {}) => `
+  Button: (label: string, url: string, options: { bgColor?: string; txtColor?: string; align?: string } = {}) => `
     <div style="margin: 24px 0; text-align:${options.align || 'left'};">
       <a href="${url}" style="display:inline-block; background-color:${options.bgColor || '#2563eb'}; color:${options.txtColor || '#ffffff'}; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:600; font-size:16px;">
         ${label}
@@ -84,21 +86,21 @@ export const EmailComponents = {
     </div>
   `,
 
-    Image: (url: string, options: { alt?: string; width?: string; align?: string } = {}) => `
+  Image: (url: string, options: { alt?: string; width?: string; align?: string } = {}) => `
     <div style="margin: 16px 0; text-align:${options.align || 'center'};">
         <img src="${url}" alt="${options.alt || ''}" style="max-width:100%; width:${options.width || 'auto'}; height:auto; border-radius:8px;" />
     </div>
   `,
 
-    Spacer: (height: number) => `
+  Spacer: (height: number) => `
     <div style="height:${height}px; line-height:${height}px;">&nbsp;</div>
   `,
 
-    Divider: (color: string = '#e5e7eb') => `
+  Divider: (color: string = '#e5e7eb') => `
     <hr style="border:none; border-top:1px solid ${color}; margin:24px 0;" />
   `,
 
-    HighlightBox: (text: string) => `
+  HighlightBox: (text: string) => `
     <div style="background-color:#eff6ff; border-left:4px solid #2563eb; padding:16px; border-radius:4px; margin: 16px 0; color:#1e40af;">
       ${text}
     </div>
@@ -106,70 +108,119 @@ export const EmailComponents = {
 };
 
 export const renderEmailBlocks = (blocks: EmailBlock[]) => {
-    return blocks.map(block => {
-        switch (block.type) {
-            case 'HEADING':
-                return EmailComponents.Heading(block.content, { align: block.align, color: block.color });
-            case 'TEXT':
-                return EmailComponents.Text(block.content, { align: block.align, color: block.color });
-            case 'BUTTON':
-                return EmailComponents.Button(block.label, block.url, { align: block.align, bgColor: block.bgColor, txtColor: block.txtColor });
-            case 'IMAGE':
-                return EmailComponents.Image(block.url, { align: block.align, width: block.width, alt: block.alt });
-            case 'SPACER':
-                return EmailComponents.Spacer(block.height);
-            case 'DIVIDER':
-                return EmailComponents.Divider(block.color);
-            default:
-                return '';
-        }
-    }).join('');
+  return blocks.map(block => {
+    switch (block.type) {
+      case 'HEADING':
+        return EmailComponents.Heading(block.content, { align: block.align, color: block.color });
+      case 'TEXT':
+        return EmailComponents.Text(block.content, { align: block.align, color: block.color });
+      case 'BUTTON':
+        return EmailComponents.Button(block.label, block.url, { align: block.align, bgColor: block.bgColor, txtColor: block.txtColor });
+      case 'IMAGE':
+        return EmailComponents.Image(block.url, { align: block.align, width: block.width, alt: block.alt });
+      case 'SPACER':
+        return EmailComponents.Spacer(block.height);
+      case 'DIVIDER':
+        return EmailComponents.Divider(block.color);
+      default:
+        return '';
+    }
+  }).join('');
 };
 
 // --- Pre-defined Templates ---
 
 export const PredefinedTemplates = {
-    ANNOUNCEMENT: {
-        label: "Aviso Geral",
-        subject: "[Aviso] Novidades na Calculadora Univesp",
-        body: (message: string) => `
+  ANNOUNCEMENT: {
+    label: "Aviso Geral",
+    subject: "[Aviso] Novidades na Calculadora Univesp",
+    body: (message: string) => `
       ${EmailComponents.Heading("Olá, estudante!")}
       ${EmailComponents.Text(message)}
       ${EmailComponents.Button("Acessar Plataforma", "https://calculadoraunivesp.com.br")}
     `
-    },
+  },
 
-    WELCOME: {
-        label: "Boas-vindas",
-        subject: "Bem-vindo à Calculadora Univesp! 🚀",
-        body: (name: string) => `
+  WELCOME: {
+    label: "Boas-vindas",
+    subject: "Bem-vindo à Calculadora Univesp! 🚀",
+    body: (name: string) => `
       ${EmailComponents.Heading(`Olá, ${name}!`)}
       ${EmailComponents.Text("Estamos muito felizes em ter você aqui. A Calculadora Univesp foi criada para ajudar você a organizar sua jornada acadêmica.")}
       ${EmailComponents.HighlightBox("Dica: Comece adicionando suas notas para ver sua média calculada automaticamente.")}
       ${EmailComponents.Button("Começar Agora", "https://calculadoraunivesp.com.br")}
     `
-    },
+  },
 
-    VERIFICATION_APPROVED: {
-        label: "Questão Verificada",
-        subject: "Sua questão foi aceita! ✅",
-        body: (questionTitle: string) => `
+  VERIFICATION_APPROVED: {
+    label: "Questão Verificada",
+    subject: "Sua questão foi aceita! ✅",
+    body: (questionTitle: string) => `
       ${EmailComponents.Heading("Parabéns!")}
       ${EmailComponents.Text(`Sua questão "<strong>${questionTitle}</strong>" foi verificada por nossa equipe.`)}
       ${EmailComponents.Text("Você ganhou <strong>10 pontos de reputação</strong> por contribuir com a comunidade.")}
       ${EmailComponents.Button("Ver Questão", "https://calculadoraunivesp.com.br/questoes")}
     `
-    },
+  },
 
-    WARNING: {
-        label: "Alerta de Moderação",
-        subject: "Aviso importante sobre sua conta",
-        body: (reason: string) => `
+  WARNING: {
+    label: "Alerta de Moderação",
+    subject: "Aviso importante sobre sua conta",
+    body: (reason: string) => `
       ${EmailComponents.Heading("Atenção")}
       ${EmailComponents.Text("Detectamos uma atividade que viola nossos termos de uso:")}
       ${EmailComponents.HighlightBox(reason)}
       ${EmailComponents.Text("Por favor, revise nossas diretrizes para evitar restrições em sua conta.")}
       ${EmailComponents.Button("Ler Diretrizes", "https://calculadoraunivesp.com.br/termos")}
     `
-    }
+  },
+
+  VERIFICATION_REQUEST_ADMIN: {
+    label: "Nova Validação",
+    subject: "[Admin] Solicitação de Validação",
+    body: (questionTitle: string, requesterName: string, requesterEmail: string, link: string) => `
+      ${EmailComponents.Heading("Nova Solicitação de Validação")}
+      ${EmailComponents.Text(`A questão "<strong>${questionTitle}</strong>" recebeu um pedido de validação.`)}
+      ${EmailComponents.HighlightBox(`Solicitado por: ${requesterName} (${requesterEmail})`)}
+      ${EmailComponents.Button("Ver Questão", link)}
+    `
+  },
+
+  VERIFICATION_REQUEST_CONFIRMATION: {
+    label: "Validação Recebida",
+    subject: "Recebemos seu pedido de validação",
+    body: (name: string, questionTitle: string, link: string) => `
+      ${EmailComponents.Heading(`Olá, ${name}`)}
+      ${EmailComponents.Text(`Recebemos sua solicitação para validar a questão "<strong>${questionTitle}</strong>".`)}
+      ${EmailComponents.Text("Nossa equipe administrativa irá analisar a questão em breve.")}
+      ${EmailComponents.Button("Ver Questão", link)}
+    `
+  },
+
+  VERIFICATION_REQUEST_AUTHOR: {
+    label: "Validação na sua Questão",
+    subject: "Sua questão recebeu um pedido de validação",
+    body: (questionTitle: string, link: string) => `
+      ${EmailComponents.Heading("Sua questão está sendo analisada")}
+      ${EmailComponents.Text(`Um usuário solicitou a validação da sua questão "<strong>${questionTitle}</strong>".`)}
+      ${EmailComponents.Text("Isso significa que ela será revisada por nossa equipe para garantir sua correção e qualidade. Você será notificado se houver alterações.")}
+      ${EmailComponents.Button("Ver Questão", link)}
+    `
+  },
+
+  ACHIEVEMENT: {
+    label: "Conquista",
+    subject: "Parabéns! Você desbloqueou a conquista: ${achievement.icon} ${achievement.title}",
+    body: (name: string, achievement: Achievement, link: string) => `
+      ${EmailComponents.Heading(`Olá, ${name}`)}
+      ${EmailComponents.Text(`Parabéns! Você desbloqueou a conquista: ${achievement.icon} ${achievement.title}`)}
+      ${EmailComponents.Button("Ver Conquista", link)}
+    `
+  },
+
+  GENERIC: {
+    label: "Genérico",
+    subject: "Notificação",
+    body: (htmlContent: string) => htmlContent
+  }
 };

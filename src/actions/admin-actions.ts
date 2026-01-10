@@ -10,47 +10,75 @@ import { EmailService } from '@/lib/email-service';
 
 // ============ Question Management ============
 
-export async function getAdminQuestions(search?: string, verified?: boolean, verificationRequested?: boolean) {
+export async function getAdminQuestions(params: {
+  search?: string;
+  subjectId?: string;
+  status?: 'verified' | 'unverified' | 'pending';
+  page?: number;
+  limit?: number;
+}) {
   await requireAdmin();
 
+  const { search, subjectId, status, page = 1, limit = 10 } = params;
   const where: any = {};
+  const skip = (page - 1) * limit;
 
   if (search) {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
       { text: { contains: search, mode: 'insensitive' } },
-      { id: { contains: search, mode: 'insensitive' } }
+      { id: { contains: search, mode: 'insensitive' } },
+      { user: { name: { contains: search, mode: 'insensitive' } } },
+      { user: { email: { contains: search, mode: 'insensitive' } } }
     ];
   }
 
-  if (verified !== undefined) {
-    where.isVerified = verified;
+  if (subjectId && subjectId !== 'all') {
+    where.subjectId = subjectId;
   }
 
-  if (verificationRequested !== undefined) {
-    where.verificationRequested = verificationRequested;
+  if (status === 'verified') {
+    where.isVerified = true;
+  } else if (status === 'unverified') {
+    where.isVerified = false;
+    where.verificationRequested = false;
+  } else if (status === 'pending') {
+    where.verificationRequested = true;
   }
 
-  const questions = await prisma.question.findMany({
-    where,
-    include: {
-      user: { select: { name: true, email: true } },
-      subject: { select: { name: true } },
-      alternatives: {
-        select: { id: true, letter: true, text: true, isCorrect: true },
-        orderBy: { letter: 'asc' }
-      },
-      _count: {
-        select: {
-          alternatives: true,
-          comments: true
+  const [questions, total] = await Promise.all([
+    prisma.question.findMany({
+      where,
+      include: {
+        user: { select: { name: true, email: true } },
+        subject: { select: { name: true } },
+        alternatives: {
+          select: { id: true, letter: true, text: true, isCorrect: true },
+          orderBy: { letter: 'asc' }
+        },
+        _count: {
+          select: {
+            alternatives: true,
+            comments: true
+          }
         }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
+    }),
+    prisma.question.count({ where })
+  ]);
 
-  return questions;
+  return {
+    questions,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
 }
 
 export async function deleteQuestion(id: string) {

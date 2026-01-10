@@ -48,36 +48,70 @@ export async function getUserProfile(userId: string) {
     });
 }
 
-export async function getUserQuestions(userId: string) {
-    return await prisma.question.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: {
-            subject: true,
-            _count: {
-                select: {
-                    comments: true,
-                    alternatives: true // We might want to count votes instead, but alternatives is what we have direct relation to
+export async function getUserQuestions(userId: string, page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+
+    const [questions, total] = await Promise.all([
+        prisma.question.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                subject: true,
+                _count: {
+                    select: {
+                        comments: true,
+                        alternatives: true
+                    }
                 }
-            }
+            },
+            skip,
+            take: limit
+        }),
+        prisma.question.count({ where: { userId } })
+    ]);
+
+    return {
+        data: questions,
+        meta: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
         }
-    });
+    };
 }
 
-export async function getUserComments(userId: string) {
-    return await prisma.comment.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: {
-            question: {
-                select: {
-                    id: true,
-                    title: true,
-                    subject: true
+export async function getUserComments(userId: string, page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+
+    const [comments, total] = await Promise.all([
+        prisma.comment.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                question: {
+                    select: {
+                        id: true,
+                        title: true,
+                        subject: true
+                    }
                 }
-            }
+            },
+            skip,
+            take: limit
+        }),
+        prisma.comment.count({ where: { userId } })
+    ]);
+
+    return {
+        data: comments,
+        meta: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
         }
-    });
+    };
 }
 
 export async function getLeaderboard(limit: number = 50) {

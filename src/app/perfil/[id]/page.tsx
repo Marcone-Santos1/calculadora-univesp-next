@@ -9,9 +9,10 @@ import { AchievementsList } from '@/components/profile/AchievementsList';
 
 interface Props {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ qPage?: string; cPage?: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
     const user = await getUserProfile(id);
 
@@ -37,8 +38,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
 }
 
-export default async function PublicProfilePage({ params }: Props) {
-    const { id } = await params;
+export default async function PublicProfilePage(props: Props) {
+    const params = await props.params;
+    const searchParams = await props.searchParams;
+    const { id } = params;
+    const qPage = Number(searchParams.qPage) || 1;
+    const cPage = Number(searchParams.cPage) || 1;
+
     const session = await auth();
     const user = await getUserProfile(id);
 
@@ -48,8 +54,8 @@ export default async function PublicProfilePage({ params }: Props) {
 
     const [stats, questions, comments] = await Promise.all([
         getUserStats(id),
-        getUserQuestions(id),
-        getUserComments(id)
+        getUserQuestions(id, qPage),
+        getUserComments(id, cPage)
     ]);
 
     const isOwner = session?.user?.id === user.id;
