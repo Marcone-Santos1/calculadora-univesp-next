@@ -19,7 +19,9 @@ export async function getQuestions(
     limit: number = 10
 ) {
     const where: any = {};
+    const orderBy: any = { createdAt: 'desc' }; // Default sort
 
+    // 1. Text Search
     if (query) {
         where.OR = [
             { title: { contains: query, mode: 'insensitive' } },
@@ -27,6 +29,7 @@ export async function getQuestions(
         ];
     }
 
+    // 2. Subject Filter
     if (subjectName) {
         where.subject = {
             name: {
@@ -36,6 +39,7 @@ export async function getQuestions(
         };
     }
 
+    // 3. Status Filters
     if (verified === 'true') {
         where.isVerified = true;
     } else if (verified === 'false') {
@@ -46,12 +50,42 @@ export async function getQuestions(
         where.verificationRequested = true;
     }
 
-    // Activity filters
+    // 4. Activity Filters (Database Level)
     if (activity === 'trending') {
         // Questions from last 7 days
         where.createdAt = {
             gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         };
+        // Ideally trending implies high activity, but "recent" is the current definition.
+    } else if (activity === 'no-votes') {
+        // Questions where ALL alternatives have NO votes
+        where.alternatives = {
+            every: {
+                votes: {
+                    none: {}
+                }
+            }
+        };
+    } else if (activity === 'no-comments') {
+        where.comments = {
+            none: {}
+        };
+    }
+
+    // 5. Sorting (Database Level)
+    if (sort === 'popular') {
+        // Sort by views
+        orderBy.views = 'desc';
+        // Remove default createdAt sort if we want partial ordering, 
+        // but typically we can keep it as secondary or just replace.
+        // Let's replace to be strict.
+        delete orderBy.createdAt;
+    } else if (sort === 'discussed') {
+        // Sort by comment count
+        orderBy.comments = {
+            _count: 'desc'
+        };
+        delete orderBy.createdAt;
     }
 
     const skip = (page - 1) * limit;
@@ -80,14 +114,14 @@ export async function getQuestions(
                     }
                 }
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' }, // Fallback to createdAt if sort is undefined or standard
             skip,
             take: limit,
         })
     ]);
 
-    // Map and calculate metrics
-    let processedQuestions = questions.map(q => {
+    // Map and calculate metrics (No more filtering here!)
+    const processedQuestions = questions.map(q => {
         const totalVotes = q.alternatives.reduce((sum, alt) => sum + alt.votes.length, 0);
 
         return {
@@ -108,27 +142,6 @@ export async function getQuestions(
             }))
         };
     });
-
-    // Apply activity filters (post-fetch filtering for complex conditions)
-    // NOTE: Doing this post-fetch breaks pagination accuracy for these specific filters if rely strictly on DB count.
-    // For 'no-votes' and 'no-comments', ideally we should filter in the DB query, but computed fields (totalVotes) are hard in standard Prisma.
-    // However, for 'no-comments' we can use: comments: { none: {} } in 'where'. 
-    // For now, keeping existing logic but acknowledging pagination might vary for these edge cases.
-    if (activity === 'no-votes') {
-        processedQuestions = processedQuestions.filter(q => q.totalVotes === 0);
-    } else if (activity === 'no-comments') {
-        processedQuestions = processedQuestions.filter(q => q.commentsCount === 0);
-    }
-
-    // Apply sorting
-    if (sort === 'popular') {
-        // Sort by total votes (descending)
-        processedQuestions.sort((a, b) => b.totalVotes - a.totalVotes);
-    } else if (sort === 'discussed') {
-        // Sort by comments count (descending)
-        processedQuestions.sort((a, b) => b.commentsCount - a.commentsCount);
-    }
-    // Default is already sorted by createdAt desc
 
     const totalPages = Math.ceil(totalQuestions / limit);
 
