@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { EmailBlock } from '@/lib/email-templates';
-import { FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaAlignLeft, FaAlignCenter, FaAlignRight, FaBold, FaImage, FaFont, FaGripLines, FaGripVertical, FaPalette, FaLink, FaRulerVertical } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaArrowUp, FaArrowDown, FaAlignLeft, FaAlignCenter, FaAlignRight, FaBold, FaImage, FaFont, FaGripLines, FaGripVertical, FaPalette, FaLink, FaRulerVertical, FaLayerGroup, FaCode } from 'react-icons/fa';
 
 interface EmailBuilderProps {
     blocks: EmailBlock[];
     onChange: (blocks: EmailBlock[]) => void;
+    isNested?: boolean;
 }
 
-export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
+export function EmailBuilder({ blocks, onChange, isNested = false }: EmailBuilderProps) {
 
     const addBlock = (type: EmailBlock['type']) => {
         const id = Math.random().toString(36).substr(2, 9);
@@ -32,7 +33,10 @@ export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
                 newBlock = { id, type, height: 20 };
                 break;
             case 'DIVIDER':
-                newBlock = { id, type, color: '#e5e7eb' };
+                newBlock = { id, type, color: '#e5e7eb', direction: 'horizontal', borderSize: 1 };
+                break;
+            case 'CONTAINER':
+                newBlock = { id, type, children: [], direction: 'column', align: 'left' };
                 break;
             default:
                 return;
@@ -62,7 +66,7 @@ export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
     return (
         <div className="space-y-6">
             {/* Toolbar */}
-            <div className="flex flex-wrap gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm sticky top-0 z-10 backdrop-blur-md bg-opacity-90">
+            <div className={`flex flex-wrap gap-2 p-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-sm ${!isNested ? 'sticky top-0 z-10 backdrop-blur-md bg-opacity-90' : ''}`}>
                 <span className="text-xs font-bold text-gray-400 uppercase flex items-center px-2 mr-2 border-r border-gray-200 dark:border-zinc-700">Adicionar</span>
 
                 <ToolbarButton icon={FaBold} label="Título" onClick={() => addBlock('HEADING')} />
@@ -71,17 +75,19 @@ export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
                 <ToolbarButton icon={FaImage} label="Imagem" onClick={() => addBlock('IMAGE')} />
                 <ToolbarButton icon={FaGripLines} label="Divisor" onClick={() => addBlock('DIVIDER')} />
                 <ToolbarButton icon={FaRulerVertical} label="Espaço" onClick={() => addBlock('SPACER')} />
+                <ToolbarButton icon={FaLayerGroup} label="Grupo" onClick={() => addBlock('CONTAINER')} />
             </div>
 
             {/* Blocks List */}
-            <div className="space-y-4 min-h-[300px]">
+            <div className={`space-y-4 ${!isNested ? 'min-h-[300px]' : ''}`}>
                 {blocks.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-xl bg-gray-50/50 dark:bg-zinc-900/20">
-                        <div className="w-16 h-16 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-2xl animate-pulse">
-                            ✨
-                        </div>
-                        <p className="font-medium">Seu email está vazio</p>
-                        <p className="text-sm opacity-70">Selecione uma ferramenta acima para começar.</p>
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-400 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-xl bg-gray-50/50 dark:bg-zinc-900/20">
+                        {!isNested && (
+                            <div className="w-12 h-12 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-3 text-xl animate-pulse">
+                                ✨
+                            </div>
+                        )}
+                        <p className="font-medium text-sm">Vazio</p>
                     </div>
                 )}
 
@@ -95,7 +101,7 @@ export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
                         </div>
 
                         {/* Block Controls */}
-                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-zinc-800 shadow-lg border border-gray-100 dark:border-zinc-700 rounded-lg p-1 z-10 transform translate-x-2 group-hover:translate-x-0">
+                        <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-zinc-800 shadow-lg border border-gray-100 dark:border-zinc-700 rounded-lg p-1 z-10 transform translate-x-2 group-hover:translate-x-0">
                             <button type="button" onClick={() => moveBlock(index, 'up')} className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded text-gray-500 hover:text-blue-500" title="Mover para cima"><FaArrowUp /></button>
                             <button type="button" onClick={() => moveBlock(index, 'down')} className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded text-gray-500 hover:text-blue-500" title="Mover para baixo"><FaArrowDown /></button>
                             <div className="w-px bg-gray-200 dark:bg-zinc-700 my-1"></div>
@@ -215,12 +221,54 @@ export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
                             )}
 
                             {block.type === 'DIVIDER' && (
-                                <div className="flex items-center gap-4 py-2">
-                                    <Badge>DIVISOR</Badge>
-                                    <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-700"></div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-gray-400">Cor da linha:</span>
-                                        <input type="color" value={block.color} onChange={(e) => updateBlock(block.id, { color: e.target.value })} className="w-6 h-6 rounded cursor-pointer border border-gray-200" />
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <Badge>DIVISOR</Badge>
+                                        <div className="flex bg-gray-100 dark:bg-zinc-800 rounded-lg p-1 border border-gray-200 dark:border-zinc-700 text-xs">
+                                            <button
+                                                type="button"
+                                                onClick={() => updateBlock(block.id, { direction: 'horizontal' })}
+                                                className={`px-2 py-1 rounded transition-all ${!block.direction || block.direction === 'horizontal' ? 'bg-white dark:bg-zinc-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-600'}`}
+                                            >
+                                                Horizontal
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => updateBlock(block.id, { direction: 'vertical' })}
+                                                className={`px-2 py-1 rounded transition-all ${block.direction === 'vertical' ? 'bg-white dark:bg-zinc-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-600'}`}
+                                            >
+                                                Vertical
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800/30 p-2 rounded-lg border border-gray-100 dark:border-zinc-700/50">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-gray-400">Cor:</span>
+                                            <input type="color" value={block.color} onChange={(e) => updateBlock(block.id, { color: e.target.value })} className="w-6 h-6 rounded cursor-pointer border border-gray-200" />
+                                        </div>
+
+                                        <div className="flex-1 flex items-center gap-2">
+                                            <span className="text-xs text-gray-400">Espessura:</span>
+                                            <input
+                                                type="range"
+                                                min="1"
+                                                max="10"
+                                                value={block.borderSize || 1}
+                                                onChange={(e) => updateBlock(block.id, { borderSize: parseInt(e.target.value) })}
+                                                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-zinc-700"
+                                            />
+                                            <span className="text-xs font-mono font-bold text-gray-500 w-8 text-right">{block.borderSize || 1}px</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Visual Preview in Editor */}
+                                    <div className="py-2 flex justify-center">
+                                        {block.direction === 'vertical' ? (
+                                            <div style={{ width: '0px', height: '40px', borderLeft: `${block.borderSize || 1}px solid ${block.color}` }}></div>
+                                        ) : (
+                                            <div style={{ width: '100%', height: '0px', borderTop: `${block.borderSize || 1}px solid ${block.color}` }}></div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -238,6 +286,57 @@ export function EmailBuilder({ blocks, onChange }: EmailBuilderProps) {
                                             className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-zinc-700"
                                         />
                                         <span className="text-xs font-mono font-bold text-gray-500 w-12 text-right">{block.height}px</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {block.type === 'CONTAINER' && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between gap-4 py-2">
+                                        <Badge>GRUPO / CONTAINER</Badge>
+
+                                        <div className="flex items-center gap-2">
+                                            {/* Direction Toggle */}
+                                            <div className="flex bg-gray-100 dark:bg-zinc-800 rounded-lg p-1 border border-gray-200 dark:border-zinc-700 text-xs">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateBlock(block.id, { direction: 'column' })}
+                                                    className={`px-2 py-1 rounded transition-all ${block.direction !== 'row' ? 'bg-white dark:bg-zinc-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-600'}`}
+                                                >
+                                                    Vertical
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => updateBlock(block.id, { direction: 'row' })}
+                                                    className={`px-2 py-1 rounded transition-all ${block.direction === 'row' ? 'bg-white dark:bg-zinc-600 shadow-sm text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400 hover:text-gray-600'}`}
+                                                >
+                                                    Horizontal
+                                                </button>
+                                            </div>
+
+                                            {/* Alignment */}
+                                            <AlignInput value={block.align} onChange={(a) => updateBlock(block.id, { align: a as any })} />
+                                        </div>
+                                    </div>
+
+                                    <div className="pl-4 border-l-2 border-gray-100 dark:border-zinc-800">
+                                        <EmailBuilder
+                                            blocks={block.children}
+                                            onChange={(newChildren) => updateBlock(block.id, { children: newChildren })}
+                                            isNested={true}
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-zinc-800/30 p-2 rounded-lg border border-gray-100 dark:border-zinc-700/50">
+                                        <span className="text-xs font-bold text-gray-400 uppercase">Estilo:</span>
+                                        <div className="space-y-1 w-full">
+                                            <input
+                                                type="text"
+                                                value={block.style || ''}
+                                                onChange={(e) => updateBlock(block.id, { style: e.target.value })}
+                                                placeholder="ex: background-color: #eee; padding: 10px;"
+                                                className="w-full p-2.5 rounded-lg  bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-xs text-gray-900 dark:text-white placeholder:text-gray-400"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )}

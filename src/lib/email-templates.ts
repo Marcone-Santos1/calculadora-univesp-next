@@ -22,7 +22,8 @@ export const BaseEmailTemplate = (content: string, title?: string) => `
             <td align="center" style="padding-bottom:24px;">
               <div style="font-size:20px; font-weight:700; color:#111827;">
                 <img src="https://calculadoraunivesp.com.br/favicon.ico" alt="Calculadora Univesp" style="width:20px; height:20px; margin-right:8px;" />
-                Calculadora <span style="color:#2563eb;">Univesp</span>
+                
+                <a href="https://calculadoraunivesp.com.br" style="text-decoration:none; color:#111827;">Calculadora <span style="color:#2563eb;">Univesp</span></a>
               </div>
             </td>
           </tr>
@@ -65,7 +66,8 @@ export type EmailBlock =
   | { id: string; type: 'BUTTON'; label: string; url: string; bgColor: string; txtColor: string; align: 'left' | 'center' | 'right' }
   | { id: string; type: 'IMAGE'; url: string; alt: string; width: string; align: 'left' | 'center' | 'right' }
   | { id: string; type: 'SPACER'; height: number }
-  | { id: string; type: 'DIVIDER'; color: string };
+  | { id: string; type: 'DIVIDER'; color: string; direction?: 'horizontal' | 'vertical'; borderSize?: number }
+  | { id: string; type: 'CONTAINER'; children: EmailBlock[]; style?: string; direction?: 'row' | 'column'; align?: 'left' | 'center' | 'right' };
 
 // --- Components ---
 
@@ -96,18 +98,52 @@ export const EmailComponents = {
     <div style="height:${height}px; line-height:${height}px;">&nbsp;</div>
   `,
 
-  Divider: (color: string = '#e5e7eb') => `
-    <hr style="border:none; border-top:1px solid ${color}; margin:24px 0;" />
-  `,
+  Divider: (color: string = '#e5e7eb', options: { borderSize?: number; direction?: 'horizontal' | 'vertical' } = {}) => {
+    const size = options.borderSize || 1;
+    const direction = options.direction || 'horizontal';
+
+    if (direction === 'vertical') {
+      return `<div style="width: 0px; border-left: ${size}px solid ${color}; height: auto; min-height: 20px; margin: 0 12px; align-self: stretch;"></div>`;
+    }
+
+    return `<hr style="border:none; border-top:${size}px solid ${color}; margin:24px 0; width: 100%;" />`;
+  },
 
   HighlightBox: (text: string) => `
     <div style="background-color:#eff6ff; border-left:4px solid #2563eb; padding:16px; border-radius:4px; margin: 16px 0; color:#1e40af;">
       ${text}
     </div>
-  `
+  `,
+
+  Container: (content: string, options: { style?: string; direction?: 'row' | 'column'; align?: 'left' | 'center' | 'right' } = {}) => {
+    const direction = options.direction || 'column';
+    const align = options.align || 'left';
+
+    // Map alignment to flex properties
+    let justifyContent = 'flex-start';
+    let alignItems = 'stretch';
+    let textAlign = 'left';
+
+    if (direction === 'row') {
+      alignItems = 'center'; // Default vertical align for row
+      if (align === 'center') justifyContent = 'center';
+      if (align === 'right') justifyContent = 'flex-end';
+    } else {
+      // column
+      if (align === 'center') alignItems = 'center';
+      if (align === 'right') alignItems = 'flex-end';
+      textAlign = align;
+    }
+
+    return `
+    <div style="display:flex; flex-direction:${direction}; justify-content:${justifyContent}; align-items:${alignItems}; text-align:${textAlign}; gap: 16px; ${options.style || ''}">
+      ${content}
+    </div>
+  `;
+  }
 };
 
-export const renderEmailBlocks = (blocks: EmailBlock[]) => {
+export const renderEmailBlocks = (blocks: EmailBlock[]): string => {
   return blocks.map(block => {
     switch (block.type) {
       case 'HEADING':
@@ -121,7 +157,12 @@ export const renderEmailBlocks = (blocks: EmailBlock[]) => {
       case 'SPACER':
         return EmailComponents.Spacer(block.height);
       case 'DIVIDER':
-        return EmailComponents.Divider(block.color);
+        return EmailComponents.Divider(block.color, { borderSize: block.borderSize, direction: block.direction });
+      case 'CONTAINER':
+        return EmailComponents.Container(
+          renderEmailBlocks(block.children),
+          { style: block.style, direction: block.direction, align: block.align }
+        );
       default:
         return '';
     }
@@ -148,7 +189,7 @@ export const PredefinedTemplates = {
       ${EmailComponents.Heading(`Olá, ${name}!`)}
       ${EmailComponents.Text("Estamos muito felizes em ter você aqui. A Calculadora Univesp foi criada para ajudar você a organizar sua jornada acadêmica.")}
       ${EmailComponents.HighlightBox("Dica: Comece adicionando suas notas para ver sua média calculada automaticamente.")}
-      ${EmailComponents.Button("Começar Agora", "https://calculadoraunivesp.com.br")}
+      ${EmailComponents.Button("Acessar Perfil", "https://calculadoraunivesp.com.br/perfil")}
     `
   },
 
