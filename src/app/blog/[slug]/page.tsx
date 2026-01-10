@@ -4,9 +4,10 @@ import { Metadata } from 'next';
 import { ArticleLayout } from "@/components/blog/ArticleLayout";
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import React from 'react';
 import Image from 'next/image';
-import {SITE_CONFIG} from "@/utils/Constants";
+import { SITE_CONFIG } from "@/utils/Constants";
 
 // Função para gerar metadados dinâmicos (SEO)
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -90,7 +91,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <ReactMarkdown
-        rehypePlugins={[rehypeRaw]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize]}
         components={{
           h1: ({ children }: { children?: React.ReactNode }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
           h2: ({ children }: { children?: React.ReactNode }) => <h2 className="text-2xl font-bold mt-8 mb-4">{children}</h2>,

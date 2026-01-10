@@ -9,6 +9,13 @@ import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2';
 // or just install uuid. Since I didn't install uuid, I'll use crypto.randomUUID() if available, 
 // or a simple fallback. Actually, let's use crypto.randomUUID() which is standard in Node 20.
 
+const ALLOWED_MIME_TYPES: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif'
+};
+
 export async function GET(request: NextRequest) {
     try {
         const session = await auth();
@@ -23,12 +30,13 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'File type is required' }, { status: 400 });
         }
 
-        // Simple validation for images
-        if (!fileType.startsWith('image/')) {
-            return NextResponse.json({ error: 'Only images are allowed' }, { status: 400 });
+        // Strict validation
+        const extension = ALLOWED_MIME_TYPES[fileType];
+        if (!extension) {
+            return NextResponse.json({ error: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.' }, { status: 400 });
         }
 
-        const fileName = `${crypto.randomUUID()}-${Date.now()}`;
+        const fileName = `${crypto.randomUUID()}-${Date.now()}.${extension}`;
         const objectKey = `uploads/${session.user.id}/${fileName}`;
 
         const command = new PutObjectCommand({
