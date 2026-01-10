@@ -76,53 +76,54 @@ export async function handleDailyLogin(userId: string) {
             select: { lastLoginAt: true, loginStreak: true }
         });
 
-        if (!user) return;
+        if (!user) return { status: 'USER_NOT_FOUND' };
 
+        // Normalize dates to midnight to ensure calendar day comparison
         const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
         const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+        if (lastLogin) {
+            lastLogin.setHours(0, 0, 0, 0);
+        }
 
         let newStreak = user.loginStreak;
         let shouldAward = false;
+        let status = 'NO_CHANGE';
 
         if (lastLogin) {
             const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // Same day? Do nothing (or just update time)
-            if (now.getDate() === lastLogin.getDate() && now.getMonth() === lastLogin.getMonth() && now.getFullYear() === lastLogin.getFullYear()) {
+            if (diffDays === 0) {
                 // Already logged in today
-                return;
+                return { status: 'ALREADY_LOGGED_IN_TODAY', streak: newStreak };
             }
 
-            // Consecutive day? (diffDays is roughly 1, logic needs to be robust but Date diff is easiest)
-            // Check if last login was "yesterday"
-            const yesterday = new Date(now);
-            yesterday.setDate(now.getDate() - 1);
-
-            const isYesterday = lastLogin.getDate() === yesterday.getDate() &&
-                lastLogin.getMonth() === yesterday.getMonth() &&
-                lastLogin.getFullYear() === yesterday.getFullYear();
-
-            if (isYesterday) {
+            if (diffDays === 1) {
+                // Consecutive day
                 newStreak += 1;
                 shouldAward = true;
+                status = 'STREAK_CONTINUED';
             } else {
-                // Formatting broke streak
+                // Streak broken
                 newStreak = 1;
                 shouldAward = true;
+                status = 'STREAK_RESET';
             }
         } else {
             // First login ever
             newStreak = 1;
             shouldAward = true;
+            status = 'FIRST_LOGIN';
         }
 
         if (shouldAward) {
-            // Update User
+            // Update User - We use the real 'now' time for the record, but the logic used midnight
             await prisma.user.update({
                 where: { id: userId },
                 data: {
-                    lastLoginAt: now,
+                    lastLoginAt: new Date(), // Store actual login time
                     loginStreak: newStreak
                 }
             });
@@ -132,11 +133,27 @@ export async function handleDailyLogin(userId: string) {
             const points = REPUTATION_EVENTS.DAILY_LOGIN.points + (isWeeklyStreak ? 10 : 0);
 
             await awardReputation(userId, points, isWeeklyStreak ? 'DAILY_LOGIN_STREAK_BONUS' : 'DAILY_LOGIN');
+
+            return { status, streak: newStreak, points, isWeeklyStreak };
         }
+
+        return { status, streak: newStreak };
 
     } catch (error) {
         console.error('Error handling daily login:', error);
+        return { status: 'ERROR' };
     }
+}
+
+export async function checkDailyStreak() {
+    const { auth } = await import('@/lib/auth');
+    const session = await auth();
+
+    if (!session?.user?.id) {
+        return { status: 'UNAUTHENTICATED' };
+    }
+
+    return await handleDailyLogin(session.user.id);
 }
 
 export async function checkAchievements(userId: string) {

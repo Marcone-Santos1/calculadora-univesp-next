@@ -45,16 +45,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 });
                 token.isAdmin = dbUser?.isAdmin || false;
                 token.id = user.id;
-
-                // Handle Daily Login (Fire and forget or await)
-                // We use dynamic import to avoid potential circular dependencies, 
-                // though reputation-actions seems clean.
-                try {
-                    const { handleDailyLogin } = await import('@/actions/reputation-actions');
-                    await handleDailyLogin(user.id);
-                } catch (error) {
-                    console.error('Failed to handle daily login:', error);
-                }
             }
             return token;
         },

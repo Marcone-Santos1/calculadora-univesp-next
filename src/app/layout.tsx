@@ -1,24 +1,25 @@
-import type {Metadata} from 'next';
-import {Inter} from 'next/font/google';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
-import {NavBar} from '@/components/NavBar';
-import {AppStateProvider} from '@/components/AppStateProvider';
-import {SessionProvider} from '@/components/SessionProvider';
-import {ToastProvider} from '@/components/ToastProvider';
-import {GoogleAnalytics} from '@next/third-parties/google'
-import {SITE_CONFIG} from '@/utils/Constants';
+import { NavBar } from '@/components/NavBar';
+import { AppStateProvider } from '@/components/AppStateProvider';
+import { SessionProvider } from '@/components/SessionProvider';
+import { ToastProvider } from '@/components/ToastProvider';
+import { GoogleAnalytics } from '@next/third-parties/google'
+import { SITE_CONFIG } from '@/utils/Constants';
 import dynamic from 'next/dynamic';
 
 const CookieConsent = dynamic(() => import('@/components/CookieConsent').then(mod => mod.CookieConsent));
-import {UserPreferencesProvider} from "@/context/UserPreferencesContext";
-import {ReactNode} from "react";
+import { UserPreferencesProvider } from "@/context/UserPreferencesContext";
+import { ReactNode } from "react";
 import Script from "next/script";
-import {Footer} from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 import { AdsenseScript } from '@/components/AdsenseScript';
 import AdsRefresher from '@/components/AdsRefresher';
+import { StreakListener } from '@/components/reputation/StreakListener';
 
-const inter = Inter({subsets: ['latin'], display: 'swap'});
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 
 export const metadata: Metadata = {
@@ -54,8 +55,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-                                     children,
-                                   }: {
+  children,
+}: {
   children: ReactNode;
 }) {
 
@@ -72,27 +73,28 @@ export default function RootLayout({
   };
 
   return (
-      <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <Script async={true} type={'application/ld+json'} id={'organizationJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
-      <GoogleAnalytics gaId="G-3141WNQQZQ"/>
+      <GoogleAnalytics gaId="G-3141WNQQZQ" />
       <AdsenseScript />
       <AdsRefresher />
       <body className={inter.className}>
-      <ToastProvider>
-        <SessionProvider>
-          <AppStateProvider>
-            <UserPreferencesProvider>
-              <NavBar/>
-              <main className="mt-20">{children}</main>
-              <Footer />
+        <ToastProvider>
+          <SessionProvider>
+            <AppStateProvider>
+              <UserPreferencesProvider>
+                <NavBar />
+                <main className="mt-20">{children}</main>
+                <Footer />
 
-              <FeedbackWidget />
-            </UserPreferencesProvider>
-          </AppStateProvider>
-        </SessionProvider>
-      </ToastProvider>
-      <CookieConsent/>
+                <FeedbackWidget />
+                <StreakListener />
+              </UserPreferencesProvider>
+            </AppStateProvider>
+          </SessionProvider>
+        </ToastProvider>
+        <CookieConsent />
       </body>
-      </html>
+    </html>
   );
 }
