@@ -128,7 +128,7 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                                 <Pagination
                                     currentPage={questions.meta.page}
                                     totalPages={questions.meta.totalPages}
-                                    baseUrl=""
+                                    baseUrl="/perfil"
                                     searchParams={Object.fromEntries(searchParams.entries())}
                                     pageParamName="qPage"
                                 />
@@ -166,7 +166,7 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                                 <Pagination
                                     currentPage={comments.meta.page}
                                     totalPages={comments.meta.totalPages}
-                                    baseUrl=""
+                                    baseUrl="/perfil"
                                     searchParams={Object.fromEntries(searchParams.entries())}
                                     pageParamName="cPage"
                                 />

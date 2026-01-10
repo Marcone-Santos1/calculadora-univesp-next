@@ -11,17 +11,28 @@ export const metadata: Metadata = {
     description: 'Gerencie suas atividades e visualize suas estatísticas.',
 };
 
-export default async function ProfilePage() {
+interface Props {
+    searchParams: Promise<{
+        qPage?: string;
+        cPage?: string;
+    }>;
+}
+
+export default async function ProfilePage({ searchParams }: Props) {
     const session = await auth();
 
     if (!session?.user) {
         redirect('/');
     }
 
+    const { qPage, cPage } = await searchParams;
+    const questionsPage = Number(qPage) || 1;
+    const commentsPage = Number(cPage) || 1;
+
     const [stats, questions, comments, userProfile] = await Promise.all([
         getUserStats(session.user.id!),
-        getUserQuestions(session.user.id!),
-        getUserComments(session.user.id!),
+        getUserQuestions(session.user.id!, questionsPage, 5),
+        getUserComments(session.user.id!, commentsPage, 5),
         getUserProfile(session.user.id!)
     ]);
 
