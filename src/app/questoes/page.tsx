@@ -31,7 +31,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
         if (activeSubject) {
             title = `Questões de ${activeSubject.name} Univesp | Gabaritos e Revisão`;
             description = `Está estudando ${activeSubject.name}? Acesse exercícios resolvidos e questões de provas anteriores da Univesp para treinar e tirar suas dúvidas.`;
-            canonical = `${baseUrl}?subject=${subjectName}`;
+            canonical = `${baseUrl}/questoes?subject=${subjectName}`;
         }
     }
     else if (query) {
@@ -220,3 +220,4 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
         </Suspense>
     );
 }
+
