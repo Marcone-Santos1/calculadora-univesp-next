@@ -50,6 +50,7 @@ export const NavBar = () => {
   };
 
   const navItems = [
+    { label: 'Início', href: '/' },
     { label: 'Questões', href: '/questoes' },
     { label: 'Blog', href: '/blog' },
     { label: 'Sobre', href: '/sobre' },
