@@ -54,6 +54,7 @@ export const NavBar = () => {
     { label: 'Blog', href: '/blog' },
     { label: 'Sobre', href: '/sobre' },
     { label: 'Simulados', href: '/simulados' },
+    { label: 'Placar', href: '/placar' },
     { label: 'AAC', href: '/perfil/aac' },
     { label: 'Anuncie', href: '/anuncie' },
   ];

@@ -169,7 +169,8 @@ export async function checkAchievements(userId: string) {
             commentVoteCount,
             receivedQuestionVotes,
             receivedCommentVotes,
-            unlockedAchievements
+            unlockedAchievements,
+            mockExams
         ] = await Promise.all([
             prisma.user.findUnique({ where: { id: userId } }),
             prisma.question.count({ where: { userId } }),
@@ -181,13 +182,22 @@ export async function checkAchievements(userId: string) {
             // Count votes on MY comments
             prisma.commentVote.count({ where: { comment: { userId } } }),
             prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } }),
+            prisma.mockExam.findMany({
+                where: { userId, status: 'COMPLETED' },
+                select: { score: true, totalQuestions: true }
+            })
         ]);
 
         if (!user) return;
 
         const totalUnlocked = unlockedAchievements.length;
-        const unlockedIds = new Set(unlockedAchievements.map(ua => ua.achievementId));
+        const unlockedIds = new Set(unlockedAchievements.map((ua: { achievementId: string }) => ua.achievementId));
         const { level } = getLevel(user.reputation || 0);
+
+        // Process Mock Exams
+        const mockExamsCompleted = mockExams.length;
+        const mockExamPerfectScores = mockExams.filter((e: { score: number; totalQuestions: number }) => e.totalQuestions >= 5 && e.score === e.totalQuestions).length;
+        const mockExamMarathons = mockExams.filter((e: { totalQuestions: number }) => e.totalQuestions >= 50).length;
 
         const stats = {
             questions: questionCount,
@@ -199,7 +209,10 @@ export async function checkAchievements(userId: string) {
             streak: user.loginStreak || 0,
             level: level,
             isProfileComplete: !!(user.name && user.bio && user.image),
-            unlockedAchievementsCount: totalUnlocked
+            unlockedAchievementsCount: totalUnlocked,
+            mockExamsCompleted,
+            mockExamPerfectScores,
+            mockExamMarathons
         };
 
         // 2. Check Conditions

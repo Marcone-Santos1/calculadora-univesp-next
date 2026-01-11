@@ -18,6 +18,9 @@ export interface Achievement {
         level: number;
         isProfileComplete: boolean;
         unlockedAchievementsCount: number;
+        mockExamsCompleted: number;
+        mockExamPerfectScores: number;
+        mockExamMarathons: number;
     }) => boolean;
 }
 
@@ -249,6 +252,35 @@ export const ACHIEVEMENTS: Achievement[] = [
         category: 'EXPERT',
         // Verifica se o usuário tem todas as conquistas menos 1 (a própria Platina)
         condition: (stats) => stats.unlockedAchievementsCount >= (ACHIEVEMENTS.length - 1)
+    },
+
+    // SIMULADO
+    {
+        id: 'FIRST_MOCK',
+        title: 'Primeiro Simulado',
+        description: 'Concluiu seu primeiro simulado.',
+        points: 50,
+        icon: '📝',
+        category: 'CREATION', // Or create a new category 'STUDY'
+        condition: (stats) => stats.mockExamsCompleted >= 1
+    },
+    {
+        id: 'SNIPER',
+        title: 'Sniper',
+        description: 'Acertou 100% das questões em um simulado (mín. 5 questões).',
+        points: 500,
+        icon: '🎯',
+        category: 'EXPERT',
+        condition: (stats) => stats.mockExamPerfectScores >= 1
+    },
+    {
+        id: 'MARATHON_RUNNER',
+        title: 'Maratonista',
+        description: 'Concluiu um simulado com 50 ou mais questões.',
+        points: 300,
+        icon: '🏃',
+        category: 'EXPERT',
+        condition: (stats) => stats.mockExamMarathons >= 1
     }
 ];
 

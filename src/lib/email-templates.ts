@@ -270,6 +270,17 @@ export const PredefinedTemplates = {
     `
   },
 
+  BILLING_PAID: {
+    label: "Pagamento Confirmado",
+    subject: "Seu pagamento foi confirmado! 🚀",
+    body: (name: string, amount: number) => `
+      ${EmailComponents.Heading(`Olá, ${name}!`)}
+      ${EmailComponents.Text(`Seu depósito de <strong>R$ ${(amount / 100).toFixed(2).replace('.', ',')}</strong> foi confirmado com sucesso.`)}
+      ${EmailComponents.Text("O valor já está disponível em seu saldo para impulsionar suas campanhas.")}
+      ${EmailComponents.Button("Gerenciar Anúncios", `${process.env.NEXT_PUBLIC_APP_URL}/advertiser/dashboard`)}
+    `
+  },
+
   GENERIC: {
     label: "Genérico",
     subject: "Notificação",

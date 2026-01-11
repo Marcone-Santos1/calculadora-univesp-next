@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         console.error("Missing ABACATEPAY_WEBHOOK_SECRET");
         return NextResponse.json({ error: "Configuration Error" }, { status: 500 });
     }
-    
+
     if (!signature) {
         console.error("Missing Signature");
         return NextResponse.json({ error: "Missing Signature" }, { status: 401 });
@@ -40,15 +40,29 @@ export async function POST(req: Request) {
         }
 
         try {
+            // 1. Get Transaction with User
+            // We need to fetch it separately first because $transaction types are tricky with includes sometimes, 
+            // but cleaner to just do it inside.
+            let userEmail: string | null = null;
+            let userName = "";
+
             await db.$transaction(async (tx) => {
                 // 1. Get Transaction
                 const transaction = await tx.adTransaction.findUnique({
                     where: { id: transactionId },
+                    include: {
+                        advertiser: {
+                            include: { user: true }
+                        }
+                    }
                 });
 
                 if (!transaction || transaction.status === AdTransactionStatus.COMPLETED) {
                     return; // Already processed or not found
                 }
+
+                userEmail = transaction.advertiser.user.email;
+                userName = transaction.advertiser.user.name || "Anunciante";
 
                 // 2. Update Transaction
                 await tx.adTransaction.update({
@@ -68,7 +82,18 @@ export async function POST(req: Request) {
                         },
                     },
                 });
+
             });
+
+            // Send Email
+            if (userEmail) {
+                const { PredefinedTemplates } = await import("@/lib/email-templates");
+                const { EmailService } = await import("@/lib/email-service");
+
+                const template = PredefinedTemplates.BILLING_PAID;
+                const html = template.body(userName, body.data.billing.amount);
+                await EmailService.sendEmail({ email: userEmail, name: userName }, template.subject, html);
+            }
 
             return NextResponse.json({ received: true });
         } catch (error) {
@@ -87,15 +112,15 @@ export async function POST(req: Request) {
  * @returns true if the signature is valid, false otherwise.
  */
 export function verifySignature(rawBody: string, signatureFromHeader: string) {
-  const bodyBuffer = Buffer.from(rawBody, "utf8")
+    const bodyBuffer = Buffer.from(rawBody, "utf8")
 
-  const expectedSig = crypto
-    .createHmac("sha256", ABACATEPAY_PUBLIC_KEY)
-    .update(bodyBuffer)
-    .digest("base64");
+    const expectedSig = crypto
+        .createHmac("sha256", ABACATEPAY_PUBLIC_KEY)
+        .update(bodyBuffer)
+        .digest("base64");
 
-  const A = Buffer.from(expectedSig);
-  const B = Buffer.from(signatureFromHeader);
+    const A = Buffer.from(expectedSig);
+    const B = Buffer.from(signatureFromHeader);
 
-  return A.length === B.length && crypto.timingSafeEqual(A, B);
+    return A.length === B.length && crypto.timingSafeEqual(A, B);
 }
