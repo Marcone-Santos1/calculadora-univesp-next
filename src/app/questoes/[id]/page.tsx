@@ -18,10 +18,10 @@ import { Loading } from '@/components/Loading';
 import { SITE_CONFIG } from "@/utils/Constants";
 import { QuestionCard } from '@/components/question/QuestionCard';
 import { FaShield } from 'react-icons/fa6';
-import { JsonValue } from '@prisma/client/runtime/library';
 import { getAdsForFeed } from '@/actions/ad-engine';
 import NativeAdCard from '@/components/feed/NativeAdCard';
 import { injectAdsWithRandomInterval } from '@/utils/functions';
+import { Comment } from '@/Contracts/Question';
 
 // Generate Dynamic Metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -101,6 +101,28 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
     }
 
     // JSON-LD Structured Data for Q&A Page
+    const correctAlternative = question.alternatives.find((alt: any) => alt.isCorrect);
+
+    // 2. Preparar a resposta aceita (se existir gabarito)
+    let acceptedAnswer = undefined;
+    if (correctAlternative) {
+        acceptedAnswer = {
+            '@type': 'Answer',
+            text: `A resposta correta é a alternativa ${correctAlternative.letter}: ${correctAlternative.text}`,
+            upvoteCount: correctAlternative.voteCount || 1,
+            dateCreated: question.createdAt.toISOString(),
+            author: {
+                '@type': 'Organization',
+                name: 'Calculadora Univesp Gabarito',
+                url: SITE_CONFIG.BASE_URL
+            }
+        };
+    }
+
+    // 3. Contar total de respostas (Gabarito + Comentários)
+    const totalAnswerCount = question.comments.length + (acceptedAnswer ? 1 : 0);
+
+    // JSON-LD Structured Data for Q&A Page
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'QAPage',
@@ -108,7 +130,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
             '@type': 'Question',
             name: question.title,
             text: question.text,
-            answerCount: question.comments.length,
+            answerCount: totalAnswerCount, // Atualizado
             upvoteCount: totalVotes,
             dateCreated: question.createdAt.toISOString(),
             author: {
@@ -116,14 +138,14 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                 name: question.userName || 'Usuário da Univesp',
                 url: question.userId ? `${SITE_CONFIG.BASE_URL}/perfil/${question.userId}` : undefined,
             },
-            // CORREÇÃO 2: Filtrar comentários vazios para evitar erro crítico de "text missing"
+            acceptedAnswer: acceptedAnswer, 
             suggestedAnswer: question.comments
-                .filter((comment: any) => comment.text && comment.text.trim() !== "")
-                .map((comment: any) => ({
+                .filter((comment: Comment) => comment.text && comment.text.trim() !== "")
+                .map((comment: Comment) => ({
                     '@type': 'Answer',
                     text: comment.text,
                     dateCreated: comment.createdAt.toISOString(),
-                    upvoteCount: 0,
+                    upvoteCount: comment.votes.length,
                     url: `${SITE_CONFIG.BASE_URL}/questoes/${question.id}#comment-${comment.id}`,
                     author: {
                         '@type': 'Person',
@@ -147,7 +169,6 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
             })),
         },
     };
-
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
             {/* Structured Data Script */}

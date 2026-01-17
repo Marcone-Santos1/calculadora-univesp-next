@@ -22,7 +22,7 @@ const s3Client = new S3Client({
 });
 
 // ID do Usuário Admin (Você deve garantir que esse ID existe no banco)
-const ADMIN_USER_ID = 'cmjafwpuq0003ah7yuokrrfsp'; 
+const ADMIN_USER_ID = 'cmjafwpuq0003ah7yuokrrfsp';
 
 async function uploadToR2(base64String: string, fileName: string): Promise<string | null> {
     try {
@@ -67,10 +67,10 @@ interface ExamFile {
 
 async function getOrCreateSubject(subjectName: string) {
     if (!subjectName) return null;
-    
+
     // Tenta achar
     const subject = await prisma.subject.findFirst({
-        where: { name: { equals: subjectName, mode: 'insensitive' } }
+        where: { name: { equals: subjectName } }
     });
 
     if (subject) return subject.id;
@@ -102,7 +102,7 @@ async function main() {
         console.log(`\n📂 Processando: ${exam.source_file}`);
 
         for (const q of exam.questions) {
-            
+
             // 1. Resolve a Matéria (Subject)
             const subjectName = q.metadata?.subject || "Geral";
             const subjectId = await getOrCreateSubject(subjectName);
@@ -128,11 +128,11 @@ async function main() {
 
                     if (img.startsWith('data:image')) {
                         const hash = crypto.randomUUID().split('-')[0];
-                        const fileName = `univesp-${subjectName.slice(0,3)}-q${q.number}-${hash}.png`;
+                        const fileName = `univesp-${subjectName.slice(0, 3)}-q${q.number}-${hash}.png`;
                         const uploaded = await uploadToR2(img, fileName);
                         if (uploaded) imageUrl = uploaded;
                     }
-                    
+
                     // Adiciona a imagem ao Markdown
                     finalMarkdown += `\n\n![${q.title}](${imageUrl})`;
                 }
@@ -147,26 +147,24 @@ async function main() {
             // 4. UPSERT (Verifica se já existe para não duplicar)
             // Critério de unicidade: Texto do enunciado (primeiros 50 chars) + Matéria
             const existingQuestion = await prisma.question.findFirst({
-                    where: {
-                        OR: [
-                            {
-                                title: {
-                                    equals: q.title.trim(),
-                                    mode: 'insensitive'
-                                }
-                            },
-                            {
-                                text: {
-                                    equals: q.statement.trim(),
-                                    mode: 'insensitive'
-                                }
+                where: {
+                    OR: [
+                        {
+                            title: {
+                                equals: q.title.trim()
                             }
-                        ]
-                    },
-                    select: { id: true, title: true } // Otimização: selecionar apenas o necessário
-                });
+                        },
+                        {
+                            text: {
+                                equals: q.statement.trim()
+                            }
+                        }
+                    ]
+                },
+                select: { id: true, title: true } // Otimização: selecionar apenas o necessário
+            });
 
- 
+
 
             if (existingQuestion) {
                 process.stdout.write('.'); // Apenas um ponto para não poluir o log

@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { createNotification } from './notification-actions';
 import { awardReputation, checkAchievements } from './reputation-actions';
 import { REPUTATION_EVENTS } from '@/utils/reputation-events';
+import { executeWithRetry } from '@/lib/prisma-utils';
 
 export async function getQuestions(
     query?: string,
@@ -24,8 +25,8 @@ export async function getQuestions(
     // 1. Text Search
     if (query) {
         where.OR = [
-            { title: { contains: query, mode: 'insensitive' } },
-            { text: { contains: query, mode: 'insensitive' } },
+            { title: { contains: query } },
+            { text: { contains: query } },
         ];
     }
 
@@ -34,7 +35,6 @@ export async function getQuestions(
         where.subject = {
             name: {
                 equals: subjectName,
-                mode: 'insensitive',
             }
         };
     }
@@ -92,8 +92,8 @@ export async function getQuestions(
 
     // Run count and findMany in parallel
     const [totalQuestions, questions] = await Promise.all([
-        prisma.question.count({ where }),
-        prisma.question.findMany({
+        executeWithRetry(() => prisma.question.count({ where })),
+        executeWithRetry(() => prisma.question.findMany({
             where,
             include: {
                 user: {
@@ -114,10 +114,10 @@ export async function getQuestions(
                     }
                 }
             },
-            orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' }, // Fallback to createdAt if sort is undefined or standard
+            orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' },
             skip,
             take: limit,
-        })
+        }))
     ]);
 
     // Map and calculate metrics (No more filtering here!)
@@ -162,7 +162,7 @@ export async function getRelatedQuestions(
     subjectId: string,
     currentQuestionId: string
 ) {
-    const questions = await prisma.question.findMany({
+    const questions = await executeWithRetry(() => prisma.question.findMany({
         where: {
             subjectId,
             id: {
@@ -190,13 +190,13 @@ export async function getRelatedQuestions(
         },
         take: 3,
         orderBy: { createdAt: 'desc' }
-    });
+    }));
 
     return questions;
 }
 
 export async function getQuestion(id: string) {
-    const question = await prisma.question.findUnique({
+    const question = await executeWithRetry(() => prisma.question.findUnique({
         where: { id },
         include: {
             user: {
@@ -226,7 +226,7 @@ export async function getQuestion(id: string) {
                 orderBy: { createdAt: 'asc' }
             }
         }
-    });
+    }));
 
     if (!question) return null;
 
@@ -298,13 +298,11 @@ export async function createQuestion(formData: FormData) {
                 {
                     title: {
                         equals: title.trim(),
-                        mode: 'insensitive'
                     }
                 },
                 {
                     text: {
                         equals: text.trim(),
-                        mode: 'insensitive'
                     }
                 }
             ]

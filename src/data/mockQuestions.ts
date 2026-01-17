@@ -31,7 +31,7 @@ export const mockQuestions: Question[] = [
             { id: 'e', text: 'Indeterminado', votes: 0, percentage: 0 },
         ],
         comments: [
-            { id: 'c1', userId: 'user2', userName: 'Maria', text: 'Basta fatorar o numerador: (x-1)(x+1). Corta o (x-1) e sobra x+1. 1+1=2.', createdAt: '2023-10-25T11:00:00Z' }
+            { id: 'c1', userId: 'user2', userName: 'Maria', text: 'Basta fatorar o numerador: (x-1)(x+1). Corta o (x-1) e sobra x+1. 1+1=2.', createdAt: new Date('2023-10-25T11:00:00Z'), votes: [] }
         ]
     },
     {

@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
-import {SITE_CONFIG} from "@/utils/Constants";
+import { SITE_CONFIG } from "@/utils/Constants";
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -34,10 +34,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
 
     // Dynamic routes (Blog Posts)
-    const blogPosts = await prisma.blogPost.findMany({
-        where: { published: true },
-        select: { slug: true, updatedAt: true },
-    });
+    // Dynamic routes (Blog Posts)
+    let blogPosts: { slug: string; updatedAt: Date }[] = [];
+    try {
+        blogPosts = await prisma.blogPost.findMany({
+            where: { published: true },
+            select: { slug: true, updatedAt: true },
+        });
+    } catch (error) {
+        console.warn('Failed to fetch blog posts for sitemap:', error);
+    }
 
     const blogRoutes: MetadataRoute.Sitemap = blogPosts.map((post) => ({
         url: `${baseUrl}/blog/${post.slug}`,
@@ -47,18 +53,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     // Dynamic routes (Questions)
-    const questions = await prisma.question.findMany({
-        select: {
-            id: true,
-            updatedAt: true,
-        },
-        orderBy: {
-            updatedAt: 'desc',
-        },
-        take: 5000, // Limit for sitemap size, can implement pagination if needed
-    });
+    // Dynamic routes (Questions)
+    let questions: { id: string; updatedAt: Date }[] = [];
+    try {
+        questions = await prisma.question.findMany({
+            select: {
+                id: true,
+                updatedAt: true,
+            },
+            orderBy: {
+                updatedAt: 'desc',
+            },
+            take: 5000,
+        });
+    } catch (error) {
+        console.warn('Failed to fetch questions for sitemap:', error);
+    }
 
-    const subjects = await prisma.subject.findMany({ select: { id: true, name: true } });
+    let subjects: { id: string; name: string }[] = [];
+    try {
+        subjects = await prisma.subject.findMany({ select: { id: true, name: true } });
+    } catch (error) {
+        console.warn('Failed to fetch subjects for sitemap:', error);
+    }
 
     const questionRoutes = questions.map((question) => ({
         url: `${baseUrl}/questoes/${question.id}`,
@@ -67,12 +84,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
     }));
 
-  const subjectRoutes: MetadataRoute.Sitemap = subjects.map((subject) => ({
-    url: `${baseUrl}/questoes?subject=${encodeURIComponent(subject.name)}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }));
+    const subjectRoutes: MetadataRoute.Sitemap = subjects.map((subject) => ({
+        url: `${baseUrl}/questoes?subject=${encodeURIComponent(subject.name)}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.8,
+    }));
 
     return [...staticRoutes, ...blogRoutes, ...questionRoutes, ...subjectRoutes];
 }

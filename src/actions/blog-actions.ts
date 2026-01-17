@@ -2,22 +2,23 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { executeWithRetry } from '@/lib/prisma-utils';
 import { auth } from '@/lib/auth';
 
 export async function getBlogPosts(publishedOnly = true) {
     const where = publishedOnly ? { published: true } : {};
-    return await prisma.blogPost.findMany({
+    return await executeWithRetry(() => prisma.blogPost.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         include: { author: { select: { name: true, image: true } } }
-    });
+    }));
 }
 
 export async function getBlogPost(slug: string) {
-    return await prisma.blogPost.findUnique({
+    return await executeWithRetry(() => prisma.blogPost.findUnique({
         where: { slug },
         include: { author: { select: { name: true, image: true } } }
-    });
+    }));
 }
 
 export async function createBlogPost(formData: FormData) {

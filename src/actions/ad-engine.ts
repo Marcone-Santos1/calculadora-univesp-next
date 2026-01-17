@@ -2,6 +2,7 @@
 
 import { prisma as db } from "@/lib/prisma";
 import { AdCampaignStatus, AdTransactionStatus, AdTransactionType, AdBillingType, AdEventType } from "@prisma/client";
+import { executeWithRetry } from "@/lib/prisma-utils";
 
 // Normalize bid to expected value per impression (EVI) for comparison
 // CPC: Bid * CTR (Est. 1% if unknown)
@@ -171,19 +172,26 @@ export async function getAdsForFeed(count: number = 1) {
         // We do this asynchronously to not slow down response
         (async () => {
             try {
-                // Basic view increment
-                await db.adCreative.update({ where: { id: creative.id }, data: { views: { increment: 1 } } });
-                await db.adDailyMetrics.upsert({
-                    where: { campaignId_date: { campaignId: campaign.id, date: new Date(new Date().toDateString()) } },
-                    create: { campaignId: campaign.id, date: new Date(new Date().toDateString()), views: 1 },
-                    update: { views: { increment: 1 } }
-                });
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
 
-                await db.adCreativeDailyMetrics.upsert({
-                    where: { creativeId_date: { creativeId: creative.id, date: new Date(new Date().toDateString()) } },
-                    create: { creativeId: creative.id, date: new Date(new Date().toDateString()), views: 1 },
+                // Basic view increment with retry
+                await executeWithRetry(() => db.adCreative.update({
+                    where: { id: creative.id },
+                    data: { views: { increment: 1 } }
+                }));
+
+                await executeWithRetry(() => db.adDailyMetrics.upsert({
+                    where: { campaignId_date: { campaignId: campaign.id, date: today } },
+                    create: { campaignId: campaign.id, date: today, views: 1 },
                     update: { views: { increment: 1 } }
-                });
+                }));
+
+                await executeWithRetry(() => db.adCreativeDailyMetrics.upsert({
+                    where: { creativeId_date: { creativeId: creative.id, date: today } },
+                    create: { creativeId: creative.id, date: today, views: 1 },
+                    update: { views: { increment: 1 } }
+                }));
 
                 // CPM Billing Logic:
                 // If CPM, we should theoretically charge here.
@@ -325,3 +333,4 @@ export async function trackAdClick(adId: string, campaignId: string) {
         return { success: false };
     }
 }
+

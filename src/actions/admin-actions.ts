@@ -25,11 +25,11 @@ export async function getAdminQuestions(params: {
 
   if (search) {
     where.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { text: { contains: search, mode: 'insensitive' } },
-      { id: { contains: search, mode: 'insensitive' } },
-      { user: { name: { contains: search, mode: 'insensitive' } } },
-      { user: { email: { contains: search, mode: 'insensitive' } } }
+      { title: { contains: search } },
+      { text: { contains: search } },
+      { id: { contains: search } },
+      { user: { name: { contains: search } } },
+      { user: { email: { contains: search } } }
     ];
   }
 
@@ -243,7 +243,7 @@ export async function getAdminComments(search?: string) {
   const where: any = {};
 
   if (search) {
-    where.text = { contains: search, mode: 'insensitive' };
+    where.text = { contains: search };
   }
 
   const comments = await prisma.comment.findMany({
@@ -401,8 +401,8 @@ export async function getAdminUsers(search?: string) {
 
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } }
+      { name: { contains: search } },
+      { email: { contains: search } }
     ];
   }
 

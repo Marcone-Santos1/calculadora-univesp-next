@@ -3,21 +3,22 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { executeWithRetry } from '@/lib/prisma-utils';
 
 // Combined data fetch for efficiency
 export async function getNotificationData(userId: string) {
     const [notifications, unreadCount] = await Promise.all([
-        prisma.notification.findMany({
+        executeWithRetry(() => prisma.notification.findMany({
             where: { userId },
             orderBy: { createdAt: 'desc' },
             take: 20,
-        }),
-        prisma.notification.count({
+        })),
+        executeWithRetry(() => prisma.notification.count({
             where: {
                 userId,
                 read: false
             }
-        })
+        }))
     ]);
 
     return { notifications, unreadCount };

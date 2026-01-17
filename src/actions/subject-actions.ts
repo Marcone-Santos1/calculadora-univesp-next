@@ -27,7 +27,6 @@ export async function getSubjectByName(name: string) {
             where: {
                 name: {
                     contains: name,
-                    mode: 'insensitive',
                 },
             },
             select: {

@@ -6,12 +6,19 @@ export interface Alternative {
     percentage?: number; // Calculated field
 }
 
+export interface CommentVote {
+    id: string;
+    userId: string;
+    commentId: string;
+}
+
 export interface Comment {
     id: string;
     userId: string;
     userName: string;
     text: string;
-    createdAt: string;
+    createdAt: Date;
+    votes: CommentVote[];
 }
 
 export interface Question {
