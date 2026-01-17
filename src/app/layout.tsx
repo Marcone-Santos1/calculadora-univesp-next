@@ -19,6 +19,9 @@ import { AdsenseScript } from '@/components/AdsenseScript';
 import AdsRefresher from '@/components/AdsRefresher';
 import { StreakListener } from '@/components/reputation/StreakListener';
 
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 
@@ -86,6 +89,9 @@ export default function RootLayout({
                 <NavBar />
                 <main className="mt-20">{children}</main>
                 <Footer />
+
+                <Analytics />
+                <SpeedInsights />
 
                 <FeedbackWidget />
                 <StreakListener />

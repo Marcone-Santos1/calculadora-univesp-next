@@ -41,3 +41,5 @@ yarn-error.log*
 next-env.d.ts
 
 questions_data_python*.json
+# Sentry Config File
+.env.sentry-build-plugin
