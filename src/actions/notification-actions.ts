@@ -7,19 +7,19 @@ import { executeWithRetry } from '@/lib/prisma-utils';
 
 // Combined data fetch for efficiency
 export async function getNotificationData(userId: string) {
-    const [notifications, unreadCount] = await Promise.all([
-        executeWithRetry(() => prisma.notification.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            take: 20,
-        })),
-        executeWithRetry(() => prisma.notification.count({
-            where: {
-                userId,
-                read: false
-            }
-        }))
-    ]);
+    // Sequential execution to reduce connection pool pressure
+    const notifications = await executeWithRetry(() => prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+    }));
+
+    const unreadCount = await executeWithRetry(() => prisma.notification.count({
+        where: {
+            userId,
+            read: false
+        }
+    }));
 
     return { notifications, unreadCount };
 }

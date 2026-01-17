@@ -91,34 +91,34 @@ export async function getQuestions(
     const skip = (page - 1) * limit;
 
     // Run count and findMany in parallel
-    const [totalQuestions, questions] = await Promise.all([
-        executeWithRetry(() => prisma.question.count({ where })),
-        executeWithRetry(() => prisma.question.findMany({
-            where,
-            include: {
-                user: {
-                    include: {
-                        reputationLogs: false
-                    }
-                },
-                subject: true,
-                alternatives: {
-                    include: {
-                        votes: true
-                    }
-                },
-                comments: true,
-                _count: {
-                    select: {
-                        comments: true,
-                    }
+    // Run count and findMany sequentially to save connections
+    const totalQuestions = await executeWithRetry(() => prisma.question.count({ where }));
+
+    const questions = await executeWithRetry(() => prisma.question.findMany({
+        where,
+        include: {
+            user: {
+                include: {
+                    reputationLogs: false
                 }
             },
-            orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' },
-            skip,
-            take: limit,
-        }))
-    ]);
+            subject: true,
+            alternatives: {
+                include: {
+                    votes: true
+                }
+            },
+            comments: true,
+            _count: {
+                select: {
+                    comments: true,
+                }
+            }
+        },
+        orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' },
+        skip,
+        take: limit,
+    }));
 
     // Map and calculate metrics (No more filtering here!)
     const processedQuestions = questions.map(q => {
