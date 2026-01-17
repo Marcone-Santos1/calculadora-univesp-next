@@ -109,7 +109,7 @@ export async function handleDailyLogin(userId: string) {
                 status = 'STREAK_CONTINUED';
             } else {
                 // Streak broken
-                newStreak = 1;
+                newStreak = 0;
                 shouldAward = true;
                 status = 'STREAK_RESET';
             }
@@ -272,5 +272,6 @@ export async function checkAchievements(userId: string) {
         console.error('Error checking achievements:', error);
     }
 }
+
 
 
