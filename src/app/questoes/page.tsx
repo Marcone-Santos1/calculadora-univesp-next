@@ -14,12 +14,23 @@ import { Metadata } from "next";
 import { Loading } from '@/components/Loading';
 import { injectAdsWithRandomInterval } from '@/utils/functions';
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string }> }): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; page?: string; }> }): Promise<Metadata> {
     const params = await searchParams;
-    const { q: query, subject: subjectName } = params;
+    const { q: query, subject: subjectName, page } = params;
 
     const baseUrl = SITE_CONFIG.BASE_URL;
-    let canonical = baseUrl;
+
+    if (query) {
+        return {
+            title: `Busca por "${query}" | Calculadora Univesp`,
+            robots: {
+                index: false,
+                follow: true,
+            }
+        };
+    }
+
+    let canonical = `${baseUrl}/questoes`;
 
     let title = "Questões Univesp Resolvidas: Estude para as Provas (Comunidade)";
     let description = "Prepare-se para o bimestre com questões reais e exercícios compartilhados por alunos. Filtre por disciplina, veja gabaritos comentados e passe sem sufoco.";
@@ -31,13 +42,14 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
         if (activeSubject) {
             title = `Questões de ${activeSubject.name} Univesp | Gabaritos e Revisão`;
             description = `Está estudando ${activeSubject.name}? Acesse exercícios resolvidos e questões de provas anteriores da Univesp para treinar e tirar suas dúvidas.`;
-            canonical = `${baseUrl}/questoes?subject=${subjectName}`;
+            canonical = `${baseUrl}/questoes?subject=${encodeURIComponent(subjectName)}`;
         }
     }
-    else if (query) {
-        title = `Busca por "${query}" | Questões e Dúvidas Univesp`;
-        description = `Resultados encontrados para "${query}" na nossa base colaborativa de questões e estudos.`;
-        canonical = baseUrl;
+
+    if (page && Number(page) > 1) {
+        const separator = canonical.includes('?') ? '&' : '?';
+        canonical = `${canonical}${separator}page=${page}`;
+        title = `${title} - Página ${page}`;
     }
 
     return {

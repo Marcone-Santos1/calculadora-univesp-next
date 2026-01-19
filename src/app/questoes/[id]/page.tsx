@@ -32,6 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         return {
             title: 'Questão não encontrada | Calculadora Univesp',
             description: 'A questão que você procura não foi encontrada.',
+            robots: {
+                index: false,
+                follow: false,
+            }
         };
     }
 
