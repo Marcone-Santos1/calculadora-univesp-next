@@ -14,21 +14,36 @@ import { Metadata } from "next";
 import { Loading } from '@/components/Loading';
 import { injectAdsWithRandomInterval } from '@/utils/functions';
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; page?: string; }> }): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: {
+    searchParams: Promise<{
+        q?: string;
+        subject?: string;
+        page?: string;
+        verified?: string;
+        verificationRequested?: string;
+        activity?: string;
+        sort?: string;
+    }>;
+}): Promise<Metadata> {
     const params = await searchParams;
-    const { q: query, subject: subjectName, page } = params;
+    const {
+        q: query,
+        subject: subjectName,
+        page,
+        verified,
+        verificationRequested,
+        activity,
+        sort,
+    } = params;
 
     const baseUrl = SITE_CONFIG.BASE_URL;
 
-    if (query) {
-        return {
-            title: `Busca por "${query}" | Calculadora Univesp`,
-            robots: {
-                index: false,
-                follow: true,
-            }
-        };
-    }
+    const hasNonIndexableFilters =
+      !!query ||
+      !!verified ||
+      !!verificationRequested ||
+      !!activity ||
+      !!sort;
 
     let canonical = `${baseUrl}/questoes`;
 
@@ -51,6 +66,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
         canonical = `${canonical}${separator}page=${page}`;
         title = `${title} - Página ${page}`;
     }
+
+    const shouldIndex = !hasNonIndexableFilters;
+
 
     return {
         title: title,
@@ -75,10 +93,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
             ],
         },
         robots: {
-            index: true,
+            index: shouldIndex,
             follow: true,
             googleBot: {
-                index: true,
+                index: shouldIndex,
                 follow: true,
                 'max-video-preview': -1,
                 'max-image-preview': 'large',
