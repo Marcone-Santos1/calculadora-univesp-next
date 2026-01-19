@@ -1,0 +1,587 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  isAdmin       Boolean   @default(false)
+  accounts      Account[]
+  sessions      Session[]
+
+  // App specific relations
+  questions     Question[]
+  comments      Comment[]
+  votes         Vote[]
+  notifications Notification[]
+
+  // Gamification
+  reputation     Int             @default(0)
+  reputationLogs ReputationLog[]
+
+  // Reporting
+  reportsFiled Report[] @relation("Reporter")
+
+  // Feedback
+  Feedbacks Feedback[]
+
+  // Blog
+  posts BlogPost[]
+
+  // Profile
+  bio         String? @db.Text
+  location    String?
+  website     String?
+  socialLinks Json?
+
+  aacActivities   AacActivity[]
+  aacReportConfig AacReportConfig?
+
+  scrapeHistory ScrapeHistory[]
+
+  advertiserProfile AdvertiserProfile?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+
+  // Gamification & Tracking
+  lastLoginAt  DateTime?
+  loginStreak  Int               @default(0)
+  achievements UserAchievement[]
+  commentVotes CommentVote[]
+  mockExams    MockExam[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // 'REPLY', 'ANSWER', 'VOTE', 'VERIFICATION'
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Optional links
+  link String?
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// App Domain Models
+
+model Subject {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  icon      String?
+  color     String?
+  questions Question[]
+}
+
+model Question {
+  id                      String    @id @default(cuid())
+  title                   String
+  text                    String    @db.LongText // Alterado para LongText para suportar textos grandes
+  week                    String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  views                   Int       @default(0)
+  isVerified              Boolean   @default(false)
+  verificationRequested   Boolean   @default(false)
+  verificationRequestDate DateTime?
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id])
+
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  alternatives    Alternative[]
+  comments        Comment[]
+  reports         Report[]
+  mockAppearances MockExamQuestion[]
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model Alternative {
+  id        String  @id @default(cuid())
+  letter    String // A, B, C, D, E
+  text      String  @db.Text // Texto da alternativa pode ser longo
+  isCorrect Boolean @default(false) // Only if verified
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  votes Vote[]
+
+  @@index([questionId])
+}
+
+model Vote {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  alternativeId String
+  alternative   Alternative @relation(fields: [alternativeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, alternativeId])
+  @@index([userId])
+  @@index([alternativeId])
+}
+
+model CommentVote {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([commentId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  // For nested replies
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  votes   CommentVote[]
+  reports Report[]
+
+  // Moderation
+  isDeleted        Boolean @default(false)
+  moderationReason String?
+
+  @@index([userId])
+  @@index([questionId])
+  @@index([parentId])
+}
+
+model ReputationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  reason    String
+  status    String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  createdAt DateTime @default(now())
+
+  reporterId String
+  reporter   User   @relation("Reporter", fields: [reporterId], references: [id])
+
+  // Optional targets
+  questionId String?
+  question   Question? @relation(fields: [questionId], references: [id])
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
+  @@index([reporterId])
+  @@index([questionId])
+  @@index([commentId])
+}
+
+model BlogPost {
+  id         String  @id @default(cuid())
+  slug       String  @unique
+  title      String
+  excerpt    String  @db.Text
+  content    String  @db.LongText // LongText para artigos grandes
+  coverImage String?
+  published  Boolean @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String? @db.Text
+  keywords        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  @@index([authorId])
+}
+
+enum FeedbackType {
+  BUG
+  IDEA
+  OTHER
+}
+
+model Feedback {
+  id      String       @id @default(cuid())
+  message String       @db.Text
+  type    FeedbackType @default(IDEA)
+  pageUrl String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+
+  @@index([userId])
+}
+
+// ARC / Horas Complementares
+enum AacCategory {
+  COURSE
+  CULTURAL
+  EXPERIENCE
+  INTERNSHIP
+  OTHER
+}
+
+model AacActivity {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  category    AacCategory
+  institution String?
+
+  startDate     DateTime?
+  endDate       DateTime?
+  originalHours Int
+  validHours    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AacReportConfig {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ra          String?
+  polo        String?
+  ingressDate String?
+  intro       String? @db.Text
+  conclusion  String? @db.Text
+
+  activityDetails Json?
+  // Record<activityId, { description, relation }>
+
+  updatedAt DateTime @updatedAt
+}
+
+model ScrapeHistory {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  year     String
+  examId   String
+  examName String
+
+  completedAt DateTime @default(now())
+
+  @@unique([userId, examId])
+  @@index([userId])
+}
+
+// --- ADS PLATFORM ---
+
+enum AdCampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  PAUSED
+  REJECTED
+  OUT_OF_BUDGET
+}
+
+enum AdTransactionType {
+  DEPOSIT
+  SPEND
+  REFUND
+}
+
+enum AdTransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AdBillingType {
+  CPC
+  CPM
+}
+
+enum AdEventType {
+  VIEW
+  CLICK
+}
+
+model AdvertiserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance      Int             @default(0) // In cents
+  taxId        String?
+  cellphone    String?
+  companyName  String?
+  campaigns    AdCampaign[]
+  transactions AdTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdCampaign {
+  id           String            @id @default(cuid())
+  advertiserId String
+  advertiser   AdvertiserProfile @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+
+  title  String
+  status AdCampaignStatus @default(DRAFT)
+
+  billingType AdBillingType @default(CPC)
+  priority    Int           @default(1)
+
+  dailyBudget Int
+  costValue   Int
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  creatives    AdCreative[]
+  dailyMetrics AdDailyMetrics[]
+  eventLogs    AdEventLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rejectionReason String?
+
+  @@index([advertiserId])
+}
+
+model AdCreative {
+  id         String     @id @default(cuid())
+  campaignId String
+  campaign   AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  headline       String
+  description    String @db.Text
+  imageUrl       String
+  destinationUrl String
+
+  views  Int @default(0)
+  clicks Int @default(0)
+
+  eventLogs    AdEventLog[]
+  dailyMetrics AdCreativeDailyMetrics[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([campaignId])
+}
+
+model AdDailyMetrics {
+  id         String     @id @default(cuid())
+  campaignId String
+  campaign   AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  date   DateTime
+  views  Int      @default(0)
+  clicks Int      @default(0)
+  spend  Int      @default(0)
+  ctr    Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([campaignId, date])
+  @@index([campaignId])
+}
+
+model AdCreativeDailyMetrics {
+  id         String     @id @default(cuid())
+  creativeId String
+  creative   AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+
+  date   DateTime
+  views  Int      @default(0)
+  clicks Int      @default(0)
+  spend  Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([creativeId, date])
+  @@index([creativeId])
+}
+
+model AdEventLog {
+  id         String     @id @default(cuid())
+  campaignId String
+  campaign   AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  creativeId String?
+  creative   AdCreative? @relation(fields: [creativeId], references: [id])
+
+  type      AdEventType
+  userId    String?
+  ipAddress String?
+  userAgent String?
+  geoRegion String?
+
+  cost Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([campaignId])
+  @@index([createdAt])
+  @@index([creativeId])
+}
+
+model AdTransaction {
+  id           String            @id @default(cuid())
+  advertiserId String
+  advertiser   AdvertiserProfile @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+
+  type   AdTransactionType
+  amount Int
+  status AdTransactionStatus @default(PENDING)
+
+  gatewayId String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([advertiserId])
+}
+
+// --- MOCK EXAMS (Simulados) ---
+
+enum MockExamStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model MockExam {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status         MockExamStatus @default(IN_PROGRESS)
+  score          Int            @default(0)
+  totalQuestions Int            @default(0)
+
+  xpEarned  Int @default(0)
+  timeSpent Int @default(0)
+
+  createdAt  DateTime           @default(now())
+  finishedAt DateTime?
+  questions  MockExamQuestion[]
+
+  @@index([userId])
+}
+
+model MockExamQuestion {
+  id         String   @id @default(cuid())
+  mockExamId String
+  mockExam   MockExam @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  selectedAlternativeId String?
+  isCorrect             Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([mockExamId])
+  @@index([questionId])
+}
