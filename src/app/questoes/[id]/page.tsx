@@ -70,20 +70,23 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 // Server Component
 const QuestionDetailContent = async ({ id }: { id: string }) => {
-    
-    const question = await getQuestion(id);
-    const ads = await getAdsForFeed(1);
+
+
+    const [question, ads, session] = await Promise.all([
+        getQuestion(id),
+        getAdsForFeed(1),
+        auth()
+    ]);
+
+    if (!question) {
+        notFound();
+    }
 
     const relatedQuestions = await getRelatedQuestions(question?.subject?.id || '', id);
 
     // Process feed items
     const feedItems = injectAdsWithRandomInterval(relatedQuestions, ads);
 
-    const session = await auth();
-
-    if (!question) {
-        notFound();
-    }
 
     const totalVotes = question.alternatives.reduce((acc: number, alt: any) => acc + alt.voteCount, 0);
 
@@ -141,7 +144,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                 name: question.userName || 'Usuário da Univesp',
                 url: question.userId ? `${SITE_CONFIG.BASE_URL}/perfil/${question.userId}` : undefined,
             },
-            acceptedAnswer: acceptedAnswer, 
+            acceptedAnswer: acceptedAnswer,
             suggestedAnswer: question.comments
                 .filter((comment: Comment) => comment.text && comment.text.trim() !== "")
                 .map((comment: Comment) => ({
