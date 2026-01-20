@@ -118,11 +118,9 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const page = Number(params.page) || 1;
 
     // Fetch data including ads
-    const [data, subjects, ads] = await Promise.all([
-        getQuestions(query, subject, verified, verificationRequested, activity, sort, page),
-        getSubjectsWithCounts(),
-        getAdsForFeed(10) // Fetch more ads to ensure variety
-    ]);
+    const data = await getQuestions(query, subject, verified, verificationRequested, activity, sort, page);
+    const subjects = await getSubjectsWithCounts();
+    const ads = await getAdsForFeed(10);
 
     const { questions, meta } = data;
 
