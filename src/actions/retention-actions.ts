@@ -13,6 +13,23 @@ export async function checkStreakRisks(dryRun = false) {
     // Users who haven't logged in since the start of today are at risk.
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+
+    console.log(`[StreakMaintenance] Resetting streaks for users inactive since before: ${startOfYesterday.toISOString()}`);
+
+    // UPDATE EM MASSA (Extremamente rápido e eficiente)
+    // Zera o streak de quem tem streak > 0 E não logou desde antes de ontem.
+    const result = await prisma.user.updateMany({
+        where: {
+            loginStreak: { gt: 0 },
+            lastLoginAt: { lt: startOfYesterday } 
+        },
+        data: {
+            loginStreak: 0
+        }
+    });
+
+    console.log(`[StreakMaintenance] ${result.count} broken streaks were reset.`);
 
     // 2. Find at-risk users
     // Criteria:
