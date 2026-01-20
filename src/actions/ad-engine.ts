@@ -167,56 +167,6 @@ export async function getAdsForFeed(count: number = 1) {
         // Remove used campaign to prevent duplicates
         const index = available.findIndex(c => c.id === campaign.id);
         if (index > -1) available.splice(index, 1);
-
-        // Track View (Increment views counter + Create Event Log)
-        // We do this asynchronously to not slow down response
-        (async () => {
-            try {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                // Basic view increment with retry
-                await executeWithRetry(() => db.adCreative.update({
-                    where: { id: creative.id },
-                    data: { views: { increment: 1 } }
-                }));
-
-                await executeWithRetry(() => db.adDailyMetrics.upsert({
-                    where: { campaignId_date: { campaignId: campaign.id, date: today } },
-                    create: { campaignId: campaign.id, date: today, views: 1 },
-                    update: { views: { increment: 1 } }
-                }));
-
-                await executeWithRetry(() => db.adCreativeDailyMetrics.upsert({
-                    where: { creativeId_date: { creativeId: creative.id, date: today } },
-                    create: { creativeId: creative.id, date: today, views: 1 },
-                    update: { views: { increment: 1 } }
-                }));
-
-                // CPM Billing Logic:
-                // If CPM, we should theoretically charge here.
-                // Simplification: If 1 view, cost is costValue / 1000.
-                // If costValue >= 1000 (R$ 10.00 CPM), charge 1 cent.
-                // If costValue < 1000, use probability.
-                if (campaign.billingType === 'CPM') {
-                    const chance = campaign.costValue / 1000;
-                    // If costValue is 200 (R$ 2.00), chance is 0.2. 20% chance to pay 1 cent.
-                    // If costValue is 1500 (R$ 15.00), chance is 1.5. Always pay 1 cent, 50% chance to pay 2 cents?
-                    // Easier: Charge floor(chance) + probabilistic remainder.
-
-                    const baseCharge = Math.floor(chance);
-                    const remainder = chance - baseCharge;
-                    let chargeAmount = baseCharge;
-                    if (Math.random() < remainder) chargeAmount += 1;
-
-                    if (chargeAmount > 0) {
-                        await processAdCharge(campaign.id, creative.id, campaign.advertiserId, chargeAmount, 'VIEW');
-                    }
-                }
-            } catch (error) {
-                console.error('Background ad tracking failed:', error);
-            }
-        })();
     }
 
     return ads;
@@ -330,6 +280,65 @@ export async function trackAdClick(adId: string, campaignId: string) {
         return { success: true };
     } catch (error) {
         console.error("Ad Click tracking failed", error);
+        return { success: false };
+    }
+}
+
+export async function trackAdView(adId: string, campaignId: string) {
+    try {
+        const campaign = await db.adCampaign.findUnique({
+            where: { id: campaignId },
+            include: { advertiser: true } // Need advertiserId for charging
+        });
+
+        if (!campaign) return { success: false };
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Basic view increment with retry
+        // We use executeWithRetry to handle potential concurency locks on counters
+        await executeWithRetry(() => db.adCreative.update({
+            where: { id: adId },
+            data: { views: { increment: 1 } }
+        }));
+
+        // Fire and forget metrics updates to don't slow down too much?
+        // Actually since this is now a dedicated action called by valid client, we can await to ensure it counts.
+        // But we should optimize.
+
+        await Promise.all([
+            executeWithRetry(() => db.adDailyMetrics.upsert({
+                where: { campaignId_date: { campaignId: campaign.id, date: today } },
+                create: { campaignId: campaign.id, date: today, views: 1 },
+                update: { views: { increment: 1 } }
+            })),
+            executeWithRetry(() => db.adCreativeDailyMetrics.upsert({
+                where: { creativeId_date: { creativeId: adId, date: today } },
+                create: { creativeId: adId, date: today, views: 1 },
+                update: { views: { increment: 1 } }
+            }))
+        ]);
+
+        // CPM Billing Logic:
+        if (campaign.billingType === 'CPM') {
+            const chance = campaign.costValue / 1000;
+            const baseCharge = Math.floor(chance);
+            const remainder = chance - baseCharge;
+            let chargeAmount = baseCharge;
+            if (Math.random() < remainder) chargeAmount += 1;
+
+            if (chargeAmount > 0) {
+                // Here we might risk "Double charging" if user triggers multiple views?
+                // Client side effect should have a "hasSentView" check.
+                await processAdCharge(campaign.id, adId, campaign.advertiserId, chargeAmount, 'VIEW');
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Ad View tracking failed", error);
+        // Fail silently to client
         return { success: false };
     }
 }

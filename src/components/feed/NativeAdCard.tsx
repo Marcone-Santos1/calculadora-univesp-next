@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 
+import { useEffect, useRef } from "react";
+import { trackAdView } from "@/actions/ad-engine";
+
 interface NativeAdCardProps {
     ad: {
         id: string;
@@ -17,6 +20,14 @@ interface NativeAdCardProps {
 
 export default function NativeAdCard({ ad }: NativeAdCardProps) {
     const trackingUrl = `/api/ad-click?adId=${ad.id}&campaignId=${ad.campaignId}&dest=${encodeURIComponent(ad.destinationUrl)}`;
+    const hasTracked = useRef(false);
+
+    useEffect(() => {
+        if (!hasTracked.current) {
+            hasTracked.current = true;
+            trackAdView(ad.id, ad.campaignId).catch(console.error);
+        }
+    }, [ad.id, ad.campaignId]);
 
     return (
         <a
