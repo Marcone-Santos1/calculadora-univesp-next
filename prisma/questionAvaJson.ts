@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
@@ -6,8 +6,6 @@ import * as dotenv from 'dotenv';
 import crypto from 'crypto';
 
 dotenv.config();
-
-const prisma = new PrismaClient();
 
 // --- CONFIGURAÇÃO R2 (Manter igual) ---
 const R2_BUCKET = process.env.R2_BUCKET_NAME!;

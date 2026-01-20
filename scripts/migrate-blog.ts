@@ -1,11 +1,9 @@
 
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import fs from 'fs';
 import path from 'path';
 import { articles } from '../src/data/articles';
-
-const prisma = new PrismaClient();
 
 // Map slugs to filenames based on src/app/blog/[slug]/page.tsx imports
 const slugToFilename: Record<string, string> = {

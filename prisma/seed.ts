@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
@@ -7,8 +7,6 @@ import { createQuestion } from '@/actions/question-actions';
 
 // Carrega variáveis de ambiente
 dotenv.config();
-
-const prisma = new PrismaClient();
 
 // Configuração do R2 (Replicando a lógica do seu src/lib/r2.ts para o ambiente Node puro)
 const R2_BUCKET = process.env.R2_BUCKET_NAME!;
