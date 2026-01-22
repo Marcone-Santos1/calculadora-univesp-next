@@ -7,13 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import dynamic from 'next/dynamic';
+import { ImageUploadArea } from "../editor/ImageUploadArea";
 
 const MarkdownEditor = dynamic(
     () => import('@/components/editor/MarkdownEditor').then((mod) => mod.MarkdownEditor),
     { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 dark:bg-gray-700 animate-pulse rounded-lg" /> }
 );
-
-import { ImageUploadArea } from '@/components/editor/ImageUploadArea';
 
 interface Subject {
     id: string;
@@ -40,8 +39,6 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
     const { saveQuestionDraft, clearQuestionDraft, preferences } = useUserPreferences();
     const isEditing = !!questionId;
 
-    // Form State
-    const [title, setTitle] = useState(initialData?.title || '');
     const [text, setText] = useState(initialData?.text || '');
     const [week, setWeek] = useState(initialData?.week || '');
     const [alternatives, setAlternatives] = useState(initialData?.alternatives || [
@@ -73,7 +70,6 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
     useEffect(() => {
         if (!isEditing && !isDraftLoaded && preferences.questionDraft) {
             const draft = preferences.questionDraft;
-            setTitle(draft.title || '');
             setText(draft.text || '');
             setWeek(draft.week || '');
             if (draft.subjectId) {
@@ -99,19 +95,19 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
 
         const timeoutId = setTimeout(() => {
             // Only save if there's some content
-            if (title || text || week || selectedSubject || alternatives.some(a => a.text)) {
+            if (text || week || selectedSubject || alternatives.some(a => a.text)) {
                 saveQuestionDraft({
-                    title,
+                    title: '',
                     text,
                     week,
                     subjectId: selectedSubject?.id,
-                    alternatives: alternatives.map(a => ({ text: a.text, isCorrect: false })) // isCorrect not used in form yet?
+                    alternatives: alternatives.map(a => ({ text: a.text, isCorrect: false }))
                 });
             }
         }, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [title, text, week, selectedSubject, alternatives, saveQuestionDraft, isEditing]);
+    }, [text, week, selectedSubject, alternatives, saveQuestionDraft, isEditing]);
 
     const handleAlternativeChange = (index: number, value: string) => {
         const newAlternatives = [...alternatives];
@@ -171,7 +167,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
             }
 
         } catch (error: any) {
-            showToast(error.message || 'Erro ao salvar questão', 'error');
+            showToast('Erro ao salvar questão', 'error');
             setIsSubmitting(false);
             setShowConfirmation(false);
         }
@@ -261,6 +257,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
                             value={week}
                             onChange={(e) => setWeek(e.target.value)}
                             className="w-full p-3 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                            required
                         >
                             <option value="">Não especificado</option>
                             <option value="Semana 1">Semana 1</option>
@@ -273,21 +270,6 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
                         </select>
                         <FaChevronDown className="absolute right-3 top-4 text-gray-400 pointer-events-none" />
                     </div>
-                </div>
-
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Título da Pergunta *
-                    </label>
-                    <input
-                        type="text"
-                        name="title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Resumo da dúvida..."
-                        className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
                 </div>
 
                 <div className="mb-6">
@@ -333,6 +315,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
                                     onChange={(e) => handleAlternativeChange(index, e.target.value)}
                                     placeholder={`Alternativa ${alt.id}`}
                                     className="flex-1 p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                    required
                                 />
                             </div>
                         ))}
@@ -432,4 +415,3 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
         </>
     );
 };
-

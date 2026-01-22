@@ -285,12 +285,23 @@ export async function createQuestion(formData: FormData) {
         throw new Error('Unauthorized');
     }
 
-    const title = formData.get('title') as string;
+    let title = formData.get('title') as string;
     const text = formData.get('text') as string;
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
     const isValidated = formData.get('isValidated') === 'isValidated';
+
+    if (!title || title.trim() === '') {
+        const cleanText = text.replace(/[#*`_]/g, '').trim();
+        title = cleanText.substring(0, 100);
+        const lastSpace = title.lastIndexOf(' ');
+        if (lastSpace > 0) {
+            title = title.substring(0, lastSpace) + '...';
+        } else {
+            title = title + '...';
+        }
+    }
 
     const existingQuestion = await prisma.question.findFirst({
         where: {
@@ -354,11 +365,22 @@ export async function updateQuestion(questionId: string, formData: FormData) {
         throw new Error('Unauthorized');
     }
 
-    const title = formData.get('title') as string;
+    let title = formData.get('title') as string;
     const text = formData.get('text') as string;
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
+
+    if (!title || title.trim() === '') {
+        const cleanText = text.replace(/[#*`_]/g, '').trim();
+        title = cleanText.substring(0, 100);
+        const lastSpace = title.lastIndexOf(' ');
+        if (lastSpace > 0) {
+            title = title.substring(0, lastSpace) + '...';
+        } else {
+            title = title + '...';
+        }
+    }
 
     // For updates, we might need to check permissions (admin or author)
     // Assuming admin access for now based on the route /admin/questions

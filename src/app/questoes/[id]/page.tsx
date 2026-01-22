@@ -204,7 +204,7 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                             </Link>
 
                             <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm font-medium">
-                                Semana {question.week}
+                                Semana {question.week?.toLowerCase().replace('semana', '')}
                             </span>
                             {question.isVerified && (
                                 <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium flex items-center gap-1">
