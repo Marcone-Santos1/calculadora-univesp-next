@@ -109,16 +109,48 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
         return () => clearTimeout(timeoutId);
     }, [text, week, selectedSubject, alternatives, saveQuestionDraft, isEditing]);
 
+    // Validation state
+    const [errors, setErrors] = useState({
+        subject: false,
+        week: false,
+        text: false,
+        alternatives: [] as number[],
+    });
+
+    const validate = () => {
+        const newErrors = {
+            subject: !selectedSubject,
+            week: !week,
+            text: !text || text.trim() === '',
+            alternatives: alternatives
+                .map((alt, index) => (!alt.text || alt.text.trim() === '' ? index : -1))
+                .filter(index => index !== -1),
+        };
+
+        setErrors(newErrors);
+
+        return !newErrors.subject && !newErrors.week && !newErrors.text && newErrors.alternatives.length === 0;
+    };
+
     const handleAlternativeChange = (index: number, value: string) => {
         const newAlternatives = [...alternatives];
         newAlternatives[index].text = value;
         setAlternatives(newAlternatives);
+
+        // Clear error if it exists for this alternative
+        if (errors.alternatives.includes(index)) {
+            setErrors(prev => ({
+                ...prev,
+                alternatives: prev.alternatives.filter(i => i !== index)
+            }));
+        }
     };
 
     const handleSubjectSelect = (subject: Subject) => {
         setSelectedSubject(subject);
         setSubjectSearch('');
         setIsSubjectDropdownOpen(false);
+        if (errors.subject) setErrors(prev => ({ ...prev, subject: false }));
     };
 
     const handleClearSubject = () => {
@@ -130,6 +162,12 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!validate()) {
+            showToast('Preencha todos os campos obrigatórios', 'error');
+            return;
+        }
+
         setShowConfirmation(true);
     };
 
@@ -178,15 +216,15 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
             <form ref={formRef} onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                 {/* Searchable Subject Field */}
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className={`block text-sm font-medium mb-2 ${errors.subject ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
                         Matéria *
                     </label>
                     <div className="relative">
-                        <input type="hidden" name="subjectId" value={selectedSubject?.id || ''} required />
+                        <input type="hidden" name="subjectId" value={selectedSubject?.id || ''} />
 
                         {selectedSubject ? (
                             // Selected subject display
-                            <div className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 flex items-center justify-between">
+                            <div className={`w-full p-3 rounded-lg border flex items-center justify-between ${errors.subject ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'}`}>
                                 <span className="text-gray-900 dark:text-white">{selectedSubject.name}</span>
                                 <button
                                     type="button"
@@ -207,12 +245,16 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
                                         onChange={(e) => {
                                             setSubjectSearch(e.target.value);
                                             setIsSubjectDropdownOpen(true);
+                                            if (errors.subject) setErrors(prev => ({ ...prev, subject: false }));
                                         }}
                                         onFocus={() => setIsSubjectDropdownOpen(true)}
-                                        className="w-full pl-10 pr-4 p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className={`w-full pl-10 pr-4 p-3 rounded-lg border outline-none text-gray-900 dark:text-white focus:ring-2 ${errors.subject ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-blue-500'}`}
                                     />
-                                    <FaSearch className="absolute left-3 top-4 text-gray-400" />
+                                    <FaSearch className={`absolute left-3 top-4 ${errors.subject ? 'text-red-400' : 'text-gray-400'}`} />
                                 </div>
+                                {errors.subject && (
+                                    <p className="mt-1 text-sm text-red-500">Selecione uma matéria</p>
+                                )}
 
                                 {/* Dropdown */}
                                 {isSubjectDropdownOpen && (
@@ -248,43 +290,54 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
 
                 {/* Week Selector */}
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Semana
+                    <label className={`block text-sm font-medium mb-2 ${errors.week ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                        Semana *
                     </label>
                     <div className="relative">
                         <select
                             name="week"
                             value={week}
-                            onChange={(e) => setWeek(e.target.value)}
-                            className="w-full p-3 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                            required
+                            onChange={(e) => {
+                                setWeek(e.target.value);
+                                if (errors.week) setErrors(prev => ({ ...prev, week: false }));
+                            }}
+                            className={`w-full p-3 pr-10 rounded-lg border outline-none text-gray-900 dark:text-white focus:ring-2 appearance-none cursor-pointer ${errors.week ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-blue-500'}`}
                         >
-                            <option value="">Não especificado</option>
-                            <option value="Semana 1">Semana 1</option>
-                            <option value="Semana 2">Semana 2</option>
-                            <option value="Semana 3">Semana 3</option>
-                            <option value="Semana 4">Semana 4</option>
-                            <option value="Semana 5">Semana 5</option>
-                            <option value="Semana 6">Semana 6</option>
-                            <option value="Semana 7">Semana 7</option>
+                            <option value="" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Não especificado</option>
+                            <option value="Semana 1" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 1</option>
+                            <option value="Semana 2" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 2</option>
+                            <option value="Semana 3" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 3</option>
+                            <option value="Semana 4" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 4</option>
+                            <option value="Semana 5" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 5</option>
+                            <option value="Semana 6" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 6</option>
+                            <option value="Semana 7" className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white">Semana 7</option>
                         </select>
                         <FaChevronDown className="absolute right-3 top-4 text-gray-400 pointer-events-none" />
                     </div>
+                    {errors.week && (
+                        <p className="mt-1 text-sm text-red-500">Selecione a semana</p>
+                    )}
                 </div>
 
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className={`block text-sm font-medium mb-2 ${errors.text ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
                         Detalhes da Questão *
                     </label>
                     <div className="space-y-4">
-                        <div className="prose dark:prose-invert max-w-none">
+                        <div className={`prose dark:prose-invert max-w-none rounded-lg ${errors.text ? 'border border-red-500' : ''}`}>
                             <MarkdownEditor
                                 value={text}
-                                onChange={setText}
+                                onChange={(val) => {
+                                    setText(val);
+                                    if (errors.text && val.trim()) setErrors(prev => ({ ...prev, text: false }));
+                                }}
                                 height={400}
                                 placeholder="Digite o texto da questão aqui..."
                             />
                         </div>
+                        {errors.text && (
+                            <p className="mt-1 text-sm text-red-500">Digite o enunciado da questão</p>
+                        )}
 
                         <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
                             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
@@ -301,22 +354,28 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ subjects, initialDat
                 </div>
 
                 <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Alternativas *</h3>
+                    <h3 className={`text-lg font-semibold mb-4 ${errors.alternatives.length > 0 ? 'text-red-500' : 'text-gray-800 dark:text-white'}`}>
+                        Alternativas *
+                    </h3>
                     <input type="hidden" name="alternatives" value={JSON.stringify(alternatives)} />
                     <div className="space-y-3">
                         {alternatives.map((alt, index) => (
-                            <div key={alt.id} className="flex items-center gap-3">
-                                <div className="w-8 h-8 flex items-center justify-center font-bold bg-gray-100 dark:bg-gray-700 rounded-full">
-                                    {alt.id}
+                            <div key={alt.id}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 flex items-center justify-center font-bold rounded-full ${errors.alternatives.includes(index) ? 'bg-red-100 text-red-600' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                        {alt.id}
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={alt.text}
+                                        onChange={(e) => handleAlternativeChange(index, e.target.value)}
+                                        placeholder={`Alternativa ${alt.id}`}
+                                        className={`flex-1 p-3 rounded-lg border outline-none text-gray-900 dark:text-white focus:ring-2 ${errors.alternatives.includes(index) ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-blue-500'}`}
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    value={alt.text}
-                                    onChange={(e) => handleAlternativeChange(index, e.target.value)}
-                                    placeholder={`Alternativa ${alt.id}`}
-                                    className="flex-1 p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                    required
-                                />
+                                {errors.alternatives.includes(index) && (
+                                    <p className="mt-1 ml-11 text-xs text-red-500">Preencha esta alternativa</p>
+                                )}
                             </div>
                         ))}
                     </div>

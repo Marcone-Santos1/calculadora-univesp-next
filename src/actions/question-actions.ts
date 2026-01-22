@@ -285,7 +285,7 @@ export async function createQuestion(formData: FormData) {
         throw new Error('Unauthorized');
     }
 
-    let title = formData.get('title') as string;
+    let title = '';
     const text = formData.get('text') as string;
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
@@ -293,7 +293,7 @@ export async function createQuestion(formData: FormData) {
     const isValidated = formData.get('isValidated') === 'isValidated';
 
     if (!title || title.trim() === '') {
-        const cleanText = text.replace(/[#*`_]/g, '').trim();
+        const cleanText = extractCleanTextFromMarkdown(text);
         title = cleanText.substring(0, 100);
         const lastSpace = title.lastIndexOf(' ');
         if (lastSpace > 0) {
@@ -352,7 +352,6 @@ export async function createQuestion(formData: FormData) {
     revalidatePath('/questoes');
 
     // Award reputation for creating a question
-    // Award reputation for creating a question
     await awardReputation(session.user.id, REPUTATION_EVENTS.QUESTION_CREATED.points, 'QUESTION_CREATED');
     await checkAchievements(session.user.id);
 
@@ -365,14 +364,14 @@ export async function updateQuestion(questionId: string, formData: FormData) {
         throw new Error('Unauthorized');
     }
 
-    let title = formData.get('title') as string;
+    let title = '';
     const text = formData.get('text') as string;
     const subjectId = formData.get('subjectId') as string;
     const week = formData.get('week') as string;
     const alternativesRaw = formData.get('alternatives');
 
     if (!title || title.trim() === '') {
-        const cleanText = text.replace(/[#*`_]/g, '').trim();
+        const cleanText = extractCleanTextFromMarkdown(text);
         title = cleanText.substring(0, 100);
         const lastSpace = title.lastIndexOf(' ');
         if (lastSpace > 0) {
@@ -570,6 +569,7 @@ export async function createComment(questionId: string, text: string, parentId?:
 }
 
 import { EmailService } from '@/lib/email-service';
+import {extractCleanTextFromMarkdown} from "@/utils/functions";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 export async function requestVerification(questionId: string) {

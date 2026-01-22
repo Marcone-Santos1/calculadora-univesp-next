@@ -126,3 +126,12 @@ export const validateTaxId = (taxId: string): boolean => {
 
   return false;
 };
+
+export function extractCleanTextFromMarkdown(md: string) {
+  return md
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/[#>*_`~\-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
