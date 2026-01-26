@@ -118,7 +118,7 @@ export const NavBar = () => {
           </nav>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-3 relative z-10">
+          <div className="flex items-center gap-1 relative z-10">
             {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
