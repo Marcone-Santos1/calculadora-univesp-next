@@ -122,7 +122,7 @@ export const NavBar = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all hover:rotate-12 active:scale-95 hidden sm:block"
+              className="p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all hover:rotate-12 active:scale-95"
               aria-label="Toggle theme"
             >
               {isDarkMode ? <FaRegSun className="text-lg" /> : <FaRegMoon className="text-lg" />}
