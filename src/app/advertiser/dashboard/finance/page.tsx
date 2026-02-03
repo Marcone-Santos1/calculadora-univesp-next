@@ -1,10 +1,12 @@
-
 import { auth } from "@/lib/auth";
 import { prisma as db } from "@/lib/prisma";
 import { createDeposit } from "@/actions/finance-actions";
+import { PaymentSuccessBanner } from "@/components/advertiser/PaymentSuccessBanner";
+import { PixSubmitButton } from "@/components/advertiser/PixSubmitButton";
 import { AdTransactionStatus, AdTransactionType } from "@prisma/client";
-import { FaWallet, FaHistory, FaQrcode } from "react-icons/fa";
+import { FaWallet, FaHistory } from "react-icons/fa";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 async function getFinanceData(userId: string): Promise<AdvertiserProfile | null> {
     const profile = await db.advertiserProfile.findUnique({
@@ -58,6 +60,9 @@ export default async function FinancePage() {
 
     return (
         <div className="space-y-6">
+            <Suspense fallback={null}>
+                <PaymentSuccessBanner />
+            </Suspense>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Financeiro</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -128,12 +133,7 @@ export default async function FinancePage() {
                                 />
                                 <p className="text-xs text-gray-500 mt-1">Mínimo: R$ 5,00</p>
                             </div>
-                            <button
-                                type="submit"
-                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors"
-                            >
-                                Pagar com PIX
-                            </button>
+                            <PixSubmitButton />
                         </form>
                     )}
                 </div>

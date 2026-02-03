@@ -1,5 +1,6 @@
 import { prisma as db } from "@/lib/prisma";
 import { AdTransactionStatus, AdTransactionType } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
@@ -32,11 +33,29 @@ export async function POST(req: Request) {
     const event = body.event; // 'billing.paid'
 
     if (event === "billing.paid") {
-        const metadata = body.data.billing.metadata;
-        const transactionId = metadata.transactionId;
+        const metadata = body.data?.billing?.metadata;
+        let transactionId = metadata?.transactionId;
+
+        // Fallback: AbacatePay may not echo metadata in webhooks; find by gatewayId (billing ID)
+        if (!transactionId) {
+            const billingId = body.data?.id ?? body.data?.billing?.id;
+            if (billingId) {
+                const byGateway = await db.adTransaction.findFirst({
+                    where: { gatewayId: billingId, status: AdTransactionStatus.PENDING },
+                    select: { id: true },
+                });
+                transactionId = byGateway?.id ?? undefined;
+            }
+        }
 
         if (!transactionId) {
-            return NextResponse.json({ error: "No transaction ID" }, { status: 400 });
+            console.error("Webhook billing.paid: could not resolve transaction", {
+                hasData: !!body.data,
+                hasBilling: !!body.data?.billing,
+                hasMetadata: !!metadata,
+                billingId: body.data?.id ?? body.data?.billing?.id,
+            });
+            return NextResponse.json({ error: "No transaction ID in metadata" }, { status: 400 });
         }
 
         try {
@@ -94,6 +113,8 @@ export async function POST(req: Request) {
                 const html = template.body(userName, body.data.billing.amount);
                 await EmailService.sendEmail({ email: userEmail, name: userName }, template.subject, html);
             }
+
+            revalidatePath("/advertiser/dashboard/finance");
 
             return NextResponse.json({ received: true });
         } catch (error) {

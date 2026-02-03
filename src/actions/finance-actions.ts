@@ -30,29 +30,33 @@ export async function createDeposit(amountInCents: number) {
         advertiserId = newAdvertiser.id;
     }
 
-    // 1. Create Pending Transaction
+    const customerData = {
+        name: user.name || "Cliente sem nome",
+        email: user.email || "email@nao.informado",
+        cellphone: user.advertiserProfile?.cellphone || "",
+        taxId: user.advertiserProfile?.taxId || ""
+    };
+
+    if (!customerData.cellphone || !customerData.taxId) {
+        throw new Error("Dados incompletos: Telefone e CPF/CNPJ são obrigatórios.");
+    }
+
+    // 1. Create Pending Transaction first (so we have transactionId for webhook metadata)
     const transaction = await db.adTransaction.create({
         data: {
             advertiserId: advertiserId!,
             type: AdTransactionType.DEPOSIT,
             amount: amountInCents,
             status: AdTransactionStatus.PENDING,
+            gatewayId: null,
+            metadata: {
+                type: "DEPOSIT",
+                userId: user.id,
+            },
         },
     });
 
-    // 2. Call AbacatePay API
     try {
-        const customerData = {
-            name: user.name || "Cliente sem nome",
-            email: user.email || "email@nao.informado",
-            cellphone: user.advertiserProfile?.cellphone || "",
-            taxId: user.advertiserProfile?.taxId || ""
-        };
-
-        if (!customerData.cellphone || !customerData.taxId) {
-            throw new Error("Dados incompletos: Telefone e CPF/CNPJ são obrigatórios.");
-        }
-
         const response = await fetch(`${ABACATEPAY_URL}/billing/create`, {
             method: "POST",
             headers: {
@@ -73,10 +77,7 @@ export async function createDeposit(amountInCents: number) {
                 returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/advertiser/dashboard/finance`,
                 completionUrl: `${process.env.NEXT_PUBLIC_APP_URL}/advertiser/dashboard/finance?success=true`,
                 customer: customerData,
-                metadata: {
-                    transactionId: transaction.id,
-                    userId: user.id,
-                },
+                metadata: { transactionId: transaction.id },
             }),
         });
 
@@ -87,13 +88,15 @@ export async function createDeposit(amountInCents: number) {
 
         const data = await response.json();
 
-        const paymentUrl = data.data.url;
+        // 2. Update transaction with gateway ID
+        await db.adTransaction.update({
+            where: { id: transaction.id },
+            data: { gatewayId: data.data.id },
+        });
 
-        return { url: paymentUrl };
-
+        return { url: data.data.url };
     } catch (error) {
         console.error("AbacatePay Error:", error);
-        // Mark transaction as failed?
         await db.adTransaction.update({
             where: { id: transaction.id },
             data: { status: AdTransactionStatus.FAILED },
