@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createSystemAnnouncement } from '@/actions/admin-actions';
-import { FaBullhorn, FaEnvelope, FaBell, FaExclamationTriangle, FaInfoCircle, FaCheckCircle, FaEye, FaCode, FaMobileAlt, FaDesktop, FaMagic, FaChevronDown, FaLayerGroup, FaHandSparkles, FaFileAlt } from 'react-icons/fa';
-import { BaseEmailTemplate, PredefinedTemplates, EmailComponents, renderEmailBlocks, EmailBlock } from '@/lib/email-templates';
+import { useState, useEffect, useCallback } from 'react';
+import { createSystemAnnouncement, getAdminUsersForEmail, getTotalUsersWithEmail } from '@/actions/admin-actions';
+import { FaBullhorn, FaEnvelope, FaBell, FaExclamationTriangle, FaInfoCircle, FaCheckCircle, FaEye, FaCode, FaMobileAlt, FaDesktop, FaMagic, FaChevronDown, FaLayerGroup, FaHandSparkles, FaUserFriends } from 'react-icons/fa';
+import { BaseEmailTemplate, PredefinedTemplates, renderEmailBlocks, EmailBlock } from '@/lib/email-templates';
 import { EmailBuilder } from '@/components/admin/EmailBuilder';
+import { UserSelector } from '@/components/admin/UserSelector';
 
 export default function AdminAnnouncementsPage() {
     const [type, setType] = useState<'INFO' | 'WARNING' | 'IMPORTANT'>('INFO');
@@ -19,6 +20,11 @@ export default function AdminAnnouncementsPage() {
     const [previewDevice, setPreviewDevice] = useState<'MOBILE' | 'DESKTOP'>('DESKTOP');
     const [selectedTemplate, setSelectedTemplate] = useState('CUSTOM');
 
+    // User targeting state
+    const [isAllSelected, setIsAllSelected] = useState(true);
+    const [selectedUsers, setSelectedUsers] = useState<{ id: string; name: string | null; email: string | null }[]>([]);
+    const [totalUsersCount, setTotalUsersCount] = useState<number | undefined>(undefined);
+
     // Preview
     const [previewHtml, setPreviewHtml] = useState('');
 
@@ -32,6 +38,16 @@ export default function AdminAnnouncementsPage() {
             setPreviewHtml(fullHtml);
         }
     }, [title, blocks, channels]);
+
+    // Fetch total users count on mount
+    useEffect(() => {
+        getTotalUsersWithEmail().then(setTotalUsersCount).catch(console.error);
+    }, []);
+
+    // User search callback for UserSelector
+    const handleFetchUsers = useCallback(async (search: string) => {
+        return await getAdminUsersForEmail(search);
+    }, []);
 
     const handleTemplateChange = (key: string) => {
         setSelectedTemplate(key);
@@ -102,21 +118,30 @@ export default function AdminAnnouncementsPage() {
                 throw new Error("Digite a mensagem curta para a notificação interna.");
             }
 
+            if (!isAllSelected && selectedUsers.length === 0) {
+                throw new Error("Selecione pelo menos um usuário destinatário.");
+            }
+
             const emailHtml = renderEmailBlocks(blocks);
+            const targetUserIds = isAllSelected ? 'ALL' : selectedUsers.map(u => u.id);
+
             console.log(type);
             const res = await createSystemAnnouncement({
                 title,
                 message: inAppMessage || 'Verifique seu email para mais detalhes.',
                 htmlMessage: emailHtml,
                 type,
-                channels
+                channels,
+                targetUserIds
             });
 
             if (res.success) {
-                setResult({ success: true, message: 'Comunicado disparado com sucesso!' });
+                setResult({ success: true, message: `Comunicado disparado com sucesso para ${isAllSelected ? 'todos os usuários' : selectedUsers.length + ' usuário(s)'}!` });
                 setTitle('');
                 setInAppMessage('');
                 setBlocks([]);
+                setSelectedUsers([]);
+                setIsAllSelected(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch (error) {
@@ -235,6 +260,22 @@ export default function AdminAnnouncementsPage() {
                                         </label>
                                     </div>
                                 </div>
+
+                                {/* User Targeting */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                                        <FaUserFriends className="text-blue-500" />
+                                        Destinatários
+                                    </label>
+                                    <UserSelector
+                                        selectedUsers={selectedUsers}
+                                        onSelectionChange={setSelectedUsers}
+                                        fetchUsers={handleFetchUsers}
+                                        isAllSelected={isAllSelected}
+                                        onToggleAll={setIsAllSelected}
+                                        totalUsersCount={totalUsersCount}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -344,7 +385,7 @@ export default function AdminAnnouncementsPage() {
                                 </div>
                             </button>
                             <p className="text-center text-xs text-gray-400 mt-3">
-                                Esta ação enviará mensagens para {channels.length > 0 ? 'todos os usuários ativos' : 'ninguém'}.
+                                Esta ação enviará mensagens para {channels.length > 0 ? (isAllSelected ? 'todos os usuários ativos' : `${selectedUsers.length} usuário(s) selecionado(s)`) : 'ninguém'}.
                             </p>
                         </div>
                     </form>

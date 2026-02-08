@@ -443,6 +443,51 @@ export async function toggleUserAdmin(id: string) {
   revalidatePath('/admin/users');
 }
 
+/**
+ * Get users for email selector dropdown
+ * Returns users with valid emails, optimized for the UserSelector component
+ */
+export async function getAdminUsersForEmail(search?: string) {
+  await requireAdmin();
+
+  const where: any = {
+    email: { not: null }
+  };
+
+  if (search && search.trim().length > 0) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } }
+    ];
+  }
+
+  const users = await prisma.user.findMany({
+    where,
+    select: {
+      id: true,
+      name: true,
+      email: true
+    },
+    orderBy: { name: 'asc' },
+    take: 20 // Limit results for performance
+  });
+
+  return users;
+}
+
+/**
+ * Get total count of users with email for "All users" display
+ */
+export async function getTotalUsersWithEmail() {
+  await requireAdmin();
+
+  const count = await prisma.user.count({
+    where: { email: { not: null } }
+  });
+
+  return count;
+}
+
 // ============ Dashboard Stats ============
 
 export async function getAdminStats() {
@@ -561,12 +606,18 @@ export async function createSystemAnnouncement(data: {
   htmlMessage?: string; // Optional rich HTML content
   type: 'INFO' | 'WARNING' | 'IMPORTANT';
   channels: string[];
+  targetUserIds?: string[] | 'ALL'; // Optional: specific user IDs or 'ALL' for everyone
 }) {
   await requireAdmin();
 
+  // Determine target users based on targetUserIds
+  const isTargetingAll = !data.targetUserIds || data.targetUserIds === 'ALL';
+  const targetIds = Array.isArray(data.targetUserIds) ? data.targetUserIds : null;
+
   // 1. In-App Notifications
   if (data.channels.includes('IN_APP')) {
-    const users = await prisma.user.findMany({ select: { id: true } });
+    const userWhere = isTargetingAll ? {} : { id: { in: targetIds! } };
+    const users = await prisma.user.findMany({ where: userWhere, select: { id: true } });
 
     if (users.length > 0) {
       const notificationsData = users.map(user => ({
@@ -586,10 +637,17 @@ export async function createSystemAnnouncement(data: {
   // 2. Email Broadcast
   let emailResult = null;
   if (data.channels.includes('EMAIL')) {
+    const emailWhere: any = { email: { not: null } };
+    if (!isTargetingAll && targetIds) {
+      emailWhere.id = { in: targetIds };
+    }
+
     const users = await prisma.user.findMany({
-      where: { email: { not: null } },
-      select: { email: true, name: true }
+      where: emailWhere,
+      select: { email: true, name: true, id: true }
     });
+
+
 
     // Convert to format expected by EmailService
     const recipients = users.map(u => ({ email: u.email!, name: u.name || 'User' }));
@@ -601,7 +659,7 @@ export async function createSystemAnnouncement(data: {
         `;
 
     emailResult = await EmailService.sendBroadcastEmail(
-      `[Aviso Univesp] ${data.title}`,
+      `${data.title}`,
       content,
       recipients
     );
