@@ -9,6 +9,73 @@ import React from 'react';
 import Image from 'next/image';
 import { SITE_CONFIG } from "@/utils/Constants";
 
+/**
+ * Extracts FAQ question/answer pairs from markdown content.
+ * Looks for H2 sections with FAQ-related keywords, then collects
+ * H3 headings (questions) + following paragraph (answer).
+ */
+function extractFaqFromMarkdown(content: string): Array<{ question: string; answer: string }> {
+  const FAQ_SECTION_KEYWORDS = /perguntas|faq|frequentes|dúvidas|duvidas/i;
+  const lines = content.split('\n');
+  const faqs: Array<{ question: string; answer: string }> = [];
+
+  let inFaqSection = false;
+  let currentQuestion: string | null = null;
+  let answerBuffer: string[] = [];
+
+  const flushCurrent = () => {
+    if (currentQuestion && answerBuffer.length > 0) {
+      const answer = answerBuffer.join(' ').trim();
+      if (answer) faqs.push({ question: currentQuestion, answer });
+    }
+    currentQuestion = null;
+    answerBuffer = [];
+  };
+
+  for (const line of lines) {
+    const h2Match = line.match(/^##\s+(.+)/);
+    const h3Match = line.match(/^###\s+(.+)/);
+    const isBlank = line.trim() === '';
+
+    if (h2Match) {
+      if (FAQ_SECTION_KEYWORDS.test(h2Match[1])) {
+        inFaqSection = true;
+        flushCurrent();
+      } else {
+        // Leaving FAQ section
+        if (inFaqSection) {
+          flushCurrent();
+          inFaqSection = false;
+        }
+      }
+      continue;
+    }
+
+    if (!inFaqSection) continue;
+
+    if (h3Match) {
+      flushCurrent();
+      currentQuestion = h3Match[1].trim();
+      continue;
+    }
+
+    if (currentQuestion) {
+      const text = line.trim();
+      if (text && !isBlank) {
+        // Strip markdown links [text](url) → text, and bold **text** → text
+        const clean = text
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1');
+        answerBuffer.push(clean);
+      }
+    }
+  }
+  flushCurrent();
+
+  return faqs;
+}
+
 // Função para gerar metadados dinâmicos (SEO)
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -80,6 +147,21 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     ]
   };
 
+  // Auto-detect FAQ sections and build FAQPage schema for featured snippets
+  const faqItems = extractFaqFromMarkdown(post.content);
+  const faqLd = faqItems.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: answer,
+      },
+    })),
+  } : null;
+
   return (
     <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags} id={post.id}>
 
@@ -89,6 +171,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+
+      {faqLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      )}
 
       <ReactMarkdown
         rehypePlugins={[rehypeRaw, rehypeSanitize]}

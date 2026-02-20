@@ -117,6 +117,9 @@ export async function getUserComments(userId: string, page: number = 1, limit: n
 export async function getLeaderboard(limit: number = 50) {
     return await prisma.user.findMany({
         orderBy: { reputation: 'desc' },
+        where: {
+            isAdmin: false
+        },
         take: limit,
         select: {
             id: true,

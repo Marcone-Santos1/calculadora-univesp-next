@@ -75,9 +75,26 @@ export default function RootLayout({
     ],
   };
 
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Calculadora Univesp",
+    "url": SITE_CONFIG.BASE_URL,
+    "description": SITE_CONFIG.DESCRIPTION,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${SITE_CONFIG.BASE_URL}/questoes?q={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <Script async={true} type={'application/ld+json'} id={'organizationJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+      <Script async={true} type={'application/ld+json'} id={'websiteJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       <GoogleAnalytics gaId="G-3141WNQQZQ" />
       <AdsenseScript />
       <AdsRefresher />

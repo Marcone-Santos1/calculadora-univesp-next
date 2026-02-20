@@ -39,11 +39,11 @@ export async function generateMetadata({ searchParams }: {
     const baseUrl = SITE_CONFIG.BASE_URL;
 
     const hasNonIndexableFilters =
-      !!query ||
-      !!verified ||
-      !!verificationRequested ||
-      !!activity ||
-      !!sort;
+        !!query ||
+        !!verified ||
+        !!verificationRequested ||
+        !!activity ||
+        !!sort;
 
     let canonical = `${baseUrl}/questoes`;
 
@@ -189,8 +189,8 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                                     <h3 className="font-bold text-lg">Quer divulgar sua marca aqui?</h3>
                                     <p className="text-blue-100 text-sm">Alcance milhares de estudantes da Univesp.</p>
                                 </div>
-                                <Link 
-                                    href="/anuncie" 
+                                <Link
+                                    href="/anuncie"
                                     className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition"
                                 >
                                     Saiba mais

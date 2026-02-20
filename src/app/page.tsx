@@ -1,8 +1,8 @@
-import {GradeCalculator} from "@/components/GradeCalculator";
-import {Content} from "@/components/Content";
-import {RecentPosts} from "@/components/blog/RecentPosts";
+import { GradeCalculator } from "@/components/GradeCalculator";
+import { Content } from "@/components/Content";
+import { RecentPosts } from "@/components/blog/RecentPosts";
 
-import {SITE_CONFIG} from "@/utils/Constants";
+import { SITE_CONFIG } from "@/utils/Constants";
 
 export default function HomePage() {
 
@@ -27,6 +27,37 @@ export default function HomePage() {
       },
       "query-input": "required name=search_term_string"
     }
+  };
+
+  const howToJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Como Calcular sua Nota Final na UNIVESP",
+    "description": "Use a calculadora para descobrir sua média bimestral, se precisa fazer exame, e qual nota precisa para passar.",
+    "totalTime": "PT1M",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": "Insira suas notas das Atividades do AVA",
+        "text": "Digite a média das suas atividades avaliativas no campo 'Atividades AVA'. Esse valor corresponde a 40% da sua nota bimestral.",
+        "url": `${SITE_CONFIG.BASE_URL}#calculadora`
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": "Insira sua nota da Prova Regular",
+        "text": "Digite a nota que você tirou (ou projeta tirar) na prova presencial. Esse valor corresponde a 60% da sua nota bimestral.",
+        "url": `${SITE_CONFIG.BASE_URL}#calculadora`
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": "Veja o resultado e saiba se você passa",
+        "text": "A calculadora exibe sua Média Bimestral automaticamente e indica se você está aprovado, de exame final, ou em DP.",
+        "url": `${SITE_CONFIG.BASE_URL}#calculadora`
+      }
+    ]
   };
 
   const faqJsonLd = {
@@ -65,18 +96,23 @@ export default function HomePage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd)}}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{__html: JSON.stringify(faqJsonLd)}}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
       />
 
 
-      <GradeCalculator/>
-      <Content/>
-      <RecentPosts limit={9}/>
+      <GradeCalculator />
+      <Content />
+      <RecentPosts limit={9} />
     </>
   );
 }
