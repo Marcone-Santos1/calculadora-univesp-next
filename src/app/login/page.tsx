@@ -1,6 +1,16 @@
 
 import { signIn } from "@/lib/auth";
 import { FaGoogle } from "react-icons/fa";
+import {Metadata} from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    robots: {
+      index: false,
+      follow: false,
+    }
+  };
+}
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
     const { callbackUrl } = await searchParams;

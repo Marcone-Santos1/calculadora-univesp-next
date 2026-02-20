@@ -1,8 +1,8 @@
-import { GradeCalculator } from "@/components/GradeCalculator";
-import { Content } from "@/components/Content";
-import { RecentPosts } from "@/components/blog/RecentPosts";
+import {GradeCalculator} from "@/components/GradeCalculator";
+import {Content} from "@/components/Content";
+import {RecentPosts} from "@/components/blog/RecentPosts";
 
-import { SITE_CONFIG } from "@/utils/Constants";
+import {SITE_CONFIG} from "@/utils/Constants";
 
 export default function HomePage() {
 
@@ -29,17 +29,54 @@ export default function HomePage() {
     }
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Como calcular a média final na Univesp?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A média da Univesp é calculada com base nas notas das atividades e provas. Use nossa calculadora para simular automaticamente."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Qual nota preciso para passar na Univesp?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Normalmente é necessário média mínima 6,0. Simule sua nota final e veja se você passa."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "A calculadora funciona para todos os cursos?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sim, ela segue as regras padrão da Univesp aplicáveis a todas as disciplinas bimestrais."
+        }
+      }
+    ]
+  };
+
   return (
     <>
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd)}}
       />
 
-      <GradeCalculator />
-      <Content />
-      <RecentPosts limit={9} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{__html: JSON.stringify(faqJsonLd)}}
+      />
+
+
+      <GradeCalculator/>
+      <Content/>
+      <RecentPosts limit={9}/>
     </>
   );
 }

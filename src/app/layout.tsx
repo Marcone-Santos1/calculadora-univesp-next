@@ -26,8 +26,8 @@ const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 
 export const metadata: Metadata = {
-  title: 'Calculadora Univesp | Média, Exame e Simulação',
-  description: 'Calculadora de Notas Univesp - Simulador de Médias. Calcule sua média final, simule a nota necessária no exame e planeje seus estudos na UNIVESP.',
+  title: 'Calculadora Univesp 2026 – Simule Média, Exame e Veja se Você Passa!',
+  description: 'Calcule sua média e sua nota final da Univesp em segundos — atualizado para 2026. Descubra quanto precisa na prova e se você passa sem complicação!',
   metadataBase: new URL(SITE_CONFIG.BASE_URL),
   robots: {
     index: true,
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
     'google-site-verification': '68Q5UEjHZo-zjJfY_P_3H9IbrIOeMVNDq16SBlTHrWA'
   },
   openGraph: {
-    title: 'Calculadora Univesp | Média, Exame e Simulação',
-    description: 'A ferramenta mais completa para os alunos da UNIVESP calcularem suas notas.',
+    title: 'Calculadora Univesp 2026 – Simule Média, Exame e Veja se Você Passa!',
+    description: 'Calcule sua média e sua nota final da Univesp em segundos — atualizado para 2026. Descubra quanto precisa na prova e se você passa sem complicação!',
     url: SITE_CONFIG.BASE_URL,
     siteName: 'Calculadora Univesp',
     images: [
