@@ -14,15 +14,15 @@ async function getCampaignWithMetrics(campaignId: string, userId: string) {
             creatives: {
                 include: {
                     dailyMetrics: {
-                        orderBy: { date: 'asc' },
+                        orderBy: { date: 'desc' }, // Pega os mais recentes
                         take: 30
                     }
                 }
             },
             advertiser: true,
             dailyMetrics: {
-                orderBy: { date: 'asc' },
-                take: 30 // Last 30 days
+                orderBy: { date: 'desc' }, // Pega os mais recentes
+                take: 30
             }
         }
     });
@@ -43,6 +43,8 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
     if (!campaign) {
         notFound();
     }
+
+    const chartData = [...campaign.dailyMetrics].reverse();
 
     // Calculate Aggregates
     const totalViews = campaign.dailyMetrics.reduce((acc, m) => acc + m.views, 0);
@@ -139,7 +141,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">Performance (Últimos 30 dias)</h2>
                 </div>
                 <div className="p-6 h-80">
-                    <AnalyticsChart data={campaign.dailyMetrics} />
+                    <AnalyticsChart data={chartData} />
                 </div>
             </div>
 
