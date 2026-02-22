@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -45,36 +45,37 @@ model User {
   isAdmin       Boolean   @default(false)
   accounts      Account[]
   sessions      Session[]
-  
+
   // App specific relations
   questions     Question[]
   comments      Comment[]
   votes         Vote[]
   notifications Notification[]
-  
+
   // Gamification
-  reputation    Int             @default(0)
+  reputation     Int             @default(0)
   reputationLogs ReputationLog[]
-  
+
   // Reporting
-  reportsFiled  Report[]        @relation("Reporter")
+  reportsFiled Report[] @relation("Reporter")
 
   // Feedback
-  Feedbacks       Feedback[]
-  
+  Feedbacks Feedback[]
+
   // Blog
-  posts         BlogPost[]
+  posts BlogPost[]
 
   // Profile
-  bio           String?   @db.Text
-  location      String?
-  website       String?
-  socialLinks   Json?
+  bio         String? @db.Text
+  location    String?
+  website     String?
+  socialLinks Json?
 
-  aacActivities AacActivity[]
+  aacActivities   AacActivity[]
   aacReportConfig AacReportConfig?
 
   scrapeHistory ScrapeHistory[]
+  importJobs    ImportJob[]
 
   advertiserProfile AdvertiserProfile?
 
@@ -82,18 +83,18 @@ model User {
   updatedAt DateTime @default(now()) @updatedAt
 
   // Gamification & Tracking
-  lastLoginAt   DateTime?
-  loginStreak   Int              @default(0)
-  achievements  UserAchievement[]
-  commentVotes  CommentVote[]
-  mockExams     MockExam[]
+  lastLoginAt  DateTime?
+  loginStreak  Int               @default(0)
+  achievements UserAchievement[]
+  commentVotes CommentVote[]
+  mockExams    MockExam[]
 }
 
 model UserAchievement {
   id            String   @id @default(cuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  achievementId String   
+  achievementId String
   unlockedAt    DateTime @default(now())
 
   @@unique([userId, achievementId])
@@ -103,13 +104,13 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String   // 'REPLY', 'ANSWER', 'VOTE', 'VERIFICATION'
+  type      String // 'REPLY', 'ANSWER', 'VOTE', 'VERIFICATION'
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
-  
+
   // Optional links
-  link      String?  // URL to redirect to
+  link String? // URL to redirect to
 }
 
 model VerificationToken {
@@ -131,89 +132,89 @@ model Subject {
 }
 
 model Question {
-  id          String   @id @default(cuid())
-  title       String
-  text        String   @db.Text
-  week        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  views       Int      @default(0)
-  isVerified            Boolean   @default(false)
-  verificationRequested Boolean   @default(false)
+  id                      String    @id @default(cuid())
+  title                   String
+  text                    String    @db.Text
+  week                    String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  views                   Int       @default(0)
+  isVerified              Boolean   @default(false)
+  verificationRequested   Boolean   @default(false)
   verificationRequestDate DateTime?
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  
-  subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id])
-  
-  alternatives Alternative[]
-  comments     Comment[]
-  reports      Report[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  alternatives    Alternative[]
+  comments        Comment[]
+  reports         Report[]
   mockAppearances MockExamQuestion[]
 }
 
 model Alternative {
-  id          String   @id @default(cuid())
-  letter      String   // A, B, C, D, E
-  text        String
-  isCorrect   Boolean  @default(false) // Only if verified
-  
-  questionId  String
-  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
-  votes       Vote[]
+  id        String  @id @default(cuid())
+  letter    String // A, B, C, D, E
+  text      String
+  isCorrect Boolean @default(false) // Only if verified
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  votes Vote[]
 }
 
 model Vote {
-  id            String      @id @default(cuid())
-  userId        String
-  user          User        @relation(fields: [userId], references: [id])
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   alternativeId String
   alternative   Alternative @relation(fields: [alternativeId], references: [id], onDelete: Cascade)
-  
-  createdAt     DateTime    @default(now())
+
+  createdAt DateTime @default(now())
 
   @@unique([userId, alternativeId]) // User can only vote once per alternative (logic should enforce once per question)
 }
 
 model CommentVote {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   commentId String
-  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
   @@unique([userId, commentId])
 }
 
 model Comment {
-  id         String   @id @default(cuid())
-  text       String   @db.Text
-  createdAt  DateTime @default(now())
-  
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  
+  id        String   @id @default(cuid())
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
-  // For nested replies
-  parentId   String?
-  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies    Comment[] @relation("CommentReplies")
-  
-  votes      CommentVote[]
 
-  reports    Report[]
+  // For nested replies
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  votes CommentVote[]
+
+  reports Report[]
 
   // Moderation
-  isDeleted        Boolean  @default(false)
+  isDeleted        Boolean @default(false)
   moderationReason String?
 }
 
@@ -222,7 +223,7 @@ model ReputationLog {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount    Int
-  reason    String   // 'VOTE_RECEIVED', 'ANSWER_ACCEPTED', etc.
+  reason    String // 'VOTE_RECEIVED', 'ANSWER_ACCEPTED', etc.
   createdAt DateTime @default(now())
 }
 
@@ -231,112 +232,112 @@ model Report {
   reason    String
   status    String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
   createdAt DateTime @default(now())
-  
+
   reporterId String
-  reporter   User     @relation("Reporter", fields: [reporterId], references: [id])
-  
+  reporter   User   @relation("Reporter", fields: [reporterId], references: [id])
+
   // Optional targets
   questionId String?
   question   Question? @relation(fields: [questionId], references: [id])
-  
-  commentId  String?
-  comment    Comment?  @relation(fields: [commentId], references: [id])
+
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
 }
 
 model BlogPost {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  excerpt     String   @db.Text
-  content     String   @db.Text
-  coverImage  String?
-  published   Boolean  @default(false)
-  
+  id         String  @id @default(cuid())
+  slug       String  @unique
+  title      String
+  excerpt    String  @db.Text
+  content    String  @db.Text
+  coverImage String?
+  published  Boolean @default(false)
+
   // SEO
   metaTitle       String?
   metaDescription String?
   keywords        String? // Comma separated
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 }
 
 enum FeedbackType {
-  BUG         // "Encontrei um erro"
-  IDEA        // "Tenho uma sugestão"
-  OTHER       // "Outro"
+  BUG // "Encontrei um erro"
+  IDEA // "Tenho uma sugestão"
+  OTHER // "Outro"
 }
 
 model Feedback {
-  id        String       @id @default(cuid())
-  message   String       @db.Text
-  type      FeedbackType @default(IDEA)
-  pageUrl   String?      // Útil para saber onde o erro ocorreu
-  
-  userId    String?
-  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id      String       @id @default(cuid())
+  message String       @db.Text
+  type    FeedbackType @default(IDEA)
+  pageUrl String? // Útil para saber onde o erro ocorreu
 
-  createdAt DateTime     @default(now())
-  isRead    Boolean      @default(false)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
 }
 
 // ARC / Horas Complementares
 enum AacCategory {
-  COURSE      // Cursos
-  CULTURAL    // Cultural (Filmes, Livros, Museus)
-  EXPERIENCE  // Vivência Profissional
-  INTERNSHIP  // Estágio
-  OTHER       // Outros
+  COURSE // Cursos
+  CULTURAL // Cultural (Filmes, Livros, Museus)
+  EXPERIENCE // Vivência Profissional
+  INTERNSHIP // Estágio
+  OTHER // Outros
 }
 
 model AacActivity {
-  id            String      @id @default(cuid())
-  title         String
-  description   String?     @db.Text
-  category      AacCategory
-  institution   String?
-  
-  startDate     DateTime?
-  endDate       DateTime?   // Se null, considera pontual? Ou obrigatório?
-  
-  originalHours Int         // Horas no certificado
-  validHours    Int         // Horas computadas após regras (pode ser recalculado no backend, mas persistido para performance)
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt // Importante para sync
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  category    AacCategory
+  institution String?
 
-  userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate DateTime?
+  endDate   DateTime? // Se null, considera pontual? Ou obrigatório?
+
+  originalHours Int // Horas no certificado
+  validHours    Int // Horas computadas após regras (pode ser recalculado no backend, mas persistido para performance)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt // Importante para sync
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AacReportConfig {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  ra              String?
-  polo            String?
-  ingressDate     String?
-  intro           String?  @db.Text
-  conclusion      String?  @db.Text
-  
-  activityDetails Json?    // Record<activityId, { description, relation }>
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  updatedAt       DateTime @updatedAt
+  ra          String?
+  polo        String?
+  ingressDate String?
+  intro       String? @db.Text
+  conclusion  String? @db.Text
+
+  activityDetails Json? // Record<activityId, { description, relation }>
+
+  updatedAt DateTime @updatedAt
 }
 
 model ScrapeHistory {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  year      String   // Ex: "2024"
-  examId    String   // O 'value' do option select (ID único da prova no AVA)
-  examName  String   // Para exibição (Ex: "Avaliação Bimestral - Matemática")
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  year     String // Ex: "2024"
+  examId   String // O 'value' do option select (ID único da prova no AVA)
+  examName String // Para exibição (Ex: "Avaliação Bimestral - Matemática")
+
   completedAt DateTime @default(now())
 
   @@unique([userId, examId]) // Evita duplicar o mesmo registro
@@ -377,139 +378,139 @@ enum AdEventType {
 }
 
 model AdvertiserProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  balance     Int      @default(0) // In cents
-  taxId       String?  // CPF/CNPJ
-  cellphone   String?  // WhatsApp/Phone
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance     Int     @default(0) // In cents
+  taxId       String? // CPF/CNPJ
+  cellphone   String? // WhatsApp/Phone
   companyName String?
-  
-  campaigns   AdCampaign[]
+
+  campaigns    AdCampaign[]
   transactions AdTransaction[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AdCampaign {
-  id            String           @id @default(cuid())
-  advertiserId  String
-  advertiser    AdvertiserProfile @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
-  
-  title         String
-  status        AdCampaignStatus @default(DRAFT)
-  
-  billingType   AdBillingType    @default(CPC)
-  priority      Int              @default(1) // 1=Normal, 10=High
-  
-  dailyBudget   Int              // In cents
-  costValue     Int              // In cents (CPC or CPM cost)
-  
-  startDate     DateTime?
-  endDate       DateTime?
+  id           String            @id @default(cuid())
+  advertiserId String
+  advertiser   AdvertiserProfile @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
 
-  creatives     AdCreative[]
-  dailyMetrics  AdDailyMetrics[]
-  eventLogs     AdEventLog[]
-  
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  
+  title  String
+  status AdCampaignStatus @default(DRAFT)
+
+  billingType AdBillingType @default(CPC)
+  priority    Int           @default(1) // 1=Normal, 10=High
+
+  dailyBudget Int // In cents
+  costValue   Int // In cents (CPC or CPM cost)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  creatives    AdCreative[]
+  dailyMetrics AdDailyMetrics[]
+  eventLogs    AdEventLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   rejectionReason String?
 }
 
 model AdCreative {
-  id             String     @id @default(cuid())
-  campaignId     String
-  campaign       AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  
+  id         String     @id @default(cuid())
+  campaignId String
+  campaign   AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
   headline       String
-  description    String     @db.Text
+  description    String @db.Text
   imageUrl       String
   destinationUrl String
-  
-  views          Int        @default(0)
-  clicks         Int        @default(0)
-  
-  eventLogs      AdEventLog[]
-  dailyMetrics   AdCreativeDailyMetrics[]
-  
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+
+  views  Int @default(0)
+  clicks Int @default(0)
+
+  eventLogs    AdEventLog[]
+  dailyMetrics AdCreativeDailyMetrics[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AdDailyMetrics {
-  id          String     @id @default(cuid())
-  campaignId  String
-  campaign    AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  
-  date        DateTime   // Only YYYY-MM-DD part matters
-  views       Int        @default(0)
-  clicks      Int        @default(0)
-  spend       Int        @default(0) // In cents
-  ctr         Float      @default(0)
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id         String     @id @default(cuid())
+  campaignId String
+  campaign   AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  date   DateTime // Only YYYY-MM-DD part matters
+  views  Int      @default(0)
+  clicks Int      @default(0)
+  spend  Int      @default(0) // In cents
+  ctr    Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([campaignId, date])
   @@index([campaignId])
 }
 
 model AdCreativeDailyMetrics {
-  id          String     @id @default(cuid())
-  creativeId  String
-  creative    AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
-  
-  date        DateTime   // Only YYYY-MM-DD part matters
-  views       Int        @default(0)
-  clicks      Int        @default(0)
-  spend       Int        @default(0) // In cents (proportional)
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id         String     @id @default(cuid())
+  creativeId String
+  creative   AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+
+  date   DateTime // Only YYYY-MM-DD part matters
+  views  Int      @default(0)
+  clicks Int      @default(0)
+  spend  Int      @default(0) // In cents (proportional)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([creativeId, date])
   @@index([creativeId])
 }
 
 model AdEventLog {
-  id          String      @id @default(cuid())
-  campaignId  String
-  campaign    AdCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  
-  creativeId  String?
-  creative    AdCreative? @relation(fields: [creativeId], references: [id])
-  
-  type        AdEventType
-  userId      String?     // Optional, for logged-in users
-  ipAddress   String?     // Anonymized
-  userAgent   String?
-  geoRegion   String?
-  
-  cost        Int         @default(0) // Cost of this specific event
-  
-  createdAt   DateTime    @default(now())
+  id         String     @id @default(cuid())
+  campaignId String
+  campaign   AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  creativeId String?
+  creative   AdCreative? @relation(fields: [creativeId], references: [id])
+
+  type      AdEventType
+  userId    String? // Optional, for logged-in users
+  ipAddress String? // Anonymized
+  userAgent String?
+  geoRegion String?
+
+  cost Int @default(0) // Cost of this specific event
+
+  createdAt DateTime @default(now())
 
   @@index([campaignId])
   @@index([createdAt])
 }
 
 model AdTransaction {
-  id           String              @id @default(cuid())
+  id           String            @id @default(cuid())
   advertiserId String
-  advertiser   AdvertiserProfile   @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
-  
-  type         AdTransactionType
-  amount       Int                 // In cents.
-  status       AdTransactionStatus @default(PENDING)
-  
-  gatewayId    String?             // For AbacatePay ID
-  metadata     Json?
-  
-  createdAt    DateTime            @default(now())
+  advertiser   AdvertiserProfile @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+
+  type   AdTransactionType
+  amount Int // In cents.
+  status AdTransactionStatus @default(PENDING)
+
+  gatewayId String? // For AbacatePay ID
+  metadata  Json?
+
+  createdAt DateTime @default(now())
 }
 
 // --- MOCK EXAMS (Simulados) ---
@@ -520,33 +521,58 @@ enum MockExamStatus {
 }
 
 model MockExam {
-  id          String         @id @default(cuid())
-  userId      String
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  status      MockExamStatus @default(IN_PROGRESS)
-  score       Int            @default(0) // Correct answers count
-  totalQuestions Int         @default(0)
-  
-  xpEarned    Int            @default(0)
-  timeSpent   Int            @default(0) // In seconds
-  
-  createdAt   DateTime       @default(now())
-  finishedAt  DateTime?
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  questions   MockExamQuestion[]
+  status         MockExamStatus @default(IN_PROGRESS)
+  score          Int            @default(0) // Correct answers count
+  totalQuestions Int            @default(0)
+
+  xpEarned  Int @default(0)
+  timeSpent Int @default(0) // In seconds
+
+  createdAt  DateTime  @default(now())
+  finishedAt DateTime?
+
+  questions MockExamQuestion[]
 }
 
 model MockExamQuestion {
-  id          String      @id @default(cuid())
-  mockExamId  String
-  mockExam    MockExam    @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
-  
-  questionId  String
-  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  mockExamId String
+  mockExam   MockExam @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
   selectedAlternativeId String? // Null if not answered
-  isCorrect   Boolean     @default(false)
-  
-  createdAt   DateTime    @default(now()) 
+  isCorrect             Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+enum ImportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model ImportJob {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  login    String
+  password String
+
+  status ImportJobStatus @default(PENDING)
+  logs   Json?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  @@index([userId])
 }
