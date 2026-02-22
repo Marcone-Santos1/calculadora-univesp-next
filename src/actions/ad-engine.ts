@@ -123,10 +123,14 @@ export async function getAdsForFeed(count: number = 1) {
 
     if (campaigns.length === 0) return [];
 
-    const available = [...campaigns];
+    let available = [...campaigns];
 
     for (let i = 0; i < count; i++) {
-        if (available.length === 0) break;
+        if (available.length === 0) {
+            // Refill available campaigns if we exhaust them before reaching 'count'
+            // This allows safe repeating of ads when there are fewer campaigns than spaces to fill.
+            available = [...campaigns];
+        }
 
         // Weighted Selection Logic on 'available'
         // ... (Similar logic as above)

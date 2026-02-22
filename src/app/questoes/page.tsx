@@ -5,6 +5,7 @@ import { QuestionSidebar } from '@/components/question/QuestionSidebar';
 import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions';
 import { getAdsForFeed } from '@/actions/ad-engine';
 import NativeAdCard from '@/components/feed/NativeAdCard';
+import SidebarAds from '@/components/feed/SidebarAds';
 import Link from 'next/link';
 import { FaPlus, FaFilter } from 'react-icons/fa';
 import { MobileFilterModal } from '@/components/question/MobileFilterModal';
@@ -117,20 +118,25 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const sort = params.sort;
     const page = Number(params.page) || 1;
 
-    // Fetch data including ads
+    // Fetch data including ads. Let's fetch 12 ads total (2 for sidebar, 10 for feed)
     const data = await getQuestions(query, subject, verified, verificationRequested, activity, sort, page);
     const subjects = await getSubjectsWithCounts();
-    const ads = await getAdsForFeed(10);
+    const allAds = await getAdsForFeed(12);
+
+    // Distribute ads uniquely
+    const sidebarAds = allAds.slice(0, 2);
+    const feedAds = allAds.slice(2);
 
     const { questions, meta } = data;
 
     const activeSubject = subjects.find(s => s.name === subject);
 
     // Process feed items
-    const feedItems = injectAdsWithRandomInterval(questions, ads);
+    const feedItems = injectAdsWithRandomInterval(questions, feedAds);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
+            <SidebarAds ads={sidebarAds} />
             <div className="container mx-auto max-w-7xl px-4 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Sidebar - Desktop */}
