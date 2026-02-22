@@ -1,30 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
 import {
     Play, Terminal, CheckCircle, AlertTriangle,
     Info, Loader2, Hourglass, Lock,
     Check, ArrowLeft, Trophy, Box, Key, User, ShieldCheck, Activity,
     StopCircle, X
 } from 'lucide-react';
-import { createComment, createQuestion } from '@/actions/question-actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import confetti from 'canvas-confetti';
-import { getSubjectByName } from '@/actions/subject-actions';
-import { capitalize } from '@/utils/functions';
-import { createSubject } from '@/actions/admin-actions';
-import { getCompletedExams, markExamAsCompleted } from '@/actions/history-actions';
+import { createImportJob, getImportJob, cancelImportJob } from '@/actions/import-job-actions';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
-
-// Configuração de Ambiente
-const MICROSERVICE_URL = process.env.NEXT_PUBLIC_MICROSERVICE_URL || 'http://localhost:3001';
-const API_KEY = process.env.NEXT_PUBLIC_SCRAPER_API_KEY || process.env.NEXT_PUBLIC_SCAPER_API_KEY || '';
 
 // Tipos
 interface LogMessage {
@@ -110,10 +101,7 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
 
-    const [saveQueue, setSaveQueue] = useState<any[]>([]);
-    const [isSaving, setIsSaving] = useState(false);
-
-    const [isScrapingFinished, setIsScrapingFinished] = useState(false);
+    const [jobId, setJobId] = useState<string | null>(null);
 
     // Estado de Logs e Métricas
     const [logs, setLogs] = useState<LogMessage[]>([]);
@@ -122,7 +110,6 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
     const [showCancelModal, setShowCancelModal] = useState(false);
 
     // Referências de Controle
-    const ctrlRef = useRef<AbortController | null>(null);
     const terminalEndRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll do terminal
@@ -132,44 +119,45 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
         }
     }, [logs]);
 
+    // Polling do Job
     useEffect(() => {
-        const processQueue = async () => {
-            if (saveQueue.length === 0 || isSaving) return;
+        let interval: any;
+        if (appState === 'running' && jobId) {
+            interval = setInterval(async () => {
+                try {
+                    const job = await getImportJob(jobId);
 
-            setIsSaving(true);
-            const currentItem = saveQueue[0]; // Pega o primeiro
+                    if (job.logs && job.logs.length > 0) {
+                        setLogs(job.logs as LogMessage[]);
+                    }
+                    if (job.metrics) {
+                        setMetrics(job.metrics as unknown as Metrics);
+                    }
 
-            try {
-                await handleSaveQuestion(currentItem);
-            } catch (error) {
-                console.error("Erro ao processar item da fila", error);
-            } finally {
-                // Remove o item processado e libera para o próximo
-                setSaveQueue(prev => prev.slice(1));
-                setIsSaving(false);
-            }
-        };
+                    if (job.status === 'COMPLETED') {
+                        setStatusText('Sincronização Concluída');
+                        clearInterval(interval);
+                        setTimeout(() => setAppState('done'), 1500);
+                    } else if (job.status === 'FAILED') {
+                        setStatusText('Falha na execução');
+                        addLog('❌ Ocorreu um erro crítico no servidor. Tente novamente mais tarde.', 'error');
+                        clearInterval(interval);
+                    } else if (job.status === 'PROCESSING') {
+                        setStatusText('O robô está trabalhando no AVA...');
+                    } else if (job.status === 'PENDING') {
+                        setStatusText('Aguardando servidor iniciar o processo...');
+                    }
 
-        processQueue();
-    }, [saveQueue, isSaving]); // Roda sempre que a fila mudar ou terminar de salvar
-
-    useEffect(() => {
-        if (isScrapingFinished && saveQueue.length === 0 && !isSaving) {
-            // Pequeno delay para UX (ver o último log)
-            const timeout = setTimeout(() => {
-                setAppState('done');
-                setIsScrapingFinished(false); // Reseta flag
-            }, 3000);
-            return () => clearTimeout(timeout);
+                } catch (error) {
+                    console.error("Failed to poll job status", error);
+                }
+            }, 3000); // 3 sec polling
         }
-    }, [isScrapingFinished, saveQueue.length, isSaving]);
 
-    // Cleanup ao desmontar o componente
-    useEffect(() => {
         return () => {
-            if (ctrlRef.current) ctrlRef.current.abort();
+            if (interval) clearInterval(interval);
         };
-    }, []);
+    }, [appState, jobId]);
 
     // Efeito de Confete ao finalizar e Proteção de Saída
     useEffect(() => {
@@ -207,14 +195,18 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
         setShowCancelModal(true);
     };
 
-    const confirmCancel = () => {
-        if (ctrlRef.current) {
-            ctrlRef.current.abort(); // Mata a conexão
+    const confirmCancel = async () => {
+        if (jobId) {
+            try {
+                await cancelImportJob(jobId);
+            } catch (error) {
+                console.error("Failed to cancel job", error);
+            }
         }
-        addLog('Operação cancelada pelo usuário.', 'error');
+        addLog('Operação cancelada pelo usuário (cliente parou de consultar).', 'error');
         setStatusText('Cancelado');
+        setJobId(null);
         setAppState('idle');
-        setSaveQueue([]);
         setShowCancelModal(false);
     };
 
@@ -229,210 +221,18 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
 
         setAppState('running');
         setLogs([]);
-        setSaveQueue([]);
         setMetrics({ found: 0, imported: 0, skipped: 0, xp: 0 });
-        setStatusText('Estabelecendo conexão segura...');
-        addLog('Iniciando handshake criptografado...', 'info');
-
-        addLog('Verificando histórico de importações...', 'info');
-        const completedExams = await getCompletedExams();
-
-        if (completedExams.length > 0) {
-            addLog(`Encontradas ${completedExams.length} provas já importadas. Serão puladas.`, 'info');
-        }
-
-        const ctrl = new AbortController();
-        ctrlRef.current = ctrl;
+        setStatusText('Criando Job de Importação...');
+        addLog('Adicionando solicitação na fila do servidor...', 'info');
 
         try {
-            console.log('Iniciando handshake criptografado...');
-            console.log('MICROSERVICE_URL', `${MICROSERVICE_URL}/scrape-stream`);
-            console.log('API_KEY', API_KEY);
-            // console.log('login', login); // Evitar logar credenciais em prod
-
-            await fetchEventSource(`${MICROSERVICE_URL}/scrape-stream`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': API_KEY,
-                },
-                body: JSON.stringify({ email: login, password, ignoredExams: completedExams }),
-                signal: ctrl.signal,
-                openWhenHidden: true,
-
-                async onopen(response) {
-                    if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
-                        addLog('Túnel TLS estabelecido com sucesso.', 'success');
-                        return;
-                    }
-                    if (response.status === 401) {
-                        throw new Error("Chave de API não autorizada.");
-                    }
-                    if (response.status === 400) {
-                        throw new Error("Requisição inválida (400). Verifique suas credenciais.");
-                    }
-                    throw new Error(`Erro no servidor remoto: ${response.status}`);
-                },
-
-                onmessage(msg) {
-                    if (msg.event === 'keepalive') return;
-
-                    try {
-                        if (!msg.data) return; // Ignora mensagens vazias e evita SyntaxError
-                        const data = JSON.parse(msg.data);
-
-                        switch (msg.event) {
-                            case 'status':
-                                setStatusText(data.message);
-                                if (data.step === 'QUEUED') {
-                                    addLog(data.message.toUpperCase(), 'queue');
-                                } else {
-                                    addLog(data.message, 'info');
-                                }
-                                break;
-
-                            case 'question':
-                                setMetrics(prev => ({ ...prev, found: prev.found + 1 }));
-                                addLog(`Questão ID ${data.id?.substring(0, 8) || '?'} capturada`, 'question');
-                                // handleSaveQuestion(data);
-                                setSaveQueue(prev => [...prev, data]);
-                                break;
-
-                            case 'error':
-                                addLog(`ERRO REMOTO: ${data.message}`, 'error');
-                                setStatusText('Falha na execução');
-                                break;
-
-                            case 'exam_done':
-                                markExamAsCompleted(data.year, data.examId, data.examName);
-                                addLog(`🏁 Prova concluída e salva: ${data.examName}`, 'success');
-                                break;
-
-                            case 'done':
-                                addLog(`Processo finalizado. Total: ${data.total}`, 'success');
-                                setStatusText('Sincronização Concluída');
-                                setIsScrapingFinished(true);
-                                ctrl.abort();
-                                break;
-                        }
-                    } catch (err) {
-                        console.error("Erro ao processar mensagem SSE:", err);
-                    }
-                },
-
-                onerror(err) {
-                    if ((err as any).name === 'AbortError') {
-                        // Se foi cancelado manualmente pelo usuário (ctrl.abort),
-                        // relançamos para parar, mas sem logs de erro grave.
-                        throw err;
-                    }
-
-                    console.error("Erro na stream:", err);
-                    addLog(`Conexão interrompida: ${err.message}`, 'error');
-                    setStatusText('Conexão perdida');
-
-                    // --- A CORREÇÃO MÁGICA ---
-                    // Você DEVE lançar o erro novamente. 
-                    // Se você der apenas 'return', a lib vai tentar reconectar (reiniciando o scraper).
-                    throw err;
-                }
-            });
-
+            const newJobId = await createImportJob(login, password);
+            setJobId(newJobId);
+            addLog('Job criado com sucesso. Aguardando processamento...', 'success');
+            setStatusText('Aguardando processamento na fila...');
         } catch (err: any) {
-            if (ctrl.signal.aborted) return;
-            addLog(`Falha crítica: ${err.message}`, 'error');
-            // Não volta pro idle automaticamente para o usuário ver o erro
-
-            addLog('Finalizando processo...', 'info');
-            setTimeout(() => {
-                ctrl.abort();
-                setAppState('idle');
-            }, 10500);
-        }
-    };
-
-    const handleSaveQuestion = async (rawData: any) => {
-        try {
-            const formData = new FormData();
-
-            // 1. Separação Inteligente (Título vs Texto)
-            const fullStatement = rawData.statement || '';
-
-            // TÍTULO: Gera um resumo para a listagem
-            let title = fullStatement.split('\n')[0].substring(0, 150).trim();
-            if (fullStatement.length > 150) title += '...';
-            if (!title) title = `Questão Importada ${new Date().toLocaleTimeString()}`;
-
-            // TEXTO: Recebe o enunciado completo
-            let textBody = fullStatement;
-
-            // 2. Processamento de Imagens
-            if (rawData.images && Array.isArray(rawData.images)) {
-                rawData.images.forEach((image: string) => {
-                    if (image && image.startsWith('http')) {
-                        textBody += `\n\n![Imagem de Apoio](${image})`;
-                    }
-                });
-            }
-
-            // 3. Busca da Matéria
-            let subject = await getSubjectByName(rawData.subjectName);
-            if (!subject) {
-                addLog('⚠️ Matéria não encontrada: ' + rawData.subjectName, 'warning');
-                const subjectName = capitalize(rawData.subjectName.toLowerCase());
-                try {
-                    subject = await createSubject({
-                        name: subjectName,
-                        color: '#3BB2F6',
-                        icon: '📚'
-                    });
-                } catch (err) {
-                    // Race Condition: Se falhar (P2002), tenta buscar novamente
-                    console.warn('Conflito ao criar matéria, tentando recuperar...', rawData.subjectName);
-                    subject = await getSubjectByName(rawData.subjectName);
-                }
-
-                if (!subject) {
-                    console.warn('Matéria não encontrada mesmo após tentativa de criação/recuperação', rawData.subjectName);
-                    addLog('⚠️ Matéria não encontrada mesmo após tentativa de criação/recuperação: ' + rawData.subjectName, 'warning');
-                }
-            }
-
-            // 4. Montagem do FormData Final
-            formData.append('title', title);
-            formData.append('text', textBody);
-            formData.append('subjectId', subject?.id || '');
-            formData.append('week', rawData.metadata?.semana || '');
-            formData.append('alternatives', JSON.stringify(rawData.alternatives || []));
-            formData.append('isValidated', 'isValidated');
-
-            // 5. Envio
-            const result = await createQuestion(formData);
-
-            // 2. Se tiver Justificativa, cria como Comentário
-            if (result?.questionId && rawData.justification) {
-                addLog('✅ Justificativa encontrada e salva', 'success');
-                const justificationText = `**🎓 Gabarito Comentado (AVA):**\n\n${rawData.justification}`;
-                await createComment(result.questionId, justificationText);
-            }
-
-            // Sucesso
-            setMetrics(prev => ({ ...prev, imported: prev.imported + 1, xp: prev.xp + 10 }));
-            if (mode === 'user') {
-                addLog('✨ +10 XP! Questão importada com sucesso.', 'success');
-            } else {
-                addLog('✅ Persistido no banco de dados', 'success');
-            }
-
-        } catch (err: any) {
-            console.error("Erro ao salvar questão:", err);
-            setMetrics(prev => ({ ...prev, skipped: prev.skipped + 1 }));
-
-            if (err.message?.includes('exist')) {
-                addLog('⚠️ Questão duplicada (Título ou Conteúdo idênticos)', 'warning');
-            } else {
-                addLog('❌ Erro ao salvar: ' + err.message, 'error');
-            }
+            addLog(`Falha ao iniciar: ${err.message}`, 'error');
+            setTimeout(() => setAppState('idle'), 5000);
         }
     };
 
@@ -440,6 +240,7 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
         setAppState('idle');
         setLogin('');
         setPassword('');
+        setJobId(null);
     };
 
     return (
@@ -449,7 +250,7 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                 onClose={() => setShowCancelModal(false)}
                 onConfirm={confirmCancel}
                 title="Interromper Sincronização?"
-                description="Se você parar agora, as questões já importadas serão mantidas, mas o processo será encerrado imediatamente."
+                description="Se você parar agora, a página deixará de monitorar o processo, mas o servidor ainda pode estar importando suas atividades em background."
             />
 
             <AnimatePresence mode="wait">
@@ -524,20 +325,20 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                                 <div>
                                     <h3 className="font-bold text-lg text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
                                         <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                                        Segurança Garantida
+                                        Fila em Background
                                     </h3>
                                     <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6">
-                                        Suas credenciais são enviadas via <span className="font-semibold text-zinc-900 dark:text-zinc-200">TLS 1.3</span> e processadas em memória volátil. Nada é salvo em disco.
+                                        Agora o processo acontece no background. Suas credenciais são <span className="font-semibold text-zinc-900 dark:text-zinc-200">criptografadas (AES-256)</span> antes de ir para a fila.
                                     </p>
 
                                     <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-sm">
                                         <div className="flex items-center gap-3 text-sm">
                                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            <span className="text-zinc-600 dark:text-zinc-400">Criptografia E2E</span>
+                                            <span className="text-zinc-600 dark:text-zinc-400">Pode fechar a aba!</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-sm">
                                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                            <span className="text-zinc-600 dark:text-zinc-400">Zero Persistência</span>
+                                            <span className="text-zinc-600 dark:text-zinc-400">Processamento em JobQueue</span>
                                         </div>
                                     </div>
                                 </div>
@@ -571,11 +372,11 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
 
                         <div className={cn(
                             "text-center py-2 rounded-lg font-mono text-xs transition-colors",
-                            isScrapingFinished ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-zinc-100 text-zinc-500"
+                            jobId ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-zinc-100 text-zinc-500"
                         )}>
-                            {isScrapingFinished
-                                ? `⏳ Extração finalizada! Salvando últimos ${saveQueue.length} itens no banco...`
-                                : `💾 Fila de salvamento: ${saveQueue.length} itens pendentes`
+                            {jobId
+                                ? `⏳ Acompanhando Job ID: ${jobId.substring(0, 8)}...`
+                                : `Criando requisição...`
                             }
                         </div>
 
@@ -583,7 +384,7 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between shadow-sm gap-6">
                             <div className="flex items-center gap-4 w-full md:w-auto">
                                 <div className="relative flex-shrink-0">
-                                    {statusText.includes('fila') ? (
+                                    {statusText.toLowerCase().includes('aguardando') || statusText.toLowerCase().includes('criando') ? (
                                         <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
                                             <Hourglass className="w-6 h-6 text-amber-500 animate-pulse" />
                                         </div>
@@ -597,7 +398,7 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-xs uppercase tracking-wider font-bold text-zinc-400 mb-0.5 flex items-center gap-2">
                                         <Activity className="w-3 h-3" />
-                                        Status em Tempo Real
+                                        Status do Background Job
                                     </span>
                                     <span className="font-medium text-lg text-zinc-800 dark:text-zinc-200 truncate pr-4">
                                         {statusText}
@@ -609,14 +410,14 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                                 <div className="flex flex-col items-center md:items-end">
                                     <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Encontradas</span>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="font-mono text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">{metrics.found}</span>
+                                        <span className="font-mono text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">{metrics?.found || 0}</span>
                                         <span className="text-xs text-zinc-400 font-medium">un</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-center md:items-end">
                                     <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1 text-emerald-600/70 dark:text-emerald-400/70">Importadas</span>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="font-mono text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{metrics.imported}</span>
+                                        <span className="font-mono text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{metrics?.imported || 0}</span>
                                         <span className="text-xs text-emerald-600/50 dark:text-emerald-400/50 font-medium">un</span>
                                     </div>
                                 </div>
@@ -624,7 +425,7 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                                 <button
                                     onClick={handleRequestCancel}
                                     className="ml-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors group tooltip-trigger"
-                                    title="Cancelar Operação"
+                                    title="Cancelar Visualização (O Job continua no backend)"
                                 >
                                     <StopCircle className="w-6 h-6" />
                                 </button>
@@ -642,11 +443,11 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                                         <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/30"></div>
                                         <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/30"></div>
                                     </div>
-                                    <span className="text-zinc-500 text-xs hidden sm:inline-block font-medium opacity-60">root@ava-bot:~/tasks</span>
+                                    <span className="text-zinc-500 text-xs hidden sm:inline-block font-medium opacity-60">root@ava-bot:~/tasks/{jobId?.substring(0, 8) || 'queue'}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-zinc-600 text-xs bg-zinc-900/50 px-2 py-1 rounded border border-zinc-800/50">
                                     <Lock size={10} />
-                                    <span>TLS Encrypted</span>
+                                    <span>Polling (Sync)</span>
                                 </div>
                             </div>
 
@@ -717,11 +518,11 @@ export default function AvaImporter({ mode = 'admin' }: { mode?: 'admin' | 'user
                                 <div className="grid grid-cols-2 gap-6 mb-8">
                                     <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-2xl text-center border border-zinc-100 dark:border-zinc-800/50">
                                         <div className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Novas Atividades</div>
-                                        <div className="text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{metrics.imported}</div>
+                                        <div className="text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">{metrics?.imported || 0}</div>
                                     </div>
                                     <div className="bg-amber-50 dark:bg-amber-900/10 p-6 rounded-2xl text-center border border-amber-100 dark:border-amber-900/30">
                                         <div className="text-xs text-amber-600/70 uppercase font-bold tracking-wider mb-2">XP Adquirido</div>
-                                        <div className="text-4xl font-extrabold text-amber-500 tracking-tight">+{metrics.xp}</div>
+                                        <div className="text-4xl font-extrabold text-amber-500 tracking-tight">+{metrics?.xp || 0}</div>
                                     </div>
                                 </div>
 
