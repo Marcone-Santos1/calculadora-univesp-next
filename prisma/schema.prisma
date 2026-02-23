@@ -128,6 +128,7 @@ model Subject {
   icon      String?
   color     String?
   questions Question[]
+  adCampaigns AdCampaign[]
 }
 
 model Question {
@@ -410,6 +411,9 @@ model AdCampaign {
   startDate     DateTime?
   endDate       DateTime?
 
+  targetSubjectId String?
+  targetSubject Subject? @relation(fields: [targetSubjectId], references: [id])
+
   creatives     AdCreative[]
   dailyMetrics  AdDailyMetrics[]
   eventLogs     AdEventLog[]
@@ -427,7 +431,7 @@ model AdCreative {
   
   headline       String
   description    String     @db.Text
-  imageUrl       String
+  imageUrl       String?
   destinationUrl String
   
   views          Int        @default(0)

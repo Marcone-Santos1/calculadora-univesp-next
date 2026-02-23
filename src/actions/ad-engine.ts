@@ -9,7 +9,7 @@ import { executeWithRetry } from "@/lib/prisma-utils";
 // CPM: Bid / 1000
 const ESTIMATED_CTR = 0.015; // 1.5% conservative estimate
 
-export async function fetchNextAd() {
+export async function fetchNextAd(subjectId?: string) {
     // 1. Fetch Candidates (Active, Budget > 0)
     const campaigns = await db.adCampaign.findMany({
         where: {
@@ -21,6 +21,13 @@ export async function fetchNextAd() {
             OR: [
                 { endDate: null },
                 { endDate: { gte: new Date() } }
+            ],
+            AND: [
+                {
+                    OR: subjectId
+                        ? [{ targetSubjectId: null }, { targetSubjectId: subjectId }]
+                        : [{ targetSubjectId: null }]
+                }
             ],
             creatives: { some: {} } // Must have at least one creative
         },
@@ -56,6 +63,11 @@ export async function fetchNextAd() {
 
         // Boost factor (optional, can be random noise to ensure rotation)
         weight = weight * (0.8 + Math.random() * 0.4);
+
+        // Contextual boost
+        if (subjectId && campaign.targetSubjectId === subjectId) {
+            weight = weight * 5; // 5x boost for highly relevant contextual ads
+        }
 
         return { campaign, creative, weight };
     }).filter(items => items !== null) as { campaign: any, creative: any, weight: number }[];
@@ -97,7 +109,7 @@ export async function fetchNextAd() {
     };
 }
 
-export async function getAdsForFeed(count: number = 1) {
+export async function getAdsForFeed(count: number = 1, subjectId?: string) {
     const ads = [];
     // We run the selection 'count' times.
     // Optimization: Exclude picked campaigns to avoid repeats in same feed?
@@ -111,6 +123,13 @@ export async function getAdsForFeed(count: number = 1) {
             OR: [
                 { endDate: null },
                 { endDate: { gte: new Date() } }
+            ],
+            AND: [
+                {
+                    OR: subjectId
+                        ? [{ targetSubjectId: null }, { targetSubjectId: subjectId }]
+                        : [{ targetSubjectId: null }]
+                }
             ],
             advertiser: { balance: { gt: 0 } },
             creatives: { some: {} }
@@ -140,6 +159,12 @@ export async function getAdsForFeed(count: number = 1) {
         const weighted = candidates.map(c => {
             let weight = c.billingType === 'CPM' ? c.costValue / 1000 : c.costValue * ESTIMATED_CTR;
             weight = weight * (0.8 + Math.random() * 0.4);
+
+            // Contextual boost
+            if (subjectId && c.targetSubjectId === subjectId) {
+                weight = weight * 5;
+            }
+
             return { campaign: c, weight };
         });
 

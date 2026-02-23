@@ -15,8 +15,6 @@ import { ReactNode } from "react";
 import Script from "next/script";
 import { Footer } from "@/components/Footer";
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
-import { AdsenseScript } from '@/components/AdsenseScript';
-import AdsRefresher from '@/components/AdsRefresher';
 import { StreakListener } from '@/components/reputation/StreakListener';
 
 import { Analytics } from "@vercel/analytics/react"
@@ -96,8 +94,6 @@ export default function RootLayout({
       <Script async={true} type={'application/ld+json'} id={'organizationJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <Script async={true} type={'application/ld+json'} id={'websiteJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       <GoogleAnalytics gaId="G-3141WNQQZQ" />
-      <AdsenseScript />
-      <AdsRefresher />
       <body className={`${inter.className} bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-50 transition-colors duration-300`}>
         <ToastProvider>
           <SessionProvider>

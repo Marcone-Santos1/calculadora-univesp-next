@@ -55,12 +55,6 @@ export default async function AdvertiserLayout({
                         </Link>
                     ))}
                 </nav>
-
-                <div className="p-4 mt-auto border-t border-gray-200 dark:border-zinc-800 md:absolute md:bottom-0 md:w-full">
-                    <Link href="/" className="text-xs text-gray-500 hover:underline">
-                        &larr; Voltar para o site
-                    </Link>
-                </div>
             </aside>
 
             {/* Main Content */}

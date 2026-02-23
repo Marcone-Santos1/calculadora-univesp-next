@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { createCampaign, updateCampaign } from "@/actions/campaign-actions";
-import { FaCloudUploadAlt, FaSpinner, FaImage } from "react-icons/fa";
+import { FaCloudUploadAlt, FaSpinner, FaImage, FaSearch, FaTimes } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/ToastProvider";
@@ -16,20 +16,43 @@ type CampaignData = {
     costValue: number;
     startDate: Date | null;
     endDate: Date | null;
+    targetSubjectId?: string | null;
     creatives: {
         headline: string;
         description: string;
         destinationUrl: string;
-        imageUrl: string;
+        imageUrl: string | null;
     }[];
 };
 
-export default function CampaignForm({ initialData }: { initialData?: CampaignData }) {
+export default function CampaignForm({ initialData, subjects = [] }: { initialData?: CampaignData, subjects?: any[] }) {
     const isEdit = !!initialData;
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.creatives[0]?.imageUrl || null);
 
     const { showToast } = useToast();
+
+    // Subject Search States
+    const [subjectSearch, setSubjectSearch] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState<any | null>(
+        initialData?.targetSubjectId ? subjects?.find(s => s.id === initialData.targetSubjectId) || null : null
+    );
+    const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
+
+    const filteredSubjects = subjects?.filter(s =>
+        s.name.toLowerCase().includes(subjectSearch.toLowerCase())
+    ) || [];
+
+    const handleSubjectSelect = (subject: any) => {
+        setSelectedSubject(subject);
+        setSubjectSearch('');
+        setIsSubjectDropdownOpen(false);
+    };
+
+    const handleClearSubject = () => {
+        setSelectedSubject(null);
+        setSubjectSearch('');
+    };
 
     // Derived values
     const today = new Date().toISOString().split('T')[0];
@@ -79,7 +102,7 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
     const action = isEdit && initialData?.id
         ? updateCampaign.bind(null, initialData.id)
         : createCampaign;
-        
+
 
     return (
         <form action={action} className="space-y-8">
@@ -160,6 +183,71 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
                             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
                         />
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Campanha Contextual</label>
+                        <div className="relative">
+                            <input type="hidden" name="targetSubjectId" value={selectedSubject?.id || ''} />
+
+                            {selectedSubject ? (
+                                <div className="w-full p-2 rounded-lg border flex items-center justify-between border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    <span>{selectedSubject.name}</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearSubject}
+                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar matéria (vazio = Global)"
+                                            value={subjectSearch}
+                                            onChange={(e) => {
+                                                setSubjectSearch(e.target.value);
+                                                setIsSubjectDropdownOpen(true);
+                                            }}
+                                            onFocus={() => setIsSubjectDropdownOpen(true)}
+                                            className="w-full pl-10 pr-4 py-2 rounded-lg border outline-none text-gray-900 dark:text-white focus:ring-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-blue-500"
+                                        />
+                                        <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                                    </div>
+
+                                    {isSubjectDropdownOpen && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setIsSubjectDropdownOpen(false)}
+                                            />
+                                            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+                                                {filteredSubjects.length > 0 ? (
+                                                    filteredSubjects.map((subject) => (
+                                                        <button
+                                                            key={subject.id}
+                                                            type="button"
+                                                            onClick={handleSubjectSelect.bind(null, subject)}
+                                                            className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white transition-colors"
+                                                        >
+                                                            {subject.name}
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-4 py-2 text-gray-500 dark:text-gray-400 text-sm">
+                                                        Nenhuma matéria encontrada
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Selecione uma matéria ou deixe vazio (Global).</p>
+                    </div>
                 </div>
             </div>
 
@@ -197,9 +285,9 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Imagem do Anúncio</label>
+                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Imagem do Anúncio (Opcional)</label>
 
-                            <input type="hidden" name="imageUrl" value={previewUrl || ""} required={!isEdit} />
+                            <input type="hidden" name="imageUrl" value={previewUrl || ""} />
 
                             <div className="flex items-center gap-4">
                                 <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden border border-gray-300 dark:border-gray-600">
@@ -250,7 +338,7 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
 
                 <button
                     type="submit"
-                    disabled={uploading || (!isEdit && !previewUrl)}
+                    disabled={uploading}
                     className="px-8 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {uploading ? "Enviando..." : (isEdit ? "Salvar Alterações" : "Lançar Campanha")}
@@ -262,6 +350,38 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
                     <p><strong>Atenção:</strong> Ao salvar alterações em uma campanha, ela voltará para o status <strong>Pendente de Revisão</strong> e deverá ser aprovada novamente pela equipe.</p>
                 </div>
             )}
+
+            <style jsx>{`
+                .custom-scrollbar {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgb(209 213 219) transparent;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: rgb(209 213 219);
+                    border-radius: 9999px;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background-color: rgb(156 163 175);
+                }
+                
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: rgb(75 85 99);
+                }
+                
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background-color: rgb(107 114 128);
+                }
+            `}</style>
 
         </form>
     );

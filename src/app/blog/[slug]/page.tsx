@@ -8,6 +8,8 @@ import rehypeSanitize from 'rehype-sanitize';
 import React from 'react';
 import Image from 'next/image';
 import { SITE_CONFIG } from "@/utils/Constants";
+import { getAdsForFeed } from "@/actions/ad-engine";
+import NativeAdCard from "@/components/feed/NativeAdCard";
 
 /**
  * Extracts FAQ question/answer pairs from markdown content.
@@ -162,6 +164,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     })),
   } : null;
 
+  const ads = await getAdsForFeed(1);
+  const ad = ads && ads.length > 0 ? ads[0].data : null;
+
   return (
     <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags} id={post.id}>
 
@@ -208,6 +213,16 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       >
         {post.content}
       </ReactMarkdown>
-    </ArticleLayout>
+
+      {
+        ad && (
+          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+            <span className="text-xs text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest mb-4 block text-center">Publicidade Patrocinada</span>
+            <NativeAdCard ad={ad} />
+          </div>
+        )
+      }
+
+    </ArticleLayout >
   );
 }

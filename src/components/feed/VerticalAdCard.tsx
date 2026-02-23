@@ -44,14 +44,16 @@ export default function VerticalAdCard({ ad }: VerticalAdCardProps) {
                 </div>
 
                 {/* Image - Vertical aspect ratio container */}
-                <div className="relative w-full h-40 shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                    <Image
-                        src={ad.imageUrl}
-                        alt={ad.headline}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                </div>
+                {ad.imageUrl && (
+                    <div className="relative w-full h-40 shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                        <Image
+                            src={ad.imageUrl}
+                            alt={ad.headline}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="p-4 flex flex-col gap-2 flex-grow">

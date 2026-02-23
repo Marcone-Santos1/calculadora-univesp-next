@@ -71,7 +71,7 @@ export default function CreativeForm({ campaignId }: { campaignId: string }) {
                                 accept="image/*"
                                 onChange={handleFileChange}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                required={!previewUrl} // Only required if no preview
+                            // required={!previewUrl} // Modificado para opcional
                             />
 
                             {uploading ? (
@@ -101,7 +101,7 @@ export default function CreativeForm({ campaignId }: { campaignId: string }) {
                         </div>
                     </div>
                     {/* Hidden input to send URL to server action */}
-                    <input type="hidden" name="imageUrl" value={previewUrl || ""} required />
+                    <input type="hidden" name="imageUrl" value={previewUrl || ""} />
                 </div>
 
                 <div className="space-y-4">

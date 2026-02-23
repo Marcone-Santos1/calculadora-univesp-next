@@ -121,15 +121,14 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     // Fetch data including ads. Let's fetch 12 ads total (2 for sidebar, 10 for feed)
     const data = await getQuestions(query, subject, verified, verificationRequested, activity, sort, page);
     const subjects = await getSubjectsWithCounts();
-    const allAds = await getAdsForFeed(12);
-
+    const activeSubject = subjects.find(s => s.name === subject);
+    const allAds = await getAdsForFeed(12, activeSubject?.id);
+    console.log(allAds)
     // Distribute ads uniquely
     const sidebarAds = allAds.slice(0, 2);
     const feedAds = allAds.slice(2);
 
     const { questions, meta } = data;
-
-    const activeSubject = subjects.find(s => s.name === subject);
 
     // Process feed items
     const feedItems = injectAdsWithRandomInterval(questions, feedAds);
