@@ -17,8 +17,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         {
             url: `${baseUrl}/blog`,
             lastModified: new Date(),
-            changeFrequency: 'weekly', // O blog é atualizado com frequência
-            priority: 0.9,
+            changeFrequency: 'monthly', // O blog é atualizado com frequência
+            priority: 0.6,
         },
         {
             url: `${baseUrl}/sobre`,
@@ -29,12 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         {
             url: `${baseUrl}/questoes`,
             lastModified: new Date(),
-            changeFrequency: 'weekly', // Página "Sobre" raramente muda
-            priority: 0.8,
+            changeFrequency: 'daily',
+            priority: 1,
         },
     ];
 
-    // Dynamic routes (Blog Posts)
     // Dynamic routes (Blog Posts)
     let blogPosts: { slug: string; updatedAt: Date }[] = [];
     try {

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { Suspense } from 'react';
+import { permanentRedirect } from 'next/navigation';
 import { QuestionCard } from '@/components/question/QuestionCard';
 import { QuestionSidebar } from '@/components/question/QuestionSidebar';
 import { getQuestions, getSubjectsWithCounts } from '@/actions/question-actions';
@@ -13,12 +14,11 @@ import { SITE_CONFIG } from "@/utils/Constants";
 import { Pagination } from '@/components/ui/Pagination';
 import { Metadata } from "next";
 import { Loading } from '@/components/Loading';
-import { injectAdsWithRandomInterval, getQuestionPath } from '@/utils/functions';
+import { generateSlug, injectAdsWithRandomInterval, getQuestionPath } from '@/utils/functions';
 
 export async function generateMetadata({ searchParams }: {
     searchParams: Promise<{
         q?: string;
-        subject?: string;
         page?: string;
         verified?: string;
         verificationRequested?: string;
@@ -29,7 +29,6 @@ export async function generateMetadata({ searchParams }: {
     const params = await searchParams;
     const {
         q: query,
-        subject: subjectName,
         page,
         verified,
         verificationRequested,
@@ -46,38 +45,23 @@ export async function generateMetadata({ searchParams }: {
         !!activity ||
         !!sort;
 
-    let canonical = `${baseUrl}/questoes`;
-
+    const canonical = `${baseUrl}/questoes`;
     let title = "Questões Univesp Resolvidas: Estude para as Provas (Comunidade)";
     let description = "Prepare-se para o bimestre com questões reais e exercícios compartilhados por alunos. Filtre por disciplina, veja gabaritos comentados e passe sem sufoco.";
 
-    if (subjectName) {
-        const subjects = await getSubjectsWithCounts();
-        const activeSubject = subjects.find(s => s.name === subjectName);
-
-        if (activeSubject) {
-            title = `Questões de ${activeSubject.name} Univesp | Gabaritos e Revisão`;
-            description = `Está estudando ${activeSubject.name}? Acesse exercícios resolvidos e questões de provas anteriores da Univesp para treinar e tirar suas dúvidas.`;
-            canonical = `${baseUrl}/questoes?subject=${encodeURIComponent(subjectName)}`;
-        }
-    }
-
     const pageNum = page ? Number(page) : 1;
     if (pageNum > 1) {
-        const separator = canonical.includes('?') ? '&' : '?';
-        canonical = `${canonical}${separator}page=${pageNum}`;
         title = `${title} - Página ${pageNum}`;
     }
 
     const shouldIndex = !hasNonIndexableFilters;
 
-    // Obter totalPages para rel prev/next
-    const data = await getQuestions(query, subjectName, verified, verificationRequested, activity, sort, pageNum);
+    // Obter totalPages para rel prev/next (listagem sem disciplina)
+    const data = await getQuestions(query, undefined, verified, verificationRequested, activity, sort, pageNum);
     const totalPages = data.meta.totalPages;
     const buildPageUrl = (p: number) => {
         const sp = new URLSearchParams();
         if (query) sp.set('q', query);
-        if (subjectName) sp.set('subject', subjectName);
         if (verified) sp.set('verified', verified);
         if (verificationRequested) sp.set('verificationRequested', verificationRequested);
         if (activity) sp.set('activity', activity);
@@ -89,16 +73,18 @@ export async function generateMetadata({ searchParams }: {
 
     const ogImageUrl = `${baseUrl}/og-questoes.png`;
 
+    const canonicalWithPage = pageNum > 1 ? `${canonical}?page=${pageNum}` : canonical;
+
     return {
         title: title,
         description: description,
         alternates: {
-            canonical,
+            canonical: canonicalWithPage,
         },
         openGraph: {
             title: title,
             description: description,
-            url: canonical,
+            url: canonicalWithPage,
             type: 'website',
             siteName: 'Calculadora Univesp',
             locale: 'pt_BR',
@@ -131,11 +117,10 @@ export async function generateMetadata({ searchParams }: {
     };
 }
 
-// Server Component
-const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string; page?: string }> }) => {
+// Server Component (listagem geral — sem ?subject=; disciplina é sempre via /questoes/[slug])
+const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string; page?: string }> }) => {
     const params = await searchParams;
     const query = params.q;
-    const subject = params.subject;
     const verified = params.verified;
     const verificationRequested = params.verificationRequested;
     const activity = params.activity;
@@ -143,12 +128,11 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const page = Number(params.page) || 1;
 
     // Fetch data including ads. Let's fetch 12 ads total (2 for sidebar, 10 for feed)
-    const data = await getQuestions(query, subject, verified, verificationRequested, activity, sort, page);
+    const data = await getQuestions(query, undefined, verified, verificationRequested, activity, sort, page);
     const subjects = await getSubjectsWithCounts();
-    const activeSubject = subjects.find(s => s.name === subject);
 
     // Fetch unique ads for sidebar and feed at once
-    const allAds = await getAdsForFeed(12, activeSubject?.id);
+    const allAds = await getAdsForFeed(12, undefined);
 
     const sidebarAds = allAds.slice(0, 2);
     const feedAds = allAds;
@@ -162,12 +146,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
         '@type': 'BreadcrumbList',
         itemListElement: [
             { '@type': 'ListItem', position: 1, name: 'Início', item: SITE_CONFIG.BASE_URL },
-            ...(activeSubject
-                ? [
-                    { '@type': 'ListItem', position: 2, name: 'Questões', item: `${SITE_CONFIG.BASE_URL}/questoes` },
-                    { '@type': 'ListItem', position: 3, name: activeSubject.name, item: `${SITE_CONFIG.BASE_URL}/questoes?subject=${encodeURIComponent(activeSubject.name)}` },
-                ]
-                : [{ '@type': 'ListItem', position: 2, name: 'Questões', item: `${SITE_CONFIG.BASE_URL}/questoes` }]),
+            { '@type': 'ListItem', position: 2, name: 'Questões', item: `${SITE_CONFIG.BASE_URL}/questoes` },
         ],
     };
 
@@ -227,12 +206,7 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                         {/* Page Header */}
                         <div className="mb-6">
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                {query
-                                    ? `Resultados para "${query}"`
-                                    : activeSubject
-                                        ? activeSubject.name
-                                        : 'Todas as Questões'
-                                }
+                                {query ? `Resultados para "${query}"` : 'Todas as Questões'}
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
                                 {meta.total} {meta.total === 1 ? 'questão encontrada' : 'questões encontradas'}
@@ -284,12 +258,12 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                             )}
                         </div>
 
-                        {/* Pagination */}
+                        {/* Pagination — sem subject nos params (disciplina é só via /questoes/[slug]) */}
                         <Pagination
                             currentPage={meta.page}
                             totalPages={meta.totalPages}
                             baseUrl="/questoes"
-                            searchParams={params}
+                            searchParams={Object.fromEntries(Object.entries(params).filter(([key]) => key !== 'subject'))}
                         />
                     </main>
                 </div>
@@ -298,7 +272,15 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     );
 };
 
-export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string }> }) {
+export default async function QuestionsPage({ searchParams }: { searchParams: Promise<{ q?: string; subject?: string; verified?: string; verificationRequested?: string; activity?: string; sort?: string; page?: string }> }) {
+    const params = await searchParams;
+    if (params.subject) {
+        const subjects = await getSubjectsWithCounts();
+        const activeSubject = subjects.find((s) => s.name === params.subject);
+        if (activeSubject) {
+            permanentRedirect(`/questoes/${generateSlug(activeSubject.name)}`);
+        }
+    }
     return (
         <Suspense fallback={<Loading />}>
             <QuestionsContent searchParams={searchParams} />

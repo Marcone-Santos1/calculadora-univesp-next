@@ -26,10 +26,13 @@ async function getSubjectBySlug(slug: string) {
 
 export async function generateMetadata({
     params,
+    searchParams,
 }: {
     params: Promise<{ segment: string }>;
+    searchParams: Promise<{ page?: string }>;
 }): Promise<Metadata> {
     const { segment } = await params;
+    const { page } = await searchParams;
     const question = await getQuestion(segment);
     if (question) {
         const canonicalPath = getQuestionPath(question);
@@ -46,8 +49,15 @@ export async function generateMetadata({
         };
     }
     const baseUrl = SITE_CONFIG.BASE_URL;
-    const canonical = `${baseUrl}/questoes/${segment}`;
-    const title = `Questões de ${subject.name} Univesp | Gabaritos e Revisão`;
+    const pageNum = page ? Number(page) : 1;
+    let canonical = `${baseUrl}/questoes/${segment}`;
+    if (pageNum > 1) {
+        canonical = `${canonical}?page=${pageNum}`;
+    }
+    let title = `Questões de ${subject.name} Univesp | Gabaritos e Revisão`;
+    if (pageNum > 1) {
+        title = `${title} - Página ${pageNum}`;
+    }
     const description = `Está estudando ${subject.name}? Acesse exercícios resolvidos e questões de provas anteriores da Univesp para treinar e tirar suas dúvidas.`;
     const ogImageUrl = `${baseUrl}/og-questoes.png`;
     return {
@@ -60,19 +70,36 @@ export async function generateMetadata({
     };
 }
 
+type SegmentSearchParams = {
+    page?: string;
+    q?: string;
+    sort?: string;
+    activity?: string;
+    verified?: string;
+    verificationRequested?: string;
+};
+
 const SubjectQuestionsContent = async ({
     segmentSlug,
     searchParams,
 }: {
     segmentSlug: string;
-    searchParams: Promise<{ page?: string }>;
+    searchParams: Promise<SegmentSearchParams>;
 }) => {
     const subject = await getSubjectBySlug(segmentSlug);
     if (!subject) notFound();
 
     const params = await searchParams;
     const page = Number(params.page) || 1;
-    const data = await getQuestions(undefined, subject.name, undefined, undefined, undefined, undefined, page);
+    const data = await getQuestions(
+        params.q,
+        subject.name,
+        params.verified,
+        params.verificationRequested,
+        params.activity,
+        params.sort,
+        page,
+    );
     const subjects = await getSubjectsWithCounts();
     const { questions, meta } = data;
     const allAds = await getAdsForFeed(12, subject.id);
@@ -130,7 +157,7 @@ const SubjectQuestionsContent = async ({
                                 <Link href="/questoes/nova" className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/20">
                                     <FaPlus /> Nova
                                 </Link>
-                                <MobileFilterModal subjects={subjects} questions={questions.map((q: any) => ({ id: q.id, title: q.title, subjectName: q.subjectName }))} />
+                                <MobileFilterModal subjects={subjects} questions={questions.map((q: any) => ({ id: q.id, title: q.title, subjectName: q.subjectName }))} currentSubjectSlug={segmentSlug} />
                             </div>
                         </div>
                         <div className="mb-6">
@@ -178,7 +205,7 @@ export default async function SegmentPage({
     searchParams,
 }: {
     params: Promise<{ segment: string }>;
-    searchParams: Promise<{ page?: string }>;
+    searchParams: Promise<SegmentSearchParams>;
 }) {
     const { segment } = await params;
 

@@ -51,8 +51,9 @@ const categorizeSubject = (name: string): string => {
 export function QuestionSidebar({ subjects, questions = [], currentSubjectSlug }: QuestionSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentSubject = searchParams.get('subject');
   const isSubjectPage = typeof currentSubjectSlug === 'string';
+  // Disciplina na listagem não usa mais ?subject=; só rota /questoes/[slug]
+  const currentSubject = null;
   const currentSort = searchParams.get('sort');
   const currentActivity = searchParams.get('activity');
   const currentVerified = searchParams.get('verified');
@@ -61,24 +62,30 @@ export function QuestionSidebar({ subjects, questions = [], currentSubjectSlug }
   const [subjectFilter, setSubjectFilter] = useState('');
   const { preferences, setExpandedCategories, setDefaultSort, setDefaultSubject } = useUserPreferences();
 
+  const basePath = isSubjectPage ? `/questoes/${currentSubjectSlug}` : '/questoes';
+
   // Sticky Search Handler
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams(searchParams.toString());
+    params.delete('subject'); // nunca usamos ?subject=; disciplina é sempre pela rota /questoes/[slug]
     params.delete('page'); // Reset pagination on search
     if (searchTerm) params.set('q', searchTerm);
     else params.delete('q');
-    router.push(`/questoes?${params.toString()}`);
+    const qs = params.toString();
+    router.push(`${basePath}${qs ? `?${qs}` : ''}`);
   };
 
   // Helper para preservar filtros
   const buildFilterUrl = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete('subject'); // nunca usamos ?subject=
     params.delete('page'); // Reset pagination on filter change
     Object.entries(updates).forEach(([key, value]) => {
       value === null ? params.delete(key) : params.set(key, value);
     });
-    return `/questoes?${params.toString()}`;
+    const qs = params.toString();
+    return `${basePath}${qs ? `?${qs}` : ''}`;
   };
 
   const categorizedSubjects = useMemo(() => {
@@ -100,7 +107,7 @@ export function QuestionSidebar({ subjects, questions = [], currentSubjectSlug }
       : [...current, category]);
   };
 
-  const hasActiveFilters = currentSubject || currentSort || currentActivity || currentVerified || searchTerm || currentPage;
+  const hasActiveFilters = (isSubjectPage ? (currentSort || currentActivity || currentVerified || searchTerm || (currentPage && currentPage !== '1')) : (!!currentSubject || currentSort || currentActivity || currentVerified || searchTerm || currentPage));
 
   return (
     <aside className="w-full lg:w-72 flex-shrink-0 space-y-6">
@@ -124,7 +131,7 @@ export function QuestionSidebar({ subjects, questions = [], currentSubjectSlug }
 
           {hasActiveFilters && (
             <Link
-              href="/questoes"
+              href={basePath}
               onClick={() => {
                 setDefaultSort(null);
                 setDefaultSubject(null);
@@ -247,8 +254,8 @@ export function QuestionSidebar({ subjects, questions = [], currentSubjectSlug }
                           return (
                             <FilterOption
                               key={subject.id}
-                              href={isSubjectPage ? `/questoes/${subjectSlug}` : buildFilterUrl({ subject: subject.name })}
-                              active={isSubjectPage ? subjectSlug === currentSubjectSlug : currentSubject === subject.name}
+                              href={`/questoes/${subjectSlug}`}
+                              active={isSubjectPage ? subjectSlug === currentSubjectSlug : false}
                               label={subject.name}
                               count={subject._count.questions}
                               onClick={() => setDefaultSubject(subject.name)}
