@@ -165,7 +165,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   } : null;
 
   const ads = await getAdsForFeed(1);
-  const ad = ads && ads.length > 0 ? ads[0].data : null;
+  const ad = ads && ads.length > 0 ? ads[0] : null;
 
   return (
     <ArticleLayout title={post.title} date={post.createdAt.toISOString()} tags={tags} id={post.id}>

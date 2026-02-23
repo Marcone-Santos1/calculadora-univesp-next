@@ -27,7 +27,7 @@ type Campaign = {
         id: string;
         headline: string;
         description: string;
-        imageUrl: string;
+        imageUrl: string | null;
         destinationUrl: string;
     }[];
 };
@@ -120,12 +120,21 @@ export default function AdminAdsClient({ campaigns }: { campaigns: Campaign[] })
                                                     #{index + 1}
                                                 </div>
                                                 <div className="relative h-44 w-full bg-gray-100 dark:bg-zinc-800">
-                                                    <Image
-                                                        src={creative.imageUrl}
-                                                        alt={`Creative ${index + 1}`}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
+                                                    {creative.imageUrl ? (
+                                                        <Image
+                                                            src={creative.imageUrl}
+                                                            alt={`Creative ${index + 1}`}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-blue-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">
+                                                            <div className="text-gray-400 dark:text-zinc-500 mb-2">
+                                                                <FaBullhorn className="text-2xl" />
+                                                            </div>
+                                                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Anúncio Textual</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="p-4">
                                                     <h4 className="font-bold text-gray-900 dark:text-white leading-tight mb-2 line-clamp-2">{creative.headline}</h4>

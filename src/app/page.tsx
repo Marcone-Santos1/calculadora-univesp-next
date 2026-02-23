@@ -8,7 +8,7 @@ import { SITE_CONFIG } from "@/utils/Constants";
 
 export default async function HomePage() {
   const ads = await getAdsForFeed(1); // Fetch 1 global ad
-  const ad = ads[0]?.data;
+  const ad = ads[0];
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -25,14 +25,15 @@ export async function fetchNextAd(subjectId?: string) {
             AND: [
                 {
                     OR: subjectId
-                        ? [{ targetSubjectId: null }, { targetSubjectId: subjectId }]
-                        : [{ targetSubjectId: null }]
+                        ? [{ targetSubjects: { none: {} } }, { targetSubjects: { some: { id: subjectId } } }]
+                        : [{ targetSubjects: { none: {} } }]
                 }
             ],
             creatives: { some: {} } // Must have at least one creative
         },
         include: {
             creatives: true,
+            targetSubjects: true,
             advertiser: {
                 select: { companyName: true, balance: true }
             }
@@ -65,7 +66,7 @@ export async function fetchNextAd(subjectId?: string) {
         weight = weight * (0.8 + Math.random() * 0.4);
 
         // Contextual boost
-        if (subjectId && campaign.targetSubjectId === subjectId) {
+        if (subjectId && campaign.targetSubjects?.some((s: any) => s.id === subjectId)) {
             weight = weight * 5; // 5x boost for highly relevant contextual ads
         }
 
@@ -127,8 +128,8 @@ export async function getAdsForFeed(count: number = 1, subjectId?: string) {
             AND: [
                 {
                     OR: subjectId
-                        ? [{ targetSubjectId: null }, { targetSubjectId: subjectId }]
-                        : [{ targetSubjectId: null }]
+                        ? [{ targetSubjects: { none: {} } }, { targetSubjects: { some: { id: subjectId } } }]
+                        : [{ targetSubjects: { none: {} } }]
                 }
             ],
             advertiser: { balance: { gt: 0 } },
@@ -136,36 +137,36 @@ export async function getAdsForFeed(count: number = 1, subjectId?: string) {
         },
         include: {
             creatives: true,
+            targetSubjects: true,
             advertiser: { select: { companyName: true, balance: true } }
         }
     });
 
     if (campaigns.length === 0) return [];
 
-    let available = [...campaigns];
+    let availableCreatives = campaigns.flatMap(c =>
+        c.creatives.map(creative => ({ campaign: c, creative }))
+    );
 
     for (let i = 0; i < count; i++) {
-        if (available.length === 0) {
-            // Refill available campaigns if we exhaust them before reaching 'count'
-            // This allows safe repeating of ads when there are fewer campaigns than spaces to fill.
-            available = [...campaigns];
+        if (availableCreatives.length === 0) {
+            break; // Stop instead of refilling to prevent duplicate creatives
         }
 
-        // Weighted Selection Logic on 'available'
-        // ... (Similar logic as above)
-        const maxPriority = Math.max(...available.map(c => c.priority));
-        const candidates = available.filter(c => c.priority === maxPriority);
+        // Weighted Selection Logic on 'availableCreatives'
+        const maxPriority = Math.max(...availableCreatives.map(c => c.campaign.priority));
+        const candidates = availableCreatives.filter(c => c.campaign.priority === maxPriority);
 
         const weighted = candidates.map(c => {
-            let weight = c.billingType === 'CPM' ? c.costValue / 1000 : c.costValue * ESTIMATED_CTR;
+            let weight = c.campaign.billingType === 'CPM' ? c.campaign.costValue / 1000 : c.campaign.costValue * ESTIMATED_CTR;
             weight = weight * (0.8 + Math.random() * 0.4);
 
             // Contextual boost
-            if (subjectId && c.targetSubjectId === subjectId) {
+            if (subjectId && c.campaign.targetSubjects.some(s => s.id === subjectId)) {
                 weight = weight * 5;
             }
 
-            return { campaign: c, weight };
+            return { item: c, weight };
         });
 
         const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
@@ -180,10 +181,7 @@ export async function getAdsForFeed(count: number = 1, subjectId?: string) {
             }
         }
 
-        const { campaign } = picked;
-
-        // Creative Rotation: Randomly select one of the available creatives
-        const creative = campaign.creatives[Math.floor(Math.random() * campaign.creatives.length)];
+        const { campaign, creative } = picked.item;
 
         ads.push({
             ...creative,
@@ -193,9 +191,9 @@ export async function getAdsForFeed(count: number = 1, subjectId?: string) {
             billingType: campaign.billingType,
         });
 
-        // Remove used campaign to prevent duplicates
-        const index = available.findIndex(c => c.id === campaign.id);
-        if (index > -1) available.splice(index, 1);
+        // Remove used creative to prevent duplicates
+        const index = availableCreatives.findIndex(c => c.creative.id === creative.id);
+        if (index > -1) availableCreatives.splice(index, 1);
     }
 
     return ads;

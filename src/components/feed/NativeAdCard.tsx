@@ -11,7 +11,7 @@ interface NativeAdCardProps {
         id: string;
         headline: string;
         description: string;
-        imageUrl: string;
+        imageUrl: string | null;
         destinationUrl: string;
         advertiserName: string | null;
         campaignId: string;

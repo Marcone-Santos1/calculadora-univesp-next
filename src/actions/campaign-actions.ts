@@ -35,7 +35,7 @@ export async function createCampaign(formData: FormData) {
     const description = formData.get("description") as string;
     const destinationUrl = formData.get("destinationUrl") as string;
     const imageUrl = formData.get("imageUrl") as string || null;
-    const targetSubjectId = formData.get("targetSubjectId") as string || null;
+    const targetSubjects = formData.getAll("targetSubjects") as string[];
 
     await db.adCampaign.create({
         data: {
@@ -46,7 +46,11 @@ export async function createCampaign(formData: FormData) {
             endDate,
             billingType,
             costValue,
-            targetSubjectId,
+            ...(targetSubjects.length > 0 && {
+                targetSubjects: {
+                    connect: targetSubjects.map(id => ({ id }))
+                }
+            }),
             status: "PENDING_REVIEW", // Default status
             creatives: {
                 create: {
@@ -152,7 +156,7 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
     // Billing
     const billingType = (formData.get("billingType") as "CPC" | "CPM") || "CPC";
     const costValue = Number(formData.get("costValue")) * 100;
-    const targetSubjectId = formData.get("targetSubjectId") as string || null;
+    const targetSubjects = formData.getAll("targetSubjects") as string[];
 
     await db.adCampaign.update({
         where: { id: campaignId },
@@ -163,7 +167,9 @@ export async function updateCampaign(campaignId: string, formData: FormData) {
             endDate,
             billingType,
             costValue,
-            targetSubjectId,
+            targetSubjects: {
+                set: targetSubjects.map(id => ({ id }))
+            },
             status: "PENDING_REVIEW", // Re-review on edit
             rejectionReason: null
         }

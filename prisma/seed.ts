@@ -223,7 +223,6 @@ async function main() {
             data: {
                 userId: adminUser.id,
                 balance: 50000, // 500 reais
-                totalSpent: 0,
             }
         });
 
@@ -259,7 +258,9 @@ async function main() {
                     dailyBudget: 2000,
                     costValue: 50,
                     billingType: 'CPM',
-                    targetSubjectId: mathSubject.id,
+                    targetSubjects: {
+                        connect: [{ id: mathSubject.id }]
+                    },
                     startDate: new Date(),
                     creatives: {
                         create: {

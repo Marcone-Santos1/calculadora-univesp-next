@@ -122,12 +122,12 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const data = await getQuestions(query, subject, verified, verificationRequested, activity, sort, page);
     const subjects = await getSubjectsWithCounts();
     const activeSubject = subjects.find(s => s.name === subject);
-    const allAds = await getAdsForFeed(12, activeSubject?.id);
-    console.log(allAds)
-    // Distribute ads uniquely
-    const sidebarAds = allAds.slice(0, 2);
-    const feedAds = allAds.slice(2);
 
+    // Fetch unique ads for sidebar and feed at once
+    const allAds = await getAdsForFeed(12, activeSubject?.id);
+
+    const sidebarAds = allAds.slice(0, 2);
+    const feedAds = allAds;
     const { questions, meta } = data;
 
     // Process feed items

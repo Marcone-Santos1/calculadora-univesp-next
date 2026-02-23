@@ -411,8 +411,7 @@ model AdCampaign {
   startDate     DateTime?
   endDate       DateTime?
 
-  targetSubjectId String?
-  targetSubject Subject? @relation(fields: [targetSubjectId], references: [id])
+  targetSubjects Subject[]
 
   creatives     AdCreative[]
   dailyMetrics  AdDailyMetrics[]
