@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { FaClock } from 'react-icons/fa';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { getQuestionPath } from '@/utils/functions';
 
 interface Question {
     id: string;
@@ -52,7 +53,7 @@ export function RecentQuestions({ allQuestions }: RecentQuestionsProps) {
                 {recentQuestions.map((question) => (
                     <Link
                         key={question.id}
-                        href={`/questoes/${question.id}`}
+                        href={getQuestionPath(question)}
                         className="block px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
                     >
                         <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">

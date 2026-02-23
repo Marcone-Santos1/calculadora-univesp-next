@@ -6,13 +6,17 @@ import { useToast } from '@/components/ToastProvider';
 interface ShareButtonProps {
     questionId: string;
     questionTitle: string;
+    /** URL canônica da questão (ex: /questoes/matematica-basica/titulo-clq123). Se não informado, usa a URL legada por id. */
+    questionPath?: string;
 }
 
-export function ShareButton({ questionId, questionTitle }: ShareButtonProps) {
+export function ShareButton({ questionId, questionTitle, questionPath }: ShareButtonProps) {
     const { showToast } = useToast();
 
     const handleShare = async () => {
-        const url = `${window.location.origin}/questoes/${questionId}`;
+        const url = questionPath
+            ? `${window.location.origin}${questionPath}`
+            : `${window.location.origin}/questoes/${questionId}`;
 
         if (navigator.share) {
             try {

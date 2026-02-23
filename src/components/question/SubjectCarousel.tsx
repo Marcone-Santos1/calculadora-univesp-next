@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Subject } from '@/Contracts/Subject';
 import { FaBook, FaCalculator, FaCode, FaFlask, FaGlobe, FaLanguage } from 'react-icons/fa';
+import { generateSlug } from '@/utils/functions';
 
 interface SubjectCarouselProps {
     subjects: Subject[];
@@ -24,7 +25,7 @@ export const SubjectCarousel: React.FC<SubjectCarouselProps> = ({ subjects }) =>
             <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide snap-x">
                 {subjects.map((subject) => (
                     <Link
-                        href={`/questoes?subject=${subject.id}`}
+                        href={`/questoes/${generateSlug(subject.name)}`}
                         key={subject.id}
                         className={`
                             flex-shrink-0 w-40 h-32 rounded-xl p-4 

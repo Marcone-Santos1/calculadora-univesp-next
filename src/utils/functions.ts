@@ -37,6 +37,52 @@ export function capitalize(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+/**
+ * Gera um slug SEO-friendly: remove acentos, caracteres especiais,
+ * substitui espaços por hífens e retorna em lowercase.
+ */
+export function generateSlug(text: string): string {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Extrai o ID da questão do slug no formato `titulo-formatado-clq12345`.
+ * O ID é a parte após o último hífen (CUID não contém hífens).
+ */
+export function extractQuestionIdFromSlug(slug: string): string | null {
+  if (!slug || typeof slug !== 'string') return null;
+  const lastHyphen = slug.lastIndexOf('-');
+  if (lastHyphen === -1) return slug || null;
+  return slug.slice(lastHyphen + 1) || null;
+}
+
+/** Tipo mínimo para montar a URL canônica de uma questão */
+export type QuestionForPath = {
+  id: string;
+  title: string;
+  subjectName?: string;
+  subject?: { name: string } | null;
+};
+
+/**
+ * Retorna o path da questão no formato semântico:
+ * /questoes/[subject-slug]/[title-slug]-[id]
+ */
+export function getQuestionPath(question: QuestionForPath): string {
+  const subjectSlug = generateSlug(question.subject?.name ?? question.subjectName ?? 'geral');
+  const titleSlug = generateSlug(question.title) || question.id;
+  return `/questoes/${subjectSlug}/${titleSlug}-${question.id}`;
+}
+
 // Helper to inject ads at random intervals
 export const injectAdsWithRandomInterval = (questions: any[], ads: any[]) => {
   if (!ads || ads.length === 0) return questions.map(q => ({ type: 'question', data: q }));

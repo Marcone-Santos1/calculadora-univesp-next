@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { SITE_CONFIG } from "@/utils/Constants";
+import { generateSlug, getQuestionPath } from '@/utils/functions';
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -52,18 +53,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
     }));
 
-    // Dynamic routes (Questions)
-    // Dynamic routes (Questions)
-    let questions: { id: string; updatedAt: Date }[] = [];
+    // Dynamic routes (Questions) — URLs semânticas: /questoes/[subject]/[slug]-[id]
+    let questions: { id: string; title: string; updatedAt: Date; subject: { name: string } }[] = [];
     try {
         questions = await prisma.question.findMany({
             select: {
                 id: true,
+                title: true,
                 updatedAt: true,
+                subject: { select: { name: true } },
             },
-            orderBy: {
-                updatedAt: 'desc',
-            },
+            orderBy: { updatedAt: 'desc' },
             take: 5000,
         });
     } catch (error) {
@@ -77,15 +77,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.warn('Failed to fetch subjects for sitemap:', error);
     }
 
-    const questionRoutes = questions.map((question) => ({
-        url: `${baseUrl}/questoes/${question.id}`,
-        lastModified: question.updatedAt,
+    const questionRoutes = questions.map((q) => ({
+        url: `${baseUrl}${getQuestionPath({ id: q.id, title: q.title, subject: q.subject })}`,
+        lastModified: q.updatedAt,
         changeFrequency: 'weekly' as const,
         priority: 0.6,
     }));
 
     const subjectRoutes: MetadataRoute.Sitemap = subjects.map((subject) => ({
-        url: `${baseUrl}/questoes?subject=${encodeURIComponent(subject.name)}`,
+        url: `${baseUrl}/questoes/${generateSlug(subject.name)}`,
         lastModified: new Date(),
         changeFrequency: 'weekly',
         priority: 0.8,

@@ -13,7 +13,7 @@ import { SITE_CONFIG } from "@/utils/Constants";
 import { Pagination } from '@/components/ui/Pagination';
 import { Metadata } from "next";
 import { Loading } from '@/components/Loading';
-import { injectAdsWithRandomInterval } from '@/utils/functions';
+import { injectAdsWithRandomInterval, getQuestionPath } from '@/utils/functions';
 
 export async function generateMetadata({ searchParams }: {
     searchParams: Promise<{
@@ -62,20 +62,38 @@ export async function generateMetadata({ searchParams }: {
         }
     }
 
-    if (page && Number(page) > 1) {
+    const pageNum = page ? Number(page) : 1;
+    if (pageNum > 1) {
         const separator = canonical.includes('?') ? '&' : '?';
-        canonical = `${canonical}${separator}page=${page}`;
-        title = `${title} - Página ${page}`;
+        canonical = `${canonical}${separator}page=${pageNum}`;
+        title = `${title} - Página ${pageNum}`;
     }
 
     const shouldIndex = !hasNonIndexableFilters;
 
+    // Obter totalPages para rel prev/next
+    const data = await getQuestions(query, subjectName, verified, verificationRequested, activity, sort, pageNum);
+    const totalPages = data.meta.totalPages;
+    const buildPageUrl = (p: number) => {
+        const sp = new URLSearchParams();
+        if (query) sp.set('q', query);
+        if (subjectName) sp.set('subject', subjectName);
+        if (verified) sp.set('verified', verified);
+        if (verificationRequested) sp.set('verificationRequested', verificationRequested);
+        if (activity) sp.set('activity', activity);
+        if (sort) sp.set('sort', sort);
+        if (p > 1) sp.set('page', String(p));
+        const qs = sp.toString();
+        return `${baseUrl}/questoes${qs ? `?${qs}` : ''}`;
+    };
+
+    const ogImageUrl = `${baseUrl}/og-questoes.png`;
 
     return {
         title: title,
         description: description,
         alternates: {
-            canonical: canonical,
+            canonical,
         },
         openGraph: {
             title: title,
@@ -86,12 +104,18 @@ export async function generateMetadata({ searchParams }: {
             locale: 'pt_BR',
             images: [
                 {
-                    url: '/og-questoes.png',
+                    url: ogImageUrl,
                     width: 1200,
                     height: 630,
                     alt: 'Plataforma de Estudos Univesp',
                 },
             ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: title,
+            description: description,
+            images: [ogImageUrl],
         },
         robots: {
             index: shouldIndex,
@@ -133,8 +157,36 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     // Process feed items
     const feedItems = injectAdsWithRandomInterval(questions, feedAds);
 
+    const breadcrumbListJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Início', item: SITE_CONFIG.BASE_URL },
+            ...(activeSubject
+                ? [
+                    { '@type': 'ListItem', position: 2, name: 'Questões', item: `${SITE_CONFIG.BASE_URL}/questoes` },
+                    { '@type': 'ListItem', position: 3, name: activeSubject.name, item: `${SITE_CONFIG.BASE_URL}/questoes?subject=${encodeURIComponent(activeSubject.name)}` },
+                ]
+                : [{ '@type': 'ListItem', position: 2, name: 'Questões', item: `${SITE_CONFIG.BASE_URL}/questoes` }]),
+        ],
+    };
+
+    const itemListJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        numberOfItems: meta.total,
+        itemListElement: questions.slice(0, 20).map((q: any, i: number) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${SITE_CONFIG.BASE_URL}${getQuestionPath(q)}`,
+            name: q.title,
+        })),
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbListJsonLd) }} />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
             <SidebarAds ads={sidebarAds} />
             <div className="container mx-auto max-w-7xl px-4 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
