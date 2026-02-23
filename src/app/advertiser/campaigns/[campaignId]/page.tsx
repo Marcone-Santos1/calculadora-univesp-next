@@ -196,20 +196,28 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {campaign.creatives.map((creative) => (
-                                <div key={creative.id} className="bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-hidden flex flex-col group hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
-                                    <div className="relative w-full h-40 bg-gray-200 dark:bg-zinc-800">
-                                        <Image
-                                            src={creative.imageUrl}
-                                            alt={creative.headline}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                        <Link href={`/advertiser/campaigns/${campaign.id}/creatives/${creative.id}/edit`}>
-                                            <button className="absolute top-2 right-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-gray-700 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-all z-10 opacity-0 group-hover:opacity-100" title="Editar Criativo">
-                                                <FaEdit />
-                                            </button>
-                                        </Link>
-                                    </div>
+                                <div key={creative.id} className="bg-gray-50 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-hidden flex flex-col group hover:border-blue-300 dark:hover:border-blue-700 transition-colors relative">
+                                    {creative.imageUrl ? (
+                                        <div className="relative w-full h-40 bg-gray-200 dark:bg-zinc-800">
+                                            <Image
+                                                src={creative.imageUrl}
+                                                alt={creative.headline}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="relative w-full h-40 bg-blue-50 dark:bg-zinc-800 flex items-center justify-center p-4 text-center">
+                                            <span className="text-gray-500 dark:text-gray-400 font-medium opacity-70">Anúncio Textual</span>
+                                        </div>
+                                    )}
+
+                                    <Link href={`/advertiser/campaigns/${campaign.id}/creatives/${creative.id}/edit`}>
+                                        <button className="absolute top-2 right-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-gray-700 dark:text-white p-2 rounded-full shadow-sm backdrop-blur-sm transition-all z-10 opacity-0 group-hover:opacity-100" title="Editar Criativo">
+                                            <FaEdit />
+                                        </button>
+                                    </Link>
+
                                     <div className="p-4 flex-1 flex flex-col">
                                         <h4 className="font-bold text-gray-900 dark:text-white line-clamp-1 mb-1">{creative.headline}</h4>
                                         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3 bg-white dark:bg-black/40 p-2 rounded border border-gray-100 dark:border-zinc-800/50 text-xs">

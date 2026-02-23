@@ -10,7 +10,7 @@ type CreativeData = {
     headline: string;
     description: string;
     destinationUrl: string;
-    imageUrl: string;
+    imageUrl: string | null;
 };
 
 export default function EditCreativeForm({ campaignId, creative }: { campaignId: string, creative: CreativeData }) {
@@ -104,7 +104,7 @@ export default function EditCreativeForm({ campaignId, creative }: { campaignId:
                             )}
                         </div>
                     </div>
-                    <input type="hidden" name="imageUrl" value={previewUrl || ""} required />
+                    <input type="hidden" name="imageUrl" value={previewUrl || ""} />
                 </div>
 
                 <div className="space-y-4">

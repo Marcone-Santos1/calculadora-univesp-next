@@ -1,0 +1,1 @@
+prisma/seed.ts(261,21): error TS2561: Object literal may only specify known properties, but 'targetSubjectId' does not exist in type 'Without<AdCampaignCreateInput, AdCampaignUncheckedCreateInput> & AdCampaignUncheckedCreateInput'. Did you mean to write 'targetSubjects'?

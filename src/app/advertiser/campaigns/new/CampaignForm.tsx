@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { createCampaign, updateCampaign } from "@/actions/campaign-actions";
-import { FaCloudUploadAlt, FaSpinner, FaImage } from "react-icons/fa";
+import { FaCloudUploadAlt, FaSpinner, FaImage, FaSearch, FaTimes } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/ToastProvider";
@@ -16,20 +16,45 @@ type CampaignData = {
     costValue: number;
     startDate: Date | null;
     endDate: Date | null;
+    targetSubjects?: { id: string; name: string }[];
     creatives: {
         headline: string;
         description: string;
         destinationUrl: string;
-        imageUrl: string;
+        imageUrl: string | null;
     }[];
 };
 
-export default function CampaignForm({ initialData }: { initialData?: CampaignData }) {
+export default function CampaignForm({ initialData, subjects = [] }: { initialData?: CampaignData, subjects?: any[] }) {
     const isEdit = !!initialData;
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.creatives[0]?.imageUrl || null);
 
     const { showToast } = useToast();
+
+    // Subject Search States
+    const [subjectSearch, setSubjectSearch] = useState('');
+    const [selectedSubjects, setSelectedSubjects] = useState<any[]>(
+        initialData?.targetSubjects || []
+    );
+    const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
+
+    const filteredSubjects = subjects?.filter(s =>
+        s.name.toLowerCase().includes(subjectSearch.toLowerCase()) &&
+        !selectedSubjects.some(selected => selected.id === s.id)
+    ) || [];
+
+    const handleSubjectSelect = (subject: any) => {
+        if (!selectedSubjects.find(s => s.id === subject.id)) {
+            setSelectedSubjects([...selectedSubjects, subject]);
+        }
+        setSubjectSearch('');
+        setIsSubjectDropdownOpen(false);
+    };
+
+    const handleRemoveSubject = (subjectId: string) => {
+        setSelectedSubjects(selectedSubjects.filter(s => s.id !== subjectId));
+    };
 
     // Derived values
     const today = new Date().toISOString().split('T')[0];
@@ -79,7 +104,7 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
     const action = isEdit && initialData?.id
         ? updateCampaign.bind(null, initialData.id)
         : createCampaign;
-        
+
 
     return (
         <form action={action} className="space-y-8">
@@ -160,109 +185,216 @@ export default function CampaignForm({ initialData }: { initialData?: CampaignDa
                             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
                         />
                     </div>
-                </div>
-            </div>
 
-            {/* Creative Settings - Only for New Campaigns */}
-            {!isEdit && (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">Anúncio Criativo</h2>
-                    <div className="grid grid-cols-1 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Título (Headline)</label>
-                            <input
-                                type="text"
-                                name="headline"
-                                maxLength={50}
-                                defaultValue={creative?.headline}
-                                required={!isEdit}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                                placeholder="Chame a atenção em poucas palavras"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Máximo 50 caracteres.</p>
-                        </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Campanhas Contextuais (Matérias)</label>
+                        <div className="relative">
+                            {selectedSubjects.map(s => (
+                                <input key={`hidden-${s.id}`} type="hidden" name="targetSubjects" value={s.id} />
+                            ))}
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Descrição</label>
-                            <textarea
-                                name="description"
-                                maxLength={150}
-                                required={!isEdit}
-                                defaultValue={creative?.description}
-                                rows={3}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                                placeholder="Detalhes da sua oferta..."
-                            ></textarea>
-                            <p className="text-xs text-gray-500 mt-1">Máximo 150 caracteres.</p>
-                        </div>
+                            {selectedSubjects.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {selectedSubjects.map(subject => (
+                                        <div key={subject.id} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm border border-blue-200 dark:border-blue-800">
+                                            <span>{subject.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveSubject(subject.id)}
+                                                className="hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none"
+                                            >
+                                                <FaTimes />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Imagem do Anúncio</label>
-
-                            <input type="hidden" name="imageUrl" value={previewUrl || ""} required={!isEdit} />
-
-                            <div className="flex items-center gap-4">
-                                <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden border border-gray-300 dark:border-gray-600">
-                                    {uploading ? (
-                                        <FaSpinner className="animate-spin text-blue-500 text-2xl" />
-                                    ) : previewUrl ? (
-                                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
-                                    ) : (
-                                        <FaImage className="text-gray-400 text-3xl" />
-                                    )}
+                            <div>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar matéria (vazio = Global)"
+                                        value={subjectSearch}
+                                        onChange={(e) => {
+                                            setSubjectSearch(e.target.value);
+                                            setIsSubjectDropdownOpen(true);
+                                        }}
+                                        onFocus={() => setIsSubjectDropdownOpen(true)}
+                                        className="w-full pl-10 pr-4 py-2 rounded-lg border outline-none text-gray-900 dark:text-white focus:ring-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-blue-500"
+                                    />
+                                    <FaSearch className="absolute left-3 top-3 text-gray-400" />
                                 </div>
 
-                                <div className="flex-1">
-                                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
-                                        <FaCloudUploadAlt className="text-lg" />
-                                        <span>{isEdit ? "Alterar Imagem" : "Escolher Imagem"}</span>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/jpeg,image/png,image/webp"
-                                            onChange={handleFileChange}
+                                {isSubjectDropdownOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setIsSubjectDropdownOpen(false)}
                                         />
-                                    </label>
-                                    <p className="text-xs text-gray-500 mt-2">Formatos: JPG, PNG, WEBP. Máx: 5MB.</p>
-                                </div>
+                                        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+                                            {filteredSubjects.length > 0 ? (
+                                                filteredSubjects.map((subject) => (
+                                                    <button
+                                                        key={subject.id}
+                                                        type="button"
+                                                        onClick={handleSubjectSelect.bind(null, subject)}
+                                                        className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white transition-colors"
+                                                    >
+                                                        {subject.name}
+                                                    </button>
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-2 text-gray-500 dark:text-gray-400 text-sm">
+                                                    Nenhuma matéria encontrada
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
+                    <p className="text-xs text-gray-500 mt-2">Escolha as matérias onde este anúncio deve aparecer com maior prioridade. Deixe vazio para uma campanha Global.</p>
+                </div>
+            </div>
+        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">URL de Destino</label>
-                            <input
-                                type="url"
-                                name="destinationUrl"
-                                defaultValue={creative?.destinationUrl}
-                                required={!isEdit}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                                placeholder="https://seu-site.com.br/oferta"
-                            />
+            {/* Creative Settings - Only for New Campaigns */ }
+    {
+        !isEdit && (
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">Anúncio Criativo</h2>
+                <div className="grid grid-cols-1 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Título (Headline)</label>
+                        <input
+                            type="text"
+                            name="headline"
+                            maxLength={50}
+                            defaultValue={creative?.headline}
+                            required={!isEdit}
+                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
+                            placeholder="Chame a atenção em poucas palavras"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Máximo 50 caracteres.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Descrição</label>
+                        <textarea
+                            name="description"
+                            maxLength={150}
+                            required={!isEdit}
+                            defaultValue={creative?.description}
+                            rows={3}
+                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
+                            placeholder="Detalhes da sua oferta..."
+                        ></textarea>
+                        <p className="text-xs text-gray-500 mt-1">Máximo 150 caracteres.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Imagem do Anúncio (Opcional)</label>
+
+                        <input type="hidden" name="imageUrl" value={previewUrl || ""} />
+
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden border border-gray-300 dark:border-gray-600">
+                                {uploading ? (
+                                    <FaSpinner className="animate-spin text-blue-500 text-2xl" />
+                                ) : previewUrl ? (
+                                    <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                                ) : (
+                                    <FaImage className="text-gray-400 text-3xl" />
+                                )}
+                            </div>
+
+                            <div className="flex-1">
+                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
+                                    <FaCloudUploadAlt className="text-lg" />
+                                    <span>{isEdit ? "Alterar Imagem" : "Escolher Imagem"}</span>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={handleFileChange}
+                                    />
+                                </label>
+                                <p className="text-xs text-gray-500 mt-2">Formatos: JPG, PNG, WEBP. Máx: 5MB.</p>
+                            </div>
                         </div>
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">URL de Destino</label>
+                        <input
+                            type="url"
+                            name="destinationUrl"
+                            defaultValue={creative?.destinationUrl}
+                            required={!isEdit}
+                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
+                            placeholder="https://seu-site.com.br/oferta"
+                        />
+                    </div>
                 </div>
-            )}
-
-            <div className="flex justify-end gap-4">
-                <Link href="/advertiser/campaigns" className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-white">
-                    Cancelar
-                </Link>
-
-                <button
-                    type="submit"
-                    disabled={uploading || (!isEdit && !previewUrl)}
-                    className="px-8 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {uploading ? "Enviando..." : (isEdit ? "Salvar Alterações" : "Lançar Campanha")}
-                </button>
             </div>
+        )
+    }
 
-            {isEdit && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
-                    <p><strong>Atenção:</strong> Ao salvar alterações em uma campanha, ela voltará para o status <strong>Pendente de Revisão</strong> e deverá ser aprovada novamente pela equipe.</p>
-                </div>
-            )}
+    <div className="flex justify-end gap-4">
+        <Link href="/advertiser/campaigns" className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-white">
+            Cancelar
+        </Link>
 
-        </form>
+        <button
+            type="submit"
+            disabled={uploading}
+            className="px-8 py-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            {uploading ? "Enviando..." : (isEdit ? "Salvar Alterações" : "Lançar Campanha")}
+        </button>
+    </div>
+
+    {
+        isEdit && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
+                <p><strong>Atenção:</strong> Ao salvar alterações em uma campanha, ela voltará para o status <strong>Pendente de Revisão</strong> e deverá ser aprovada novamente pela equipe.</p>
+            </div>
+        )
+    }
+
+    <style jsx>{`
+                .custom-scrollbar {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgb(209 213 219) transparent;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: rgb(209 213 219);
+                    border-radius: 9999px;
+                }
+                
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background-color: rgb(156 163 175);
+                }
+                
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background-color: rgb(75 85 99);
+                }
+                
+                .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background-color: rgb(107 114 128);
+                }
+            `}</style>
+
+        </form >
     );
 }

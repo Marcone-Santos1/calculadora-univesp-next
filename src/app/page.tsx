@@ -1,10 +1,14 @@
 import { GradeCalculator } from "@/components/GradeCalculator";
 import { Content } from "@/components/Content";
 import { RecentPosts } from "@/components/blog/RecentPosts";
+import { getAdsForFeed } from "@/actions/ad-engine";
+import NativeAdCard from "@/components/feed/NativeAdCard";
 
 import { SITE_CONFIG } from "@/utils/Constants";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const ads = await getAdsForFeed(1); // Fetch 1 global ad
+  const ad = ads[0];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -111,6 +115,13 @@ export default function HomePage() {
 
 
       <GradeCalculator />
+
+      {ad && (
+        <div className="container mx-auto px-4 max-w-4xl pt-8">
+          <NativeAdCard ad={ad} />
+        </div>
+      )}
+
       <Content />
       <RecentPosts limit={9} />
     </>

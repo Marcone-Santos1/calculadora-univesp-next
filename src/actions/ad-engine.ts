@@ -9,7 +9,7 @@ import { executeWithRetry } from "@/lib/prisma-utils";
 // CPM: Bid / 1000
 const ESTIMATED_CTR = 0.015; // 1.5% conservative estimate
 
-export async function fetchNextAd() {
+export async function fetchNextAd(subjectId?: string) {
     // 1. Fetch Candidates (Active, Budget > 0)
     const campaigns = await db.adCampaign.findMany({
         where: {
@@ -22,10 +22,18 @@ export async function fetchNextAd() {
                 { endDate: null },
                 { endDate: { gte: new Date() } }
             ],
+            AND: [
+                {
+                    OR: subjectId
+                        ? [{ targetSubjects: { none: {} } }, { targetSubjects: { some: { id: subjectId } } }]
+                        : [{ targetSubjects: { none: {} } }]
+                }
+            ],
             creatives: { some: {} } // Must have at least one creative
         },
         include: {
             creatives: true,
+            targetSubjects: true,
             advertiser: {
                 select: { companyName: true, balance: true }
             }
@@ -56,6 +64,11 @@ export async function fetchNextAd() {
 
         // Boost factor (optional, can be random noise to ensure rotation)
         weight = weight * (0.8 + Math.random() * 0.4);
+
+        // Contextual boost
+        if (subjectId && campaign.targetSubjects?.some((s: any) => s.id === subjectId)) {
+            weight = weight * 5; // 5x boost for highly relevant contextual ads
+        }
 
         return { campaign, creative, weight };
     }).filter(items => items !== null) as { campaign: any, creative: any, weight: number }[];
@@ -97,7 +110,7 @@ export async function fetchNextAd() {
     };
 }
 
-export async function getAdsForFeed(count: number = 1) {
+export async function getAdsForFeed(count: number = 1, subjectId?: string) {
     const ads = [];
     // We run the selection 'count' times.
     // Optimization: Exclude picked campaigns to avoid repeats in same feed?
@@ -112,31 +125,48 @@ export async function getAdsForFeed(count: number = 1) {
                 { endDate: null },
                 { endDate: { gte: new Date() } }
             ],
+            AND: [
+                {
+                    OR: subjectId
+                        ? [{ targetSubjects: { none: {} } }, { targetSubjects: { some: { id: subjectId } } }]
+                        : [{ targetSubjects: { none: {} } }]
+                }
+            ],
             advertiser: { balance: { gt: 0 } },
             creatives: { some: {} }
         },
         include: {
             creatives: true,
+            targetSubjects: true,
             advertiser: { select: { companyName: true, balance: true } }
         }
     });
 
     if (campaigns.length === 0) return [];
 
-    const available = [...campaigns];
+    let availableCreatives = campaigns.flatMap(c =>
+        c.creatives.map(creative => ({ campaign: c, creative }))
+    );
 
     for (let i = 0; i < count; i++) {
-        if (available.length === 0) break;
+        if (availableCreatives.length === 0) {
+            break; // Stop instead of refilling to prevent duplicate creatives
+        }
 
-        // Weighted Selection Logic on 'available'
-        // ... (Similar logic as above)
-        const maxPriority = Math.max(...available.map(c => c.priority));
-        const candidates = available.filter(c => c.priority === maxPriority);
+        // Weighted Selection Logic on 'availableCreatives'
+        const maxPriority = Math.max(...availableCreatives.map(c => c.campaign.priority));
+        const candidates = availableCreatives.filter(c => c.campaign.priority === maxPriority);
 
         const weighted = candidates.map(c => {
-            let weight = c.billingType === 'CPM' ? c.costValue / 1000 : c.costValue * ESTIMATED_CTR;
+            let weight = c.campaign.billingType === 'CPM' ? c.campaign.costValue / 1000 : c.campaign.costValue * ESTIMATED_CTR;
             weight = weight * (0.8 + Math.random() * 0.4);
-            return { campaign: c, weight };
+
+            // Contextual boost
+            if (subjectId && c.campaign.targetSubjects.some(s => s.id === subjectId)) {
+                weight = weight * 5;
+            }
+
+            return { item: c, weight };
         });
 
         const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
@@ -151,10 +181,7 @@ export async function getAdsForFeed(count: number = 1) {
             }
         }
 
-        const { campaign } = picked;
-
-        // Creative Rotation: Randomly select one of the available creatives
-        const creative = campaign.creatives[Math.floor(Math.random() * campaign.creatives.length)];
+        const { campaign, creative } = picked.item;
 
         ads.push({
             ...creative,
@@ -164,9 +191,9 @@ export async function getAdsForFeed(count: number = 1) {
             billingType: campaign.billingType,
         });
 
-        // Remove used campaign to prevent duplicates
-        const index = available.findIndex(c => c.id === campaign.id);
-        if (index > -1) available.splice(index, 1);
+        // Remove used creative to prevent duplicates
+        const index = availableCreatives.findIndex(c => c.creative.id === creative.id);
+        if (index > -1) availableCreatives.splice(index, 1);
     }
 
     return ads;

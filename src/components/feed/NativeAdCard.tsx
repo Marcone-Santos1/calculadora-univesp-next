@@ -11,7 +11,7 @@ interface NativeAdCardProps {
         id: string;
         headline: string;
         description: string;
-        imageUrl: string;
+        imageUrl: string | null;
         destinationUrl: string;
         advertiserName: string | null;
         campaignId: string;
@@ -45,14 +45,16 @@ export default function NativeAdCard({ ad }: NativeAdCardProps) {
 
                 <div className="flex flex-col sm:flex-row">
                     {/* Image - Fixed aspect ratio container */}
-                    <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-zinc-100 dark:bg-zinc-800">
-                        <Image
-                            src={ad.imageUrl}
-                            alt={ad.headline}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                    </div>
+                    {ad.imageUrl && (
+                        <div className="relative w-full sm:w-48 h-48 sm:h-auto shrink-0 bg-zinc-100 dark:bg-zinc-800">
+                            <Image
+                                src={ad.imageUrl}
+                                alt={ad.headline}
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                        </div>
+                    )}
 
                     {/* Content */}
                     <div className="p-4 flex flex-col justify-center gap-2">

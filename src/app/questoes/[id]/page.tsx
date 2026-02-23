@@ -21,6 +21,7 @@ import { FaShield } from 'react-icons/fa6';
 import { getAdsForFeed } from '@/actions/ad-engine';
 import NativeAdCard from '@/components/feed/NativeAdCard';
 import { injectAdsWithRandomInterval } from '@/utils/functions';
+import SidebarAds from '@/components/feed/SidebarAds';
 import { Comment } from '@/Contracts/Question';
 
 // Generate Dynamic Metadata
@@ -72,20 +73,25 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 const QuestionDetailContent = async ({ id }: { id: string }) => {
 
 
-    const [question, ads, session] = await Promise.all([
-        getQuestion(id),
-        getAdsForFeed(1),
-        auth()
-    ]);
+    const question = await getQuestion(id);
 
     if (!question) {
         notFound();
     }
 
+    const [ads, session] = await Promise.all([
+        getAdsForFeed(6, question.subject?.id),
+        auth()
+    ]);
+
+    const sidebarAds = ads.slice(0, 2);
+    const middleAd = ads[2];
+    const feedAds = ads.slice(3);
+
     const relatedQuestions = await getRelatedQuestions(question?.subject?.id || '', id);
 
-    // Process feed items
-    const feedItems = injectAdsWithRandomInterval(relatedQuestions, ads);
+    // Process feed items with remaining ads
+    const feedItems = injectAdsWithRandomInterval(relatedQuestions, feedAds);
 
 
     const totalVotes = question.alternatives.reduce((acc: number, alt: any) => acc + alt.voteCount, 0);
@@ -176,7 +182,8 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
         },
     };
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 relative">
+            <SidebarAds ads={sidebarAds} />
             {/* Structured Data Script */}
             <script
                 type="application/ld+json"
@@ -305,6 +312,14 @@ const QuestionDetailContent = async ({ id }: { id: string }) => {
                         )}
                     </div>
                 </div>
+
+                {/* Middle Ad Slot */}
+                {middleAd && (
+                    <div className="mb-8">
+                        <span className="text-xs text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest mb-2 block text-center">Publicidade</span>
+                        <NativeAdCard ad={middleAd} />
+                    </div>
+                )}
 
                 {/* Comments Section */}
                 <div className="mt-8">

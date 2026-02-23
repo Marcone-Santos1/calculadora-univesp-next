@@ -5,32 +5,43 @@
 Environment variables loaded from .env
 Prisma schema loaded from prisma/schema.prisma
 
-✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 447ms
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 278ms
 
 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
 
-Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
 
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
    ▲ Next.js 16.0.10 (Turbopack)
    - Environments: .env
+   - Experiments (use with caution):
+     · clientTraceMetadata
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 15.8s
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 61s
+   Running next.config.js provided runAfterProductionCompile ...
+ ✓ Completed runAfterProductionCompile in 29298ms
    Running TypeScript ...
    Collecting page data using 3 workers ...
-   Generating static pages using 3 workers (0/39) ...
-   Generating static pages using 3 workers (9/39) 
-   Generating static pages using 3 workers (19/39) 
-   Generating static pages using 3 workers (29/39) 
- ✓ Generating static pages using 3 workers (39/39) in 1364.9ms
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 3 workers (0/44) ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 3 workers (11/44) 
+   Generating static pages using 3 workers (22/44) 
+   Generating static pages using 3 workers (33/44) 
+ ✓ Generating static pages using 3 workers (44/44) in 1909.7ms
    Finalizing page optimization ...
 
 Route (app)
 ┌ ○ /
 ├ ○ /_not-found
-├ ○ /aac
 ├ ƒ /admin
 ├ ƒ /admin/ads
+├ ƒ /admin/avisos
 ├ ƒ /admin/blog
 ├ ƒ /admin/blog/[id]
 ├ ƒ /admin/blog/new
@@ -55,14 +66,17 @@ Route (app)
 ├ ƒ /api/ad-click
 ├ ƒ /api/auth/[...nextauth]
 ├ ƒ /api/check-admin
+├ ƒ /api/cron/streak-guard
 ├ ƒ /api/upload
 ├ ƒ /api/webhooks/abacatepay
 ├ ○ /blog
 ├ ● /blog/[slug]
+│ └ /blog/teste
 ├ ○ /calculadora-cr
 ├ ƒ /login
 ├ ƒ /perfil
 ├ ƒ /perfil/[id]
+├ ƒ /perfil/aac
 ├ ƒ /perfil/editar
 ├ ƒ /perfil/importar
 ├ ○ /placar
@@ -72,6 +86,11 @@ Route (app)
 ├ ƒ /questoes/[id]/opengraph-image
 ├ ○ /questoes/nova
 ├ ○ /robots.txt
+├ ƒ /simulados
+├ ƒ /simulados/[id]
+├ ƒ /simulados/[id]/resultado
+├ ƒ /simulados/novo
+├ ƒ /simulados/ranking
 ├ ○ /sitemap.xml
 └ ○ /sobre
 
