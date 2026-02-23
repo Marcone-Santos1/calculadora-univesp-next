@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Question } from '@/Contracts/Question';
+import { generateSlug, getQuestionPath } from '@/utils/functions';
 import { FaCheckCircle, FaComment, FaEye, FaClock, FaUser, FaCheck } from 'react-icons/fa';
 import { FavoriteButton } from './FavoriteButton';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -95,7 +96,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
 
                 {/* Title & Content */}
                 <div className="mb-4">
-                    <Link href={`/questoes/${question.id}`} className="block">
+                    <Link href={getQuestionPath(question)} className="block">
                         <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                             {question.title}
                         </h3>
@@ -119,7 +120,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
                 {/* Footer: Stats & Status */}
                 <div className="flex flex-wrap items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 gap-y-3">
                     <div className="flex items-center gap-3">
-                        <a href={`/questoes?subject=${question.subject?.name}`} className="inline-block px-2.5 py-1 rounded-md text-xs font-medium border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 max-w-[140px] truncate">
+                        <a href={question.subject?.name || question.subjectName ? `/questoes/${generateSlug(question.subject?.name ?? question.subjectName ?? '')}` : '/questoes'} className="inline-block px-2.5 py-1 rounded-md text-xs font-medium border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 max-w-[140px] truncate">
                             {question.subject?.name}
                         </a>
 

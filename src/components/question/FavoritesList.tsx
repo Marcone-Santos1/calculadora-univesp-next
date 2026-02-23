@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { FaStar, FaTimes } from 'react-icons/fa';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { getQuestionPath } from '@/utils/functions';
 
 interface Question {
     id: string;
@@ -45,7 +46,7 @@ export function FavoritesList({ allQuestions }: FavoritesListProps) {
                         className="group relative"
                     >
                         <Link
-                            href={`/questoes/${question.id}`}
+                            href={getQuestionPath(question)}
                             className="block px-3 py-2 pr-8 rounded-lg bg-yellow-50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 hover:border-yellow-300 dark:hover:border-yellow-700 transition-all"
                         >
                             <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
