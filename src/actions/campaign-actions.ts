@@ -121,6 +121,7 @@ export async function toggleCampaignStatus(campaignId: string) {
     });
 
     revalidatePath("/advertiser/campaigns");
+    revalidatePath("/");
     return { success: true, message: "Status atualizado com sucesso" };
 }
 
