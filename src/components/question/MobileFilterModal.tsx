@@ -23,9 +23,11 @@ interface Subject {
 interface MobileFilterModalProps {
     subjects: Subject[];
     questions?: SimpleQuestion[];
+    /** Quando na página /questoes/[segment], passa o slug para os filtros usarem a rota do silo */
+    currentSubjectSlug?: string;
 }
 
-export function MobileFilterModal({ subjects, questions = [] }: MobileFilterModalProps) {
+export function MobileFilterModal({ subjects, questions = [], currentSubjectSlug }: MobileFilterModalProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -59,7 +61,7 @@ export function MobileFilterModal({ subjects, questions = [] }: MobileFilterModa
                             </button>
                         </div>
                         <div className="p-4">
-                            <QuestionSidebar subjects={subjects} questions={questions} />
+                            <QuestionSidebar subjects={subjects} questions={questions} currentSubjectSlug={currentSubjectSlug} />
                         </div>
                     </div>
                 </>

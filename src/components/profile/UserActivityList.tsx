@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FaQuestionCircle, FaComment, FaClock } from 'react-icons/fa';
+import { getQuestionPath } from '@/utils/functions';
 
 interface Question {
     id: string;
@@ -100,7 +101,7 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                                 {questions.data.map((question) => (
                                     <Link
                                         key={question.id}
-                                        href={`/questoes/${question.id}`}
+                                        href={getQuestionPath({ id: question.id, title: question.title, subject: question.subject })}
                                         className="block p-4 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all group"
                                     >
                                         <div className="flex items-start justify-between">
@@ -146,7 +147,7 @@ export function UserActivityList({ questions, comments }: UserActivityListProps)
                                 {comments.data.map((comment) => (
                                     <Link
                                         key={comment.id}
-                                        href={`/questoes/${comment.question.id}`}
+                                        href={getQuestionPath({ id: comment.question.id, title: comment.question.title, subject: comment.question.subject })}
                                         className="block p-4 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all group"
                                     >
                                         <div className="mb-2">
