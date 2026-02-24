@@ -16,6 +16,10 @@ import { Metadata } from 'next';
 import { Loading } from '@/components/Loading';
 import { generateSlug, injectAdsWithRandomInterval, getQuestionPath } from '@/utils/functions';
 
+// Garante que a rota não seja cacheada; o redirect principal é feito no middleware para evitar
+// falha do permanentRedirect quando o usuário está logado (streaming/cookies).
+export const dynamic = 'force-dynamic';
+
 /**
  * Resolve o slug da disciplina para o nome (busca no banco).
  */
