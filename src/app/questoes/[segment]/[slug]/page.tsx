@@ -231,11 +231,7 @@ const QuestionDetailContent = async ({ subjectSlug, slug, id }: { subjectSlug: s
                                         key={alt.id}
                                         alternative={alt}
                                         totalVotes={totalVotes}
-                                        onVote={async (altId) => {
-                                            'use server';
-                                            if (!session?.user?.id) return;
-                                            await voteOnAlternative(altId);
-                                        }}
+                                        onVote={voteOnAlternative}
                                         hasVoted={userHasVoted}
                                         isVerified={question.isVerified}
                                         isLoggedIn={!!session}
