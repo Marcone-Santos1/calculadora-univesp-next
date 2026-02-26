@@ -1,5 +1,6 @@
 import React from 'react';
-import AvaImporter from '@/components/admin/AvaImporter';
+// import AvaImporter from '@/components/admin/AvaImporter'; // TEMPORARIAMENTE COMENTADO
+import AvaImporterTemp from '@/components/admin/AvaImporterTemp';
 
 export const metadata = {
     title: 'Importador AVA | Admin',
@@ -33,7 +34,8 @@ export default function ImportPage() {
 
             {/* Content Area */}
             <div className="container mx-auto px-6 max-w-6xl">
-                <AvaImporter />
+                {/* <AvaImporter /> */}
+                <AvaImporterTemp />
             </div>
         </main>
     );

@@ -82,6 +82,38 @@ export async function getImportJob(jobId: string) {
     };
 }
 
+export async function getMyImportJobs() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Não autorizado');
+    }
+
+    const jobs = await db.importJob.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+    });
+
+    return jobs.map(job => {
+        let metrics = { found: 0, imported: 0, skipped: 0, xp: 0 };
+        if (job.logs) {
+            try {
+                const parsed = typeof job.logs === 'string' ? JSON.parse(job.logs) : job.logs;
+                metrics = parsed.metrics || metrics;
+            } catch { }
+        }
+
+        return {
+            id: job.id,
+            status: job.status,
+            createdAt: job.createdAt,
+            updatedAt: job.updatedAt,
+            completedAt: job.completedAt,
+            metrics,
+        };
+    });
+}
+
 export async function cancelImportJob(jobId: string) {
     const session = await auth();
     if (!session?.user?.id) {

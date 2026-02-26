@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import AvaImporter from '@/components/admin/AvaImporter';
+// import AvaImporter from '@/components/admin/AvaImporter'; // TEMPORARIAMENTE COMENTADO
+import AvaImporterTemp from '@/components/admin/AvaImporterTemp';
 import { Sparkles } from 'lucide-react';
 
 export const metadata = {
@@ -28,7 +29,8 @@ export default async function ImportarPage() {
             </div>
 
             {/* Importer Component */}
-            <AvaImporter mode="user" />
+            {/* <AvaImporter mode="user" /> */}
+            <AvaImporterTemp mode="user" />
         </div>
     );
 }

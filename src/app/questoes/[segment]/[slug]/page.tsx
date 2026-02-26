@@ -153,12 +153,12 @@ const QuestionDetailContent = async ({ subjectSlug, slug, id }: { subjectSlug: s
     const relatedItemListJsonLd =
         relatedQuestions.length > 0
             ? {
-                  '@context': 'https://schema.org',
-                  '@type': 'ItemList',
-                  name: 'Questões relacionadas',
-                  numberOfItems: relatedQuestions.length,
-                  itemListElement: relatedQuestions.map((q: any, i: number) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_CONFIG.BASE_URL}${getQuestionPath(q)}`, name: q.title })),
-              }
+                '@context': 'https://schema.org',
+                '@type': 'ItemList',
+                name: 'Questões relacionadas',
+                numberOfItems: relatedQuestions.length,
+                itemListElement: relatedQuestions.map((q: any, i: number) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_CONFIG.BASE_URL}${getQuestionPath(q)}`, name: q.title })),
+            }
             : null;
 
     return (
