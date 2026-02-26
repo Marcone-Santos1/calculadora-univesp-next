@@ -86,6 +86,20 @@ export default function AdminAnnouncementsPage() {
                     { id: generateId(), type: 'TEXT', content: 'Por favor, revise nossas diretrizes para evitar restrições em sua conta.', align: 'left', color: '#374151' },
                     { id: generateId(), type: 'BUTTON', label: 'Ler Diretrizes', url: 'https://calculadoraunivesp.com.br/termos', bgColor: '#dc2626', txtColor: '#ffffff', align: 'left' }
                 );
+            } else if (key === 'AVA_IMPORTER_UPDATE') {
+                newBlocks.push(
+                    { id: generateId(), type: 'HEADING', content: 'Seu importador do AVA ficou melhor!', align: 'left', color: '#1e3a8a' },
+                    { id: generateId(), type: 'TEXT', content: 'Olá! Temos novidades importantes sobre o Importador de Atividades do AVA.', align: 'left', color: '#374151' },
+                    { id: generateId(), type: 'TEXT', content: 'Fizemos melhorias significativas nesta funcionalidade. Agora o processo funciona de forma mais estável e você não precisa mais manter a aba aberta enquanto espera.', align: 'left', color: '#374151' },
+                    { id: generateId(), type: 'DIVIDER', color: '#e5e7eb' },
+                    { id: generateId(), type: 'TEXT', content: '📦 O que mudou?', align: 'left', color: '#111827' },
+                    { id: generateId(), type: 'TEXT', content: '📌 Processamento em Background: Ao iniciar a sincronização, sua solicitação vai para uma fila. Você pode fechar a aba normalmente!', align: 'left', color: '#1e40af' },
+                    { id: generateId(), type: 'TEXT', content: '📊 Acompanhamento de Status: Acesse a página de importação a qualquer momento para ver o status dos seus jobs – pendente, em andamento ou concluído.', align: 'left', color: '#1e40af' },
+                    { id: generateId(), type: 'TEXT', content: '🛡️ Maior Estabilidade: O novo sistema é mais resistente a falhas e processa suas atividades de forma mais confiável.', align: 'left', color: '#1e40af' },
+                    { id: generateId(), type: 'SPACER', height: 8 },
+                    { id: generateId(), type: 'TEXT', content: 'Para usar o importador atualizado, acesse seu perfil e clique em Importar do AVA.', align: 'left', color: '#6b7280' },
+                    { id: generateId(), type: 'BUTTON', label: 'Ir para Importação', url: 'https://calculadoraunivesp.com.br/perfil/importar', bgColor: '#2563eb', txtColor: '#ffffff', align: 'center' }
+                );
             }
 
             setBlocks(newBlocks);
@@ -468,6 +482,7 @@ function TemplateSelector({ value, onChange }: { value: string, onChange: (val: 
     const options = [
         { value: 'CUSTOM', label: 'Configurar Manualmente', desc: 'Começar do zero', icon: FaLayerGroup, color: 'text-gray-500' },
         { value: 'ANNOUNCEMENT', label: 'Aviso Geral', desc: 'Template simples para comunicados', icon: FaBullhorn, color: 'text-blue-500' },
+        { value: 'AVA_IMPORTER_UPDATE', label: 'Melhorias no Importador', desc: 'Novidades sobre a fila em background', icon: FaBullhorn, color: 'text-indigo-500' },
         { value: 'WELCOME', label: 'Boas-vindas', desc: 'Email de recepção para novos usuários', icon: FaHandSparkles, color: 'text-yellow-500' },
         { value: 'WARNING', label: 'Alerta Importante', desc: 'Avisos de moderação ou urgentes', icon: FaExclamationTriangle, color: 'text-orange-500' },
     ];

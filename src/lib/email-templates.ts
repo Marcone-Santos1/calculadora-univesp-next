@@ -281,6 +281,24 @@ export const PredefinedTemplates = {
     `
   },
 
+  AVA_IMPORTER_UPDATE: {
+    label: "Melhorias no Importador",
+    subject: "🔄 Importador do AVA Atualizado – Fila em Background",
+    body: () => `
+      ${EmailComponents.Heading('Seu importador do AVA ficou melhor!', { align: 'left', color: '#1e3a8a' })}
+      ${EmailComponents.Text('Olá! Temos novidades importantes sobre o <strong>Importador de Atividades do AVA</strong>.')}
+      ${EmailComponents.Text('Fizemos melhorias significativas nesta funcionalidade. Agora o processo funciona de forma mais estável e você não precisa mais manter a aba aberta enquanto espera.')}
+      ${EmailComponents.Divider()}
+      ${EmailComponents.Text('<strong>📦 O que mudou?</strong>', { color: '#111827' })}
+      ${EmailComponents.HighlightBox('<strong>Processamento em Background:</strong> Ao iniciar a sincronização, sua solicitação vai para uma fila de processamento. Você pode fechar a aba normalmente!')}
+      ${EmailComponents.HighlightBox('<strong>Acompanhamento de Status:</strong> Acesse a página de importação a qualquer momento para ver o status dos seus jobs – pendente, em andamento ou concluído.')}
+      ${EmailComponents.HighlightBox('<strong>Maior Estabilidade:</strong> O novo sistema é mais resistente a falhas e processa suas atividades em background de forma mais confiável.')}
+      ${EmailComponents.Spacer(8)}
+      ${EmailComponents.Text('Para usar o importador atualizado, acesse seu perfil e clique em <strong>Importar do AVA</strong>.', { color: '#6b7280' })}
+      ${EmailComponents.Button('Ir para Importação', 'https://calculadoraunivesp.com.br/perfil/importar', { bgColor: '#2563eb', align: 'center' })}
+    `
+  },
+
   GENERIC: {
     label: "Genérico",
     subject: "Notificação",
