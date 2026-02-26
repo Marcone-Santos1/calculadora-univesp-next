@@ -646,7 +646,9 @@ export async function requestVerification(questionId: string) {
     revalidatePath('/admin/questions');
 }
 
-export async function getSubjectsWithCounts() {
+import { cache } from 'react';
+
+export const getSubjectsWithCounts = cache(async function getSubjectsWithCounts() {
     const subjects = await prisma.subject.findMany({
         include: {
             _count: {
@@ -657,4 +659,4 @@ export async function getSubjectsWithCounts() {
     });
 
     return subjects;
-}
+});
