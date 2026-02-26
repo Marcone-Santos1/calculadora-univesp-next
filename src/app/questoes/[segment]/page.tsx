@@ -95,18 +95,23 @@ const SubjectQuestionsContent = async ({
 
     const params = await searchParams;
     const page = Number(params.page) || 1;
-    const data = await getQuestions(
-        params.q,
-        subject.name,
-        params.verified,
-        params.verificationRequested,
-        params.activity,
-        params.sort,
-        page,
-    );
-    const subjects = await getSubjectsWithCounts();
+
+    // Fetch all data in parallel — saves ~2x latency vs sequential calls
+    const [data, subjects, allAds] = await Promise.all([
+        getQuestions(
+            params.q,
+            subject.name,
+            params.verified,
+            params.verificationRequested,
+            params.activity,
+            params.sort,
+            page,
+        ),
+        getSubjectsWithCounts(),
+        getAdsForFeed(12, subject.id),
+    ]);
+
     const { questions, meta } = data;
-    const allAds = await getAdsForFeed(12, subject.id);
     const sidebarAds = allAds.slice(0, 2);
     const feedAds = allAds;
     const feedItems = injectAdsWithRandomInterval(questions, feedAds);

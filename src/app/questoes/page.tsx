@@ -56,21 +56,6 @@ export async function generateMetadata({ searchParams }: {
 
     const shouldIndex = !hasNonIndexableFilters;
 
-    // Obter totalPages para rel prev/next (listagem sem disciplina)
-    const data = await getQuestions(query, undefined, verified, verificationRequested, activity, sort, pageNum);
-    const totalPages = data.meta.totalPages;
-    const buildPageUrl = (p: number) => {
-        const sp = new URLSearchParams();
-        if (query) sp.set('q', query);
-        if (verified) sp.set('verified', verified);
-        if (verificationRequested) sp.set('verificationRequested', verificationRequested);
-        if (activity) sp.set('activity', activity);
-        if (sort) sp.set('sort', sort);
-        if (p > 1) sp.set('page', String(p));
-        const qs = sp.toString();
-        return `${baseUrl}/questoes${qs ? `?${qs}` : ''}`;
-    };
-
     const ogImageUrl = `${baseUrl}/og-questoes.png`;
 
     const canonicalWithPage = pageNum > 1 ? `${canonical}?page=${pageNum}` : canonical;
@@ -127,12 +112,12 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
     const sort = params.sort;
     const page = Number(params.page) || 1;
 
-    // Fetch data including ads. Let's fetch 12 ads total (2 for sidebar, 10 for feed)
-    const data = await getQuestions(query, undefined, verified, verificationRequested, activity, sort, page);
-    const subjects = await getSubjectsWithCounts();
-
-    // Fetch unique ads for sidebar and feed at once
-    const allAds = await getAdsForFeed(12, undefined);
+    // Fetch all data in parallel — saves ~2x latency vs sequential calls
+    const [data, subjects, allAds] = await Promise.all([
+        getQuestions(query, undefined, verified, verificationRequested, activity, sort, page),
+        getSubjectsWithCounts(),
+        getAdsForFeed(12, undefined),
+    ]);
 
     const sidebarAds = allAds.slice(0, 2);
     const feedAds = allAds;

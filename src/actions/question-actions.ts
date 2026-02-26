@@ -90,35 +90,35 @@ export async function getQuestions(
 
     const skip = (page - 1) * limit;
 
-    // Run count and findMany in parallel
-    // Run count and findMany sequentially to save connections
-    const totalQuestions = await executeWithRetry(() => prisma.question.count({ where }));
-
-    const questions = await executeWithRetry(() => prisma.question.findMany({
-        where,
-        include: {
-            user: {
-                include: {
-                    reputationLogs: false
+    // Run count and findMany in parallel to save a full DB round-trip
+    const [totalQuestions, questions] = await Promise.all([
+        executeWithRetry(() => prisma.question.count({ where })),
+        executeWithRetry(() => prisma.question.findMany({
+            where,
+            include: {
+                user: {
+                    include: {
+                        reputationLogs: false
+                    }
+                },
+                subject: true,
+                alternatives: {
+                    include: {
+                        votes: true
+                    }
+                },
+                comments: true,
+                _count: {
+                    select: {
+                        comments: true,
+                    }
                 }
             },
-            subject: true,
-            alternatives: {
-                include: {
-                    votes: true
-                }
-            },
-            comments: true,
-            _count: {
-                select: {
-                    comments: true,
-                }
-            }
-        },
-        orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' },
-        skip,
-        take: limit,
-    }));
+            orderBy: sort === 'popular' || sort === 'discussed' ? orderBy : { createdAt: 'desc' },
+            skip,
+            take: limit,
+        }))
+    ]);
 
     // Map and calculate metrics (No more filtering here!)
     const processedQuestions = questions.map(q => {
@@ -569,7 +569,7 @@ export async function createComment(questionId: string, text: string, parentId?:
 }
 
 import { EmailService } from '@/lib/email-service';
-import {extractCleanTextFromMarkdown} from "@/utils/functions";
+import { extractCleanTextFromMarkdown } from "@/utils/functions";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 export async function requestVerification(questionId: string) {
