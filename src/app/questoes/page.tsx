@@ -188,11 +188,8 @@ const QuestionsContent = async ({ searchParams }: { searchParams: Promise<{ q?: 
                             </div>
                         </div>
 
-                        {/* Page Header */}
+                        {/* Page Header — renderizado DENTRO do Suspense para mostrar query e total */}
                         <div className="mb-6">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                {query ? `Resultados para "${query}"` : 'Todas as Questões'}
-                            </h1>
                             <p className="text-gray-600 dark:text-gray-400">
                                 {meta.total} {meta.total === 1 ? 'questão encontrada' : 'questões encontradas'}
                             </p>
@@ -266,10 +263,22 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
             permanentRedirect(`/questoes/${generateSlug(activeSubject.name)}`);
         }
     }
+
+    // H1 title acima do Suspense — pinta imediatamente com o shell HTML em vez de esperar os DB queries
+    // Isso faz o LCP acontecer junto ao FCP (~1.2s) em vez de esperar (~3.3s)
+    const pageTitle = params.q ? `Resultados para "${params.q}"` : 'Todas as Questões';
+
     return (
-        <Suspense fallback={<Loading />}>
-            <QuestionsContent searchParams={searchParams} />
-        </Suspense>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="container mx-auto max-w-7xl px-4 pt-8 pb-2">
+                {/* H1 fora do Suspense — é o LCP candidate; pinta antes dos dados carregarem */}
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {pageTitle}
+                </h1>
+            </div>
+            <Suspense fallback={<Loading />}>
+                <QuestionsContent searchParams={searchParams} />
+            </Suspense>
+        </div>
     );
 }
-

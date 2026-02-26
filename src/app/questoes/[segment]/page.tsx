@@ -170,7 +170,6 @@ const SubjectQuestionsContent = async ({
                             </div>
                         </div>
                         <div className="mb-6">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{subject.name}</h1>
                             <p className="text-gray-600 dark:text-gray-400">
                                 {meta.total} {meta.total === 1 ? 'questão encontrada' : 'questões encontradas'}
                             </p>
@@ -223,9 +222,20 @@ export default async function SegmentPage({
         permanentRedirect(getQuestionPath({ id: question.id, title: question.title, subjectName: question.subjectName, subject: question.subject ?? null }));
     }
 
+    // Deriva um título legível do slug para pintar o H1 antes dos DB queries resolverem
+    const slugTitle = segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
     return (
-        <Suspense fallback={<Loading />}>
-            <SubjectQuestionsContent segmentSlug={segment} searchParams={searchParams} />
-        </Suspense>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="container mx-auto max-w-7xl px-4 pt-8 pb-2">
+                {/* H1 fora do Suspense — é o LCP candidate */}
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {slugTitle}
+                </h1>
+            </div>
+            <Suspense fallback={<Loading />}>
+                <SubjectQuestionsContent segmentSlug={segment} searchParams={searchParams} />
+            </Suspense>
+        </div>
     );
 }
