@@ -8,7 +8,7 @@ interface LoadingProps {
 export const Loading: React.FC<LoadingProps> = ({ message = 'Carregando...', fullScreen = true }) => {
 
     const containerClasses = fullScreen
-        ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900"
+        ? "min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900"
         : "flex flex-col items-center justify-center py-12 bg-gray-900";
 
     return (

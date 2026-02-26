@@ -9,6 +9,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session: {
         strategy: "jwt", // Use JWT for edge runtime compatibility
     },
+    trustHost: true,
     providers: [
         Google({
             clientId: process.env.GOOGLE_CLIENT_ID!,

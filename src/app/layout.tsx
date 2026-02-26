@@ -91,6 +91,16 @@ export default function RootLayout({
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      {/* Script síncrono que aplica o tema ANTES do primeiro paint — elimina FOUC e CLS de tema */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem('darkTheme');if(t==='dark'||t===null){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+        }}
+      />
+      {/* Preconnect para origens externas críticas — reduz latência DNS+TLS */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link rel="preconnect" href="https://www.googletagmanager.com" />
       <Script async={true} type={'application/ld+json'} id={'organizationJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <Script async={true} type={'application/ld+json'} id={'websiteJsonLd'} dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       <GoogleAnalytics gaId="G-3141WNQQZQ" />
