@@ -3,6 +3,7 @@
 import { prisma as db } from "@/lib/prisma";
 import { AdCampaignStatus, AdTransactionStatus, AdTransactionType, AdBillingType, AdEventType } from "@prisma/client";
 import { executeWithRetry } from "@/lib/prisma-utils";
+import { rateLimit } from "@/lib/rate-limit";
 
 // Normalize bid to expected value per impression (EVI) for comparison
 // CPC: Bid * CTR (Est. 1% if unknown)
@@ -312,6 +313,10 @@ export async function trackAdClick(adId: string, campaignId: string) {
 }
 
 export async function trackAdView(adId: string, campaignId: string) {
+    // 🛡️ Rate limit: máximo 60 visualizações por minuto por criativo
+    const { success: allowed } = rateLimit(`ad-view:${adId}`, 60, 60_000);
+    if (!allowed) return { success: false };
+
     try {
         const campaign = await db.adCampaign.findUnique({
             where: { id: campaignId },

@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { checkIsAdmin } from '@/lib/admin-auth';
 import { FeedbackType } from '@prisma/client';
+import { rateLimit } from '@/lib/rate-limit';
 
 const FeedbackSchema = z.object({
   message: z.string().min(3, "A mensagem deve ter pelo menos 3 caracteres").max(1000),
@@ -15,7 +16,16 @@ const FeedbackSchema = z.object({
 export async function submitFeedback(formData: FormData) {
   try {
     const session = await auth();
-    
+
+    // 🛡️ Rate limit: máximo 5 feedbacks por minuto por usuário/IP-equivalente
+    const rateLimitKey = session?.user?.id
+      ? `feedback:user:${session.user.id}`
+      : `feedback:anon:${String(formData.get('message')).slice(0, 32)}`;
+    const { success: allowed } = rateLimit(rateLimitKey, 5, 60_000);
+    if (!allowed) {
+      return { success: false, error: 'Muitas tentativas. Aguarde um momento antes de enviar outro feedback.' };
+    }
+
     const rawData = {
       message: formData.get('message'),
       type: formData.get('type'),
@@ -67,13 +77,13 @@ export async function getFeedbacks() {
 }
 
 export async function deleteFeedback(id: string) {
-    const session = await checkIsAdmin();
-    if (!session) return { success: false };
-    
-    try {
-        await prisma.feedback.delete({ where: { id } });
-        return { success: true };
-    } catch (e) {
-        return { success: false };
-    }
+  const session = await checkIsAdmin();
+  if (!session) return { success: false };
+
+  try {
+    await prisma.feedback.delete({ where: { id } });
+    return { success: true };
+  } catch (e) {
+    return { success: false };
+  }
 }

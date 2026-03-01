@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { trackAdClick } from "@/actions/ad-engine";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  // 🛡️ Rate limit: máximo 10 cliques por minuto por IP
+  const ip = getClientIP(req.headers);
+  const { success } = rateLimit(`ad-click:${ip}`, 10, 60_000);
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
+  }
+
   const searchParams = req.nextUrl.searchParams;
   const adId = searchParams.get("adId");
   const campaignId = searchParams.get("campaignId");
