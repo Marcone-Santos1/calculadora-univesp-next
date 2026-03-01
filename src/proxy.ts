@@ -75,10 +75,10 @@ export default async function proxy(request: NextRequest) {
     }
 
     // ──────────────────────────────────────────────────────────
-    // 🛡️ 2. Rate limit global: 120 requests/min por IP
+    // 🛡️ 2. Rate limit global: 160 requests/min por IP
     // ──────────────────────────────────────────────────────────
     const ip = getClientIP(request.headers);
-    const { success: withinLimit } = rateLimit(`global:${ip}`, 120, 60_000);
+    const { success: withinLimit } = rateLimit(`global:${ip}`, 160, 60_000);
     if (!withinLimit) {
         return new NextResponse('Too Many Requests', {
             status: 429,

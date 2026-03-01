@@ -159,9 +159,17 @@ export const NavBar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay — CSS transitions instead of framer-motion */}
+      {/* Mobile Menu Backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 top-20 bg-black/40 z-40"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Mobile Menu Panel — fixed overlay below navbar */}
       <div
-        className={`lg:hidden overflow-hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+        className={`lg:hidden fixed top-20 left-0 right-0 bottom-0 z-50 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out overflow-y-auto ${isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
           }`}
       >
         <div className="container mx-auto px-4 py-6 space-y-6">
