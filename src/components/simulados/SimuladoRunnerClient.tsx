@@ -6,10 +6,20 @@ import { submitMockExamAnswer, finishMockExam } from '@/actions/mock-exam-action
 import { FaClock, FaChevronLeft, FaChevronRight, FaCheck, FaFire } from 'react-icons/fa';
 import { useToast } from '@/components/ToastProvider';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+
+/** Load react-markdown and rehype-raw only on client to avoid "boolean is not defined" in Turbopack/RSC. */
+function useMarkdownRenderer() {
+    const [Markdown, setMarkdown] = useState<React.ComponentType<{ children: string; rehypePlugins?: unknown[] }> | null>(null);
+    useEffect(() => {
+        Promise.all([import('react-markdown'), import('rehype-raw')]).then(([md, raw]) => {
+            const Comp = (props: { children: string }) => <md.default rehypePlugins={[raw.default]} {...props} />;
+            setMarkdown(() => Comp);
+        });
+    }, []);
+    return Markdown;
+}
 
 interface Question {
     id: string;
@@ -35,6 +45,7 @@ export function SimuladoRunnerClient({ exam }: { exam: MockExam }) {
     const [secondsElapsed, setSecondsElapsed] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const Markdown = useMarkdownRenderer();
     const { showToast } = useToast();
     const router = useRouter();
     const currentQ = exam.questions[currentIndex];
@@ -169,7 +180,11 @@ export function SimuladoRunnerClient({ exam }: { exam: MockExam }) {
 
                             {/* Question Text */}
                             <div className="prose prose-lg dark:prose-invert max-w-none mb-10 text-gray-800 dark:text-gray-200 leading-relaxed">
-                                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{currentQ.question.text}</ReactMarkdown>
+                                {Markdown ? (
+                                    <Markdown>{currentQ.question.text}</Markdown>
+                                ) : (
+                                    <div className="whitespace-pre-wrap">{currentQ.question.text}</div>
+                                )}
                             </div>
 
                             {/* Alternatives */}

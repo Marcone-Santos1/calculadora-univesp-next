@@ -5,7 +5,8 @@ import { FaHistory, FaTrophy, FaChartLine, FaFire, FaMedal, FaPlus } from 'react
 import { redirect } from 'next/navigation';
 import { SimuladoHistoryTimeline } from '@/components/simulados/SimuladoHistoryTimeline';
 import { WeeklyProgressChart } from '@/components/simulados/WeeklyProgressChart';
-import { createMockExam, getWeeklyProgress, getSimuladoStreak } from "@/actions/mock-exam-actions";
+import { getWeeklyProgress, getSimuladoStreak, getWrongQuestionsCount } from "@/actions/mock-exam-actions";
+import { RevisarErrosButton } from "@/components/simulados/RevisarErrosButton";
 
 export default async function SimuladosDashboard() {
     const session = await auth();
@@ -25,9 +26,11 @@ export default async function SimuladosDashboard() {
         select: { score: true, totalQuestions: true }
     });
 
-    const weeklyData = await getWeeklyProgress();
-
-    const userStreak = await getSimuladoStreak(session.user.id);
+    const [weeklyData, userStreak, wrongCount] = await Promise.all([
+        getWeeklyProgress(),
+        getSimuladoStreak(session.user.id),
+        getWrongQuestionsCount(),
+    ]);
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -35,7 +38,7 @@ export default async function SimuladosDashboard() {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
                         <FaTrophy className="text-yellow-500" />
-                        Simulados Premium
+                        Simulados
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">Treine com foco e suba no ranking!</p>
                 </div>
@@ -90,6 +93,11 @@ export default async function SimuladosDashboard() {
                     </div>
                     <p className="font-bold text-lg leading-tight">Mantenha a constância para dobrar seu aprendizado!</p>
                 </div>
+            </div>
+
+            {/* Revisar erros */}
+            <div className="mb-8">
+                <RevisarErrosButton wrongCount={wrongCount} variant="card" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

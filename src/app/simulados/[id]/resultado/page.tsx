@@ -6,6 +6,7 @@ import { FaClock, FaTrophy, FaCheckCircle, FaTimesCircle, FaArrowLeft, FaRedo } 
 import { Confetti } from '@/components/ui/Confetti';
 import { SubjectRadarChart } from '@/components/simulados/SubjectRadarChart';
 import { QuestionReviewList } from '@/components/simulados/QuestionReviewList';
+import { RevisarErrosDesteSimuladoButton } from '@/components/simulados/RevisarErrosDesteSimuladoButton';
 import { calculateSubjectPerformance } from '@/utils/simulado-stats';
 
 export default async function SimuladoResultadoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +41,7 @@ export default async function SimuladoResultadoPage({ params }: { params: Promis
 
     const percentage = Math.round((exam.score / exam.totalQuestions) * 100);
     const subjectPerformance = calculateSubjectPerformance(exam);
+    const wrongCount = exam.questions.filter((q: { isCorrect: boolean }) => !q.isCorrect).length;
 
     return (
         <div className="container mx-auto px-4 py-12 max-w-4xl">
@@ -95,10 +97,11 @@ export default async function SimuladoResultadoPage({ params }: { params: Promis
                 Ideally we refine the type in QuestionReviewList to match Prisma return exactly. */}
 
             {/* Footer Actions */}
-            <div className="flex justify-center gap-4 mt-12">
+            <div className="flex flex-wrap justify-center gap-4 mt-12">
                 <Link href="/simulados" className="px-6 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 font-semibold transition-colors flex items-center gap-2">
                     <FaArrowLeft /> Voltar ao Painel
                 </Link>
+                <RevisarErrosDesteSimuladoButton examId={id} wrongCount={wrongCount} />
                 <Link href="/simulados/novo" className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-500/20 transition-colors flex items-center gap-2">
                     <FaRedo /> Novo Simulado
                 </Link>

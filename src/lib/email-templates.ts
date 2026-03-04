@@ -270,6 +270,49 @@ export const PredefinedTemplates = {
     `
   },
 
+  /** Re-engagement: users inactive 3–7 days */
+  REENGAGEMENT: {
+    label: "Reengajamento",
+    subject: "Sentimos sua falta na Calculadora Univesp 💙",
+    body: (name: string, baseUrl: string) => `
+      ${EmailComponents.Heading(`Olá, ${name}!`, { align: 'center' })}
+      ${EmailComponents.Text('Faz alguns dias que você não passa por aqui. A comunidade continua crescendo com novas questões e simulados.', { align: 'center' })}
+      ${EmailComponents.Text('Que tal dar uma olhada nas questões mais acessadas da semana ou fazer um simulado rápido para manter o ritmo?', { align: 'center' })}
+      ${EmailComponents.Button('Voltar a estudar', `${baseUrl}/questoes`, { align: 'center', bgColor: '#2563eb' })}
+      ${EmailComponents.Spacer(8)}
+      ${EmailComponents.Text('Até breve!', { align: 'center', color: '#6b7280' })}
+    `
+  },
+
+  /** Weekly summary: resumo da semana (streak, simulados, participação) */
+  WEEKLY_SUMMARY: {
+    label: "Resumo Semanal",
+    subject: "📊 Seu resumo da semana na Calculadora Univesp",
+    body: (
+      name: string,
+      stats: { streak: number; simuladosCompleted: number; commentsCount: number; questionsCreated: number },
+      baseUrl: string
+    ) => {
+      const hasActivity = stats.simuladosCompleted > 0 || stats.commentsCount > 0 || stats.questionsCreated > 0;
+      return `
+      ${EmailComponents.Heading(`Olá, ${name}!`, { align: 'center' })}
+      ${EmailComponents.Text('Aqui está seu resumo da última semana na Calculadora Univesp.', { align: 'center' })}
+      ${EmailComponents.Divider('#e5e7eb')}
+      ${stats.streak > 0 ? EmailComponents.HighlightBox(`🔥 <strong>${stats.streak} dias</strong> de ofensiva! Continue assim.`) : ''}
+      ${EmailComponents.Text(
+        `Simulados concluídos: <strong>${stats.simuladosCompleted}</strong> · Comentários: <strong>${stats.commentsCount}</strong> · Questões criadas: <strong>${stats.questionsCreated}</strong>`,
+        { align: 'center', fontSize: '15px' }
+      )}
+      ${EmailComponents.Spacer(8)}
+      ${hasActivity
+        ? EmailComponents.Text('Parabéns pela dedicação! Que tal manter o ritmo na próxima semana?', { align: 'center' })
+        : EmailComponents.Text('Que tal começar a semana com um simulado ou explorando questões da sua disciplina?', { align: 'center' })
+      }
+      ${EmailComponents.Button('Abrir plataforma', baseUrl, { align: 'center' })}
+    `;
+    }
+  },
+
   BILLING_PAID: {
     label: "Pagamento Confirmado",
     subject: "Seu pagamento foi confirmado! 🚀",

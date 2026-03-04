@@ -36,7 +36,6 @@ export function StreakListener() {
         const checkStreak = async () => {
             try {
                 const result = await checkDailyStreak();
-                console.log(result);
                 if (result && result.status !== 'UNAUTHENTICATED' && result.status !== 'ERROR' && result.status !== 'USER_NOT_FOUND') {
 
                     localStorage.setItem(key, 'true');

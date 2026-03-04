@@ -94,6 +94,91 @@ export async function createMockExam(subjectIds: string[], mode: 'STANDARD' | 'F
     return { success: true, mockExamId: mockExam.id };
 }
 
+const REVISION_MAX_QUESTIONS = 50;
+
+/** Returns count of distinct questions the user got wrong in any completed simulado (for display). */
+export async function getWrongQuestionsCount(): Promise<number> {
+    const ids = await getWrongQuestionIdsForUser();
+    return ids.length;
+}
+
+/** Returns distinct question IDs the user got wrong in any completed simulado. */
+export async function getWrongQuestionIdsForUser(): Promise<string[]> {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    const wrongItems = await prisma.mockExamQuestion.findMany({
+        where: {
+            mockExam: {
+                userId: session.user.id,
+                status: 'COMPLETED',
+            },
+            isCorrect: false,
+        },
+        select: { questionId: true },
+    });
+
+    const uniqueIds = [...new Set(wrongItems.map((w) => w.questionId))];
+    return uniqueIds;
+}
+
+/** Creates a simulado with only questions the user got wrong (from all past simulados). */
+export async function createRevisionMockExam(): Promise<{ success: true; mockExamId: string } | { success: false; error: 'UNAUTHORIZED' | 'NO_WRONG_QUESTIONS' }> {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: 'UNAUTHORIZED' };
+
+    const questionIds = await getWrongQuestionIdsForUser();
+    if (questionIds.length === 0) return { success: false, error: 'NO_WRONG_QUESTIONS' };
+
+    const shuffled = [...questionIds].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, REVISION_MAX_QUESTIONS);
+
+    const mockExam = await prisma.mockExam.create({
+        data: {
+            userId: session.user.id,
+            totalQuestions: selected.length,
+            status: 'IN_PROGRESS',
+            questions: {
+                create: selected.map((qId) => ({ questionId: qId })),
+            },
+        },
+    });
+
+    revalidatePath('/simulados');
+    return { success: true, mockExamId: mockExam.id };
+}
+
+/** Creates a revision simulado from wrong questions of a single completed exam. */
+export async function createRevisionFromExam(examId: string): Promise<{ success: true; mockExamId: string } | { success: false; error: 'UNAUTHORIZED' | 'EXAM_NOT_FOUND' | 'NO_WRONG_QUESTIONS' }> {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: 'UNAUTHORIZED' };
+
+    const exam = await prisma.mockExam.findFirst({
+        where: { id: examId, userId: session.user.id, status: 'COMPLETED' },
+        include: { questions: { where: { isCorrect: false }, select: { questionId: true } } },
+    });
+
+    if (!exam) return { success: false, error: 'EXAM_NOT_FOUND' };
+    const questionIds = exam.questions.map((q) => q.questionId).filter(Boolean);
+    if (questionIds.length === 0) return { success: false, error: 'NO_WRONG_QUESTIONS' };
+
+    const shuffled = [...questionIds].sort(() => 0.5 - Math.random());
+
+    const mockExam = await prisma.mockExam.create({
+        data: {
+            userId: session.user.id,
+            totalQuestions: shuffled.length,
+            status: 'IN_PROGRESS',
+            questions: {
+                create: shuffled.map((qId) => ({ questionId: qId })),
+            },
+        },
+    });
+
+    revalidatePath('/simulados');
+    return { success: true, mockExamId: mockExam.id };
+}
+
 export async function getMockExam(id: string) {
     const session = await auth();
     if (!session?.user) return null;

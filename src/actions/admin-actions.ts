@@ -115,8 +115,6 @@ export async function deleteQuestion(id: string) {
 
   revalidatePath('/admin/questions');
   revalidatePath('/questoes');
-  revalidatePath('/admin/questions');
-  revalidatePath('/questoes');
 }
 
 export async function deleteQuestions(ids: string[]) {

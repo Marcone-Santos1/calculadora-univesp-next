@@ -24,22 +24,22 @@ export function NotificationBell() {
     const [isLoading, setIsLoading] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    const userId = session?.user?.id;
     const fetchNotifications = useCallback(async () => {
-        if (session?.user?.id) {
+        if (userId) {
             setIsLoading(true);
             try {
-                const { notifications: data, unreadCount: count } = await getNotificationData(session.user.id);
+                const { notifications: data, unreadCount: count } = await getNotificationData(userId);
                 setNotifications(data);
                 setUnreadCount(count);
             } finally {
                 setIsLoading(false);
             }
         }
-    }, [session]);
+    }, [userId]);
 
     useEffect(() => {
         fetchNotifications();
-        // Poll every 2 minutes to conserve database connections
         const interval = setInterval(fetchNotifications, 120000);
         return () => clearInterval(interval);
     }, [fetchNotifications]);
