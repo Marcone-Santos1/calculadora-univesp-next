@@ -3,11 +3,65 @@ import React from 'react';
 import Link from 'next/link';
 import { FaBullhorn, FaChartLine, FaUsers, FaWhatsapp, FaArrowRight } from 'react-icons/fa';
 import NativeAdCard from '@/components/feed/NativeAdCard';
+import { SITE_CONFIG } from '@/utils/Constants';
+
+import { Metadata } from 'next';
+
+const baseUrl = `${SITE_CONFIG.BASE_URL}`;
+const url = `${baseUrl}/anuncie`;
+
+export const metadata: Metadata = {
+    title: 'Anuncie na Calculadora Univesp | Alcance Milhares de Alunos',
+    description: 'Conecte sua marca ao maior público de estudantes da UNIVESP. Oferecemos publicidade nativa, anúncios contextuais por disciplina e visibilidade exclusiva para o seu curso ou serviço.',
+    alternates: {
+        canonical: url,
+    },
+    openGraph: {
+        title: 'Anuncie na Calculadora Univesp - Mídia Kit e Parcerias',
+        description: 'Alcance alunos engajados da UNIVESP no momento exato do estudo. Conheça nossas soluções de anúncios.',
+        url: url,
+        siteName: 'Calculadora Univesp',
+        images: [
+            {
+                url: `/og-anuncie.png`, // Recomendo criar uma imagem com o texto "Anuncie aqui"
+                width: 1200,
+                height: 630,
+                alt: 'Publicidade na Calculadora Univesp',
+            },
+        ],
+        locale: 'pt_BR',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Anuncie na Calculadora Univesp',
+        description: 'Oportunidades exclusivas de anúncio para o público universitário da UNIVESP.',
+        images: [`/og-anuncie.png`],
+    },
+};
+
+const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Publicidade na Calculadora Univesp",
+    "description": "Serviços de anúncios nativos e contextuais para o público universitário da Univesp.",
+    "provider": {
+        "@type": "Organization",
+        "name": "Calculadora Univesp",
+        "url": baseUrl
+    },
+    "serviceType": "Advertising Service",
+    "offers": {
+        "@type": "Offer",
+        "description": "Anúncios nativos e contextuais por disciplina"
+    }
+};
+
 
 export default function AdvertisePage() {
     const stats = [
         { label: 'Visualizações Mensais', value: '+50k', icon: <FaUsers className="w-6 h-6 text-blue-500" /> },
-        { label: 'Taxa de Clinton (CTR)', value: '3.5%', icon: <FaChartLine className="w-6 h-6 text-green-500" /> },
+        { label: 'Taxa de Cliques (CTR)', value: '3.5%', icon: <FaChartLine className="w-6 h-6 text-green-500" /> },
         { label: 'Universitários', value: '+10k', icon: <FaBullhorn className="w-6 h-6 text-purple-500" /> },
     ];
 
@@ -24,6 +78,11 @@ export default function AdvertisePage() {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
 
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900 text-white">
